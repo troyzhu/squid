@@ -46,6 +46,16 @@ Use `AskUserQuestion` to collect answers. Consolidate where possible — one or 
 7. **Shared OpenAPI contracts** (only if backend + ≥1 frontend): yes / no.
 8. **Infra** (multi-select): `docker`, `github-actions`.
 9. **Agent team + tracker?** yes (recommended) / no. Also: file-based tracker or GitHub Issues?
+10. **External services** (optional, multi-select — skip any category that doesn't apply). Each selection pulls a `specs/<category>-<choice>.md` stub and emits a one-line bullet into the generated CLAUDE.md, wrapped in `<!-- stack:<slug> -->` comments so the user can find-and-delete it later:
+   - **Datastore:** `mongodb` / `postgresql` / `redis` / `sqlite` / `other` / `none`
+   - **Orchestrator:** `prefect` / `dagster` / `temporal` / `other` / `none`
+   - **Observability & evals:** `opik` / `opentelemetry` / `sentry` / `other` / `none`
+   - **LLM API:** `anthropic` / `openai` / `gemini` / `other` / `none`
+   - **Embedding API:** `voyageai` / `openai` / `sentence-transformers` / `other` / `none`
+   - **Model serving:** `modal` / `replicate` / `other` / `none`
+   - **Web scraping:** `firecrawl` / `playwright` / `requests-bs4` / `other` / `none`
+
+   Ask this as ONE consolidated question: "Which external services will you use? (deselect anything you don't need)." `none` skips the category entirely — no stub read, no bullet emitted. `other` keeps an `AGENT: fill in` placeholder so the SWE can document the real choice on first use.
 
 Before proceeding to step 2, echo the picked configuration back to the user in a two-line summary and confirm.
 
@@ -70,6 +80,15 @@ Conditionally include (from answers):
 | docker | [`docker.md`](specs/docker.md) |
 | github-actions | [`github-actions.md`](specs/github-actions.md) |
 | agent team + tracker | [`tracker-workflow.md`](specs/tracker-workflow.md) |
+| datastore = `mongodb` / `postgresql` / `redis` / `sqlite` | + [`datastore-<choice>.md`](specs/) |
+| orchestrator = `prefect` / `dagster` / `temporal` | + [`orchestrator-<choice>.md`](specs/) |
+| observability = `opik` / `opentelemetry` / `sentry` | + [`observability-<choice>.md`](specs/) |
+| llm-api = `anthropic` / `openai` / `gemini` | + [`llm-<choice>.md`](specs/) |
+| embeddings = `voyageai` / `openai` / `sentence-transformers` | + [`embeddings-<choice>.md`](specs/) |
+| model-serving = `modal` / `replicate` | + [`model-serving-<choice>.md`](specs/) |
+| scraping = `firecrawl` / `playwright` / `requests-bs4` | + [`scraping-<choice>.md`](specs/) |
+
+Skip any row where the user picked `none` / `other`. `other` is handled at compose time by leaving an `AGENT: fill in` placeholder in the generated CLAUDE.md.
 
 `Read` each selected spec end-to-end. Specs are short markdown — full read is fine. Skip reading specs that don't apply; keep context lean.
 
@@ -150,6 +169,26 @@ Multi-language — each component brings its own toolchain:
 {- **Go 1.22+** (frontend-tui) — `go mod`, `gofmt`, `go test`.}
 {- **OpenAPI 3.1 + codegen** (shared) — `openapi-spec-validator`, `openapi-python-client`, `@openapitools/openapi-generator-cli`, `oapi-codegen`.}
 
+### External services
+
+*For each external-service slug the user selected in step 1, emit one bullet here wrapped in `<!-- stack:<slug> -->` / `<!-- /stack:<slug> -->` HTML comments. Pull the one-line summary from the spec's frontmatter `description` (distil if too long). Slug = short tool name; disambiguate where the same name appears in multiple categories (`openai-llm`, `openai-embeddings`). Emit nothing for categories the user left as `none`. Use the `other` pattern below when the user picked `other` for a category. Post-scaffold, the user can grep `<!-- stack:` to find any block and delete it.*
+
+Example (MongoDB selected):
+
+```
+<!-- stack:mongodb -->
+- **MongoDB** — async ODM (Beanie / PyMongo); `mongosh "$MONGODB_URL"` for local queries. Spec: [`datastore-mongodb`](.claude/skills/scaffold/specs/datastore-mongodb.md).
+<!-- /stack:mongodb -->
+```
+
+Example (user picked `other` for datastore):
+
+```
+<!-- stack:other-datastore -->
+- **{Datastore — other}** — *AGENT: fill in client CLI and connection details on first use.*
+<!-- /stack:other-datastore -->
+```
+
 ### Access Documentation
 
 Use the `context7` MCP server (when available in the Claude Code session) to look up authoritative usage and best practices for any of the above tech-stack items.
@@ -210,6 +249,7 @@ Project-specific additions:
 {- **Editing the OpenAPI spec:** run `make openapi-validate && make openapi-gen` and confirm the generated clients compile.}
 {- **Editing the root `Makefile` or adding a component:** run `make help` to confirm the target surface is coherent and every per-component verb is wired.}
 {- **Editing `docker-compose.yml`:** run `make docker-up` then `docker compose ps` — every service should be `healthy` within 30s.}
+{- **Editing an orchestrator-driven pipeline:** serve the worker in the background (`make serve-workflows &`), then trigger via a wrapped `make run-<pipeline>` so logs stream to the current terminal. Re-serve after code changes — running workers don't auto-reload.}
 
 ## Build
 
@@ -238,6 +278,8 @@ Every verb runs at repo root. The root Makefile **delegates** to `packages/<c>/M
 | `make ci` | Full pre-PR fan: `install → test → lint-check → format-check → pre-commit → build`. |
 | `make help` | Curated target list with descriptions. |
 
+> **Manual QA order:** `format-fix → lint-fix → format-check → lint-check → pre-commit → unit-tests`. Fixers before checkers so auto-fixable issues don't surface as false failures. CI runs the non-fix variants only.
+
 ### Per-component (fast inner loop)
 
 Every aggregate verb has a `-<component>` form: `make test-backend`, `make lint-fix-frontend-web`, `make format-check-frontend-tui`, etc. Use these during active work on a single component to skip the fan-out cost.
@@ -255,7 +297,7 @@ Every command uses `$(MAKE) -C` under the hood — **never literal `make`** — 
 
 For any command not wrapped by the Makefile:
 
-{- **Python (backend):** `uv run python ...`, `uv run pytest ...`, `uv run ruff ...`, `uvx <one-shot-tool>` (e.g. `uvx openapi-spec-validator`).}
+{- **Python (backend):** `uv run python ...`, `uv run pytest ...`, `uv run ruff ...`, `uvx <one-shot-tool>` (e.g. `uvx openapi-spec-validator`). From the repo root without `cd`: `uv --directory packages/<c> run ...`.}
 {- **TypeScript (frontend-web):** `npm run <script>`, `npx <one-shot-tool>`.}
 {- **Go (frontend-tui):** `go run ./cmd/<slug>`, `go test ./...`, `go run <module>@<version>` for one-shot tools.}
 
@@ -266,15 +308,15 @@ External CLIs used during development:
 - **Git:** `git` for generic VCS operations.
 - **GitHub:** `gh` for PRs, issues, Actions logs.
 {- **Docker:** `docker compose up -d`, `docker compose down`, `docker compose logs -f <svc>`.}
-{- **{Datastore — mongodb / postgres / ...}:** *AGENT: fill in client CLI (mongosh / psql / redis-cli) and how to connect to the dev-compose instance.*}
-{- **{Orchestrator — prefect / airflow / dagster / ...}:** *AGENT: fill in orchestrator CLI usage for this project (`prefect deployment`, `airflow dags`, etc.).*}
+
+External-service CLIs (datastore, orchestrator, observability, LLM, embedding, serving, scraping) are documented per-service in [**Tech Stack › External services**](#external-services) above — each `<!-- stack:<slug> -->` block there includes its invocation. Delete a block to drop the service from the project.
 
 ## Self Improve
 
 If a `self-improve` skill is available in your Claude Code session, run it at the end of a session to analyse corrections and persist lessons learned into `CLAUDE.md` or the memory system.
 ```
 
-**Size target: ≤ 300 lines.** If CLAUDE.md balloons past that, you're copy-pasting specs verbatim instead of distilling. Cut and link out.
+**Size target: ≤ 350 lines** (was 300; the extra 50 accommodate the External services block when several stacks are chosen). If CLAUDE.md balloons past that, you're copy-pasting specs verbatim instead of distilling. Cut and link out.
 
 **Distil, don't copy.** For each `Key {Lang} Design Choices` section, extract 3–5 headline rules from the relevant spec's "Canonical principles". The *rationale* and canonical examples stay in the spec files; CLAUDE.md states the rule and points to the spec for depth.
 
@@ -353,6 +395,7 @@ Summarise for the user:
 - **Stop and ask on conflicts.** If the user picks `cli-tool-python` and `fastapi-service` for the same backend, ask which one (they can always run `/scaffold` again to add the other).
 - **Don't overwrite without confirmation.** If the target dir already has a `CLAUDE.md` or a `packages/<c>/` for a chosen component, ask before clobbering.
 - **Don't mutate the spec library.** `specs/` is read-only at scaffold time. Edits happen on the plugin repo, not in a consumer project.
+- **Stack stubs are optional and deletable.** The `datastore-*`, `orchestrator-*`, `observability-*`, `llm-*`, `embeddings-*`, `model-serving-*`, `scraping-*` files are all stubs pending real-project use. If a category turns out not to be worth maintaining, delete the stub(s) in plugin-repo edits and drop the matching row in Step 2's decision table — nothing else references them.
 
 ## Index of specs
 
@@ -390,3 +433,12 @@ The spec library lives at [`specs/`](specs/). Each file is a standalone referenc
 
 **Process**
 - [`tracker-workflow.md`](specs/tracker-workflow.md) — file-based task tracker format.
+
+**External services** *(all stubs — flesh out as real projects reveal opinions; delete any category or file you decide isn't worth maintaining, and drop the matching row in Step 2's decision table)*
+- Datastore: [`datastore-mongodb.md`](specs/datastore-mongodb.md), [`datastore-postgresql.md`](specs/datastore-postgresql.md), [`datastore-redis.md`](specs/datastore-redis.md), [`datastore-sqlite.md`](specs/datastore-sqlite.md).
+- Orchestrator: [`orchestrator-prefect.md`](specs/orchestrator-prefect.md), [`orchestrator-dagster.md`](specs/orchestrator-dagster.md), [`orchestrator-temporal.md`](specs/orchestrator-temporal.md).
+- Observability: [`observability-opik.md`](specs/observability-opik.md), [`observability-opentelemetry.md`](specs/observability-opentelemetry.md), [`observability-sentry.md`](specs/observability-sentry.md).
+- LLM API: [`llm-anthropic.md`](specs/llm-anthropic.md), [`llm-openai.md`](specs/llm-openai.md), [`llm-gemini.md`](specs/llm-gemini.md).
+- Embeddings: [`embeddings-voyageai.md`](specs/embeddings-voyageai.md), [`embeddings-openai.md`](specs/embeddings-openai.md), [`embeddings-sentence-transformers.md`](specs/embeddings-sentence-transformers.md).
+- Model serving: [`model-serving-modal.md`](specs/model-serving-modal.md), [`model-serving-replicate.md`](specs/model-serving-replicate.md).
+- Scraping: [`scraping-firecrawl.md`](specs/scraping-firecrawl.md), [`scraping-playwright.md`](specs/scraping-playwright.md), [`scraping-requests-bs4.md`](specs/scraping-requests-bs4.md).
