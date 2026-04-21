@@ -139,6 +139,18 @@ Aggregate-only verbs that don't delegate into a single component:
 | `docker-up` / `docker-down` | `docker compose up -d` / `docker compose down`. |
 | `ci` | The full pre-PR fan: `install test lint-check format-check pre-commit build`. |
 
+### 9. Fix-before-check ordering (manual loop)
+
+When running checks by hand — outside `pre-commit` hooks or CI — run fixers before checkers so auto-fixable issues don't surface as false failures:
+
+```bash
+make format-fix && make lint-fix && \
+make format-check && make lint-check && \
+make pre-commit && make unit-tests
+```
+
+The `pre-commit` and `ci` targets run the non-fix variants only — correct for CI, which should fail on drift rather than mutate the tree. Locally, fix-first-check-second is the faster inner loop.
+
 ## Anti-patterns
 
 - **Literal `make` calls** (`cd packages/backend && make test`). Loses `$(MAKE)` propagation. Use `$(MAKE) -C ...`.

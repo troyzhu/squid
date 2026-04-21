@@ -230,6 +230,15 @@ Library code never calls `print()`. Use the project logger (`logger = logging.ge
 
 If you can't satisfy all three, you don't have a pipeline — you have a script, and it goes in `scripts/` with a big warning in the docstring.
 
+### Pipelines: serving and triggering (orchestrator ergonomics)
+
+Pipelines are executed by an orchestrator (Prefect / Airflow / Dagster / Temporal). Two rules for the dev loop, tool-agnostic:
+
+- **Serve the worker in the background, trigger via `make`.** The orchestrator worker — the process that picks up deployments — runs as a background task (`make serve-workflows &`). Triggers go through wrapped `make run-<pipeline>` targets, never the raw orchestrator CLI, so `stdout`/`stderr` stream to the current terminal. If you edit pipeline code, kill the worker and re-serve — running workers don't auto-reload.
+- **Make targets own the trigger, not the orchestrator CLI.** Rationale: debuggability. The Make-wrapped script streams logs back to your terminal; the orchestrator UI is for post-hoc inspection, not first-pass debugging.
+
+Orchestrator-specific CLI usage (deployment names, worker config, UI endpoints) belongs in the project's own `CLAUDE.md` — this spec stays framework-agnostic.
+
 ### Async for I/O, sync for CPU
 
 - I/O-bound code (HTTP, DB, queue, file) → `async def` + `await`. Use `asyncio.gather` for concurrency; avoid `asyncio.run_in_executor` unless wrapping sync libs.

@@ -44,6 +44,17 @@ Opinionated `uv` usage. uv is the only supported package/project manager in this
 | `uvx <tool>` | Run a tool **from PyPI** without adding it to the project — one-shot. Equivalent to `pipx run`. Use for `uvx copier`, `uvx ruff` (when the project doesn't own ruff), `uvx openapi-spec-validator`. |
 | `uv tool install <tool>` | Install a CLI tool persistently for the user (not the project). Use when you want `copier` in your PATH without typing `uvx`. |
 
+### Running from a monorepo root
+
+In a monorepo, target a component's environment without `cd`:
+
+```bash
+uv --directory packages/<c> run <cmd>            # from repo root
+cd packages/<c> && uv run <cmd>                  # equivalent, stateful
+```
+
+Prefer `--directory` inside `make` recipes and in one-shot commands; prefer `cd` once at the start of an interactive session.
+
 ### Python version management
 
 | Command | When |
