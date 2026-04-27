@@ -46,11 +46,26 @@ The agents and skills appear in `/agents` and `/help` in any Claude Code session
 
 ### As a per-project install via `npx` (drops files into your repo)
 
-```
+Three sources, in increasing order of pinning rigour:
+
+```bash
+# Published to npm (once `npm publish` has been run)
 npx engineering-agent-team
+
+# Directly from a public GitHub repo (no npm publish needed)
+npx github:iusztinpaul/squid
+
+# Directly from a private GitHub repo (uses your local git auth — SSH key or PAT)
+npx git+ssh://git@github.com/iusztinpaul/squid.git
+
+# Pin to a specific tag or commit (recommended for reproducibility)
+npx github:iusztinpaul/squid#v0.1.0
+npx github:iusztinpaul/squid#<commit-sha>
 ```
 
-Run this from inside the project you want to set up. It writes:
+The git-URL forms work because `npx` clones the repo into its cache, runs `npm install` (zero deps here), and invokes the `bin` script. For private repos, **git auth** is what matters — not npm: if `git clone git@github.com:iusztinpaul/squid.git` works on your machine, the SSH form above works too.
+
+Once invoked, run from inside the project you want to set up. It writes:
 
 - `.claude/agents/` — the five sub-agent contracts (overwrites)
 - `.claude/skills/` — `/day`, `/night`, `/scaffold`, plus support skills (overwrites)
