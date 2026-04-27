@@ -12,20 +12,21 @@ Consumers install it and get an opinionated agent team plus a `/scaffold` flow t
 .
 ├── .claude-plugin/plugin.json         # plugin manifest
 ├── .claude/
-│   ├── agents/                        # four sub-agents
+│   ├── agents/                        # five sub-agents
 │   │   ├── product-manager.md
 │   │   ├── software-engineer.md
 │   │   ├── tester.md
+│   │   ├── pr-reviewer.md
 │   │   └── oncall-engineer.md
 │   └── skills/
 │       ├── scaffold/                  # /scaffold — bootstrap a new repo
 │       │   ├── SKILL.md
 │       │   └── specs/                 # 19 reference specs read by scaffold
-│       ├── day/                       # /day — supervised single-task pipeline
-│       ├── night/                     # /night — unattended batched pipeline
+│       ├── day/                       # /day — supervised single-task inner loop (SWE↔Tester)
+│       ├── night/                     # /night — end-to-end single-feature pipeline
 │       ├── testing-python/            # test-writing conventions
 │       ├── create-pr/                 # PR skill
-│       └── self-improve/              # end-of-session corrections capture
+│       └── self-improve/              # end-of-session corrections capture (human-gated by /night)
 ├── docs/PROCESS.md                    # canonical agent-team lifecycle
 ├── LICENSE
 ├── README.md                          # user-facing (install + what's inside)
@@ -53,7 +54,7 @@ Consumers install it and get an opinionated agent team plus a `/scaffold` flow t
 - **Local install:** `/plugin install <path-to-this-repo>` in a scratch Claude Code session.
 - **Test `/scaffold`:** run it in an empty directory and confirm it produces a sensible `CLAUDE.md` and skeleton tree without writing any application source.
 - **Test `/day`:** run it against a `/scaffold`-generated project; confirm SWE + Tester gate and no commit happens without your action.
-- **Test `/night`:** run it against a project with groomed `tracker/*.groomed.md` tasks.
+- **Test `/night`:** run it against a project, passing a feature spec (free-form text or a path to a `docs/features/*.md` file) — `/night` is per-feature, end-to-end, and asks for human approval of the Tasks Plan before the inner loop runs.
 
 There is no `make test` or pytest suite — testing this plugin means running the skills against real scratch targets.
 
@@ -65,4 +66,4 @@ There is no `make test` or pytest suite — testing this plugin means running th
 
 ## What this repo used to be
 
-Until recently, this was a Copier template with a full `template/` Jinja tree that rendered real code into generated projects. That architecture is gone. The pivot: specs replace templates, agents replace rendered code. The `docs/PROCESS.md` lifecycle, the four agents, and the `/day` / `/night` pipelines are the only carry-over.
+Until recently, this was a Copier template with a full `template/` Jinja tree that rendered real code into generated projects. That architecture is gone. The pivot: specs replace templates, agents replace rendered code. The `docs/PROCESS.md` lifecycle, the five agents (PM, SWE, Tester, PR Reviewer, On-Call), and the `/day` / `/night` pipelines are the only carry-over.

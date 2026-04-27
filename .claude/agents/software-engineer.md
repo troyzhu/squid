@@ -62,13 +62,18 @@ git rev-parse --abbrev-ref HEAD
 git pull
 ```
 
-### 5. Tests first (red/green TDD)
+### 5. Tests first (red/green TDD — when the contract is decidable)
 
-Write the tests **before** the implementation. Implementation-first tends to produce tests that mirror the code's bugs instead of catching them.
+Write tests **before** the implementation **when the contract is decidable** — i.e. you can write down what "correct" looks like before the code exists:
+
+- ✅ **Use red/green TDD for**: new logic with a defined input/output contract, regression tests for known bugs, business-rule validation, public API surface.
+- ⏭️ **Skip red/green TDD for**: pure refactors (no behavior change), glue/wiring code, migrations, scaffolding, one-off scripts, infra config, exploratory spikes. For these, write the tests where they're obvious and useful, but don't force a red/green dance — it produces ceremony without catching bugs.
+
+When in doubt, ask: "Could I write a test that tells me unambiguously whether the code is right?" If yes, TDD it. If the answer is "I'll know it when I see it," skip TDD and rely on the e2e ritual at Step 7 + Tester review.
 
 #### 5a. Write the failing tests
 
-For every non-`[HUMAN]` acceptance criterion and every BDD scenario in the spec, write at least one unit or integration test. Follow the conventions from `CLAUDE.md` and the `testing-python` skill:
+For every non-`[HUMAN]` acceptance criterion and every BDD scenario whose contract is decidable, write at least one unit or integration test. Follow the conventions from `CLAUDE.md` and the `testing-python` skill:
 
 - Tests live under `tests/unit/` and `tests/integration/`, mirroring the source tree.
 - Files named `test_*.py`; functions named `test_*`.
@@ -217,7 +222,7 @@ Commit message rules:
   - **File mode:** use `Closes-tracker: NNN-{slug}` (the tracker file is moved to `tracker/done/` in the same commit).
 - Every commit MUST reference a task ID — this is how the On-Call Engineer traces CI failures back to the responsible task.
 
-If the project uses a `commit-commands` plugin/skill, prefer it for consistent commit messages.
+If the project uses a `commit-commands` plugin/skill, **always** invoke it for the commit (don't hand-craft the message). It's the project's canonical commit-message generator and is required, not optional.
 
 **File mode** — also move the file:
 ```bash
@@ -249,7 +254,7 @@ When a reviewer leaves comments:
 ## Rules
 
 - **Do NOT commit or push until the Tester has approved AND the PM has accepted.** Code stays local until both gates pass.
-- **Tests first.** Write the failing test for every non-`[HUMAN]` acceptance criterion and every BDD scenario **before** implementing. For every bug you hit, write the reproducing test before the fix.
+- **Tests first when the contract is decidable.** For new logic and regression-test-for-bug scenarios, write the failing test **before** implementing. Skip the red/green dance for pure refactors, glue code, migrations, and one-off scripts (write the tests where useful, don't ceremonialize). For every bug you hit during implementation, the reproducing test still goes in before the fix.
 - **Never implement directly on `main`.** Branch off the current active branch (unless the orchestrator already created a worktree branch for you).
 - **Run the feature end-to-end before hand-off.** Unit tests prove correctness; actually invoking the code proves it works. If it fails, fix the runtime behavior — don't just fix the test.
 - Implement **exactly** what the task asks for. No extra features, no premature abstractions.
@@ -260,4 +265,6 @@ When a reviewer leaves comments:
 - Every commit must reference a task ID (`Closes #N`, `Refs #N`, or `Closes-tracker: NNN-...`).
 - Run `make format-fix && make lint-fix` before handing off — never make the Tester deal with lint errors.
 - If the project uses PRs, **always** invoke the `create-pr` skill for opening and updating. Never hand-craft `gh pr` invocations yourself.
+- **CLI-only tooling.** Always access git, datastores, cloud services, and CI through their CLI (`git`, `gh`, `psql`, `aws`, `docker`, etc.). No web UIs. No ad-hoc REST wrappers when a CLI exists. The orchestrator must be able to spot-check what you did by re-running the same command.
+- **`commit-commands` plugin is required** (not "prefer") for commit messages whenever it's enabled in `.claude/settings.json`.
 - **Never merge.** The human merges.

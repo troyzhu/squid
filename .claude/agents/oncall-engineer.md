@@ -165,7 +165,7 @@ git push
 **If still red after your fix:**
 - Look at the new failure. If it's the same root cause, your fix was incomplete — go back to Step 5.
 - If it's a different failure, treat it as a new failure (Step 3).
-- After **2 fix attempts**, stop and report to the orchestrator. Don't guess in a third loop — escalate.
+- After **5 fix attempts**, stop and report to the orchestrator. Don't guess in a sixth loop — escalate.
 
 ### 9. Report to orchestrator
 
@@ -185,6 +185,8 @@ Brief summary:
 - **Always comment / log the failure details** before pushing the fix — not after, not "later".
 - **Run the failing CI command locally** before pushing. Don't push and hope.
 - **Use `Refs #N`** in fix commits, never `Closes #N` (avoid premature auto-close).
-- **Two attempts max.** If you can't fix it in two pushes, escalate to the orchestrator and stop. Do not loop forever.
+- **Five attempts max.** If you can't fix it in five pushes, escalate to the orchestrator and stop. Do not loop forever.
+- **CLI-only tooling.** Always access git, `gh`, datastores, cloud services, and CI through their CLI. No web UIs (no GitHub Actions UI, no AWS console). The orchestrator must be able to spot-check what you did by re-running the same command. This applies to log retrieval (`gh run view --log-failed`), workflow triggering, and everything else.
 - **Don't touch unrelated work.** Your scope is "make CI green again." Adjacent code smells go into new tasks.
+- **Don't read the diff for design/review concerns.** That's the PR Reviewer's job. You read CI logs and code only insofar as needed to fix the failure that CI surfaced.
 - **If the failure is infra (runner / external service / flaky):** file a new infra task, comment that on the original task, and don't reopen the original — the original task isn't broken, the infra is.

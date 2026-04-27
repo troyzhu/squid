@@ -1,262 +1,379 @@
 ---
 name: night
-description: Run the full development loop — pick tasks, implement, QA, PM acceptance review, commit, push, repeat. Drives the agent team defined in docs/PROCESS.md. Trigger when the user wants to ship work autonomously across many tasks (overnight runs, batch implementation, draining the backlog), or says "/night".
+description: Run the full agent-team pipeline end-to-end for a single feature — branch + worktree, PM grooms a Tasks Plan, human approves the plan, inner SWE/Tester loop per task, PM acceptance, push, parallel On-Call (CI) + PR Reviewer (diff), squash, optional Self-Improve, hand the squashed PR to the human to merge. Trigger when the user wants to ship one whole feature unattended between two human gates, or says "/night".
 disable-model-invocation: true
-argument-hint: [batch-size]
+argument-hint: <feature-spec | path/to/spec.md | tracker-ref>
 ---
 
-# Night Mode — Unattended Development Loop
+# Night Mode — End-to-End Single-Feature Pipeline
 
-Run the full agent-team pipeline as defined in [`docs/PROCESS.md`](../../../docs/PROCESS.md). Number of tasks per parallel batch: `$ARGUMENTS` (default: `2`).
+Run the full agent-team pipeline as defined in [`docs/PROCESS.md`](../../../docs/PROCESS.md) for **one feature**, end-to-end.
 
-The lifecycle (canonical, see PROCESS.md): **PM grooms → SWE implements → Tester verifies → PM accepts → Commit → On-Call watches CI**.
+`$ARGUMENTS` is the feature spec — a free-form description, a path to a spec file (`docs/features/{slug}.md`), or a tracker reference. If empty, ask the human for one before proceeding.
 
 You are the **orchestrator** — a MANAGER, not an implementer. You do NOT write code, run tests, or review the diff yourself. You launch agents, enforce the gates, and verify each agent's report before forwarding it.
 
+The pipeline blocks on the human exactly **twice**, by design:
+
+1. **After PM produces the Tasks Plan** — human approves the plan before the inner loop runs.
+2. **At the very end** — human merges the squashed Feature PR.
+
+There is also one optional human prompt: "Run self-improve to capture corrections into CLAUDE.md? (y/N)". This runs only on yes.
+
+Everything else is automated. Failures route back into the inner loop as new rollup tasks rather than stopping the pipeline.
+
 **Critical rules** (from `docs/PROCESS.md`):
 
-- **Never rubber-stamp an agent's report.** When an agent says "PASS" or "ACCEPT", re-read the acceptance criteria and spot-check that the agent actually addressed each one. Common failure: agent writes a test but never runs it; AC says "verify runtime" but agent only ran lint. REJECT and re-launch with specific feedback about what was missed.
-- **False confidence is the worst outcome.** Never tell the user "it works" without firsthand evidence (actual test output, real logs, produced artifacts). "Tester reports PASS" is not firsthand evidence. If you can't confirm it yourself, say "Tester reports PASS but I haven't independently verified" — not "it works."
-- **Pipeline always moves forward.** If something needs user input, write it as `USER ACTION REQUIRED` in the task log and move on — never stop the loop.
-- **One agent per task.** For N parallel tasks, launch N separate agents. Never combine tasks into a single agent call.
+- **Never rubber-stamp an agent's report.** When an agent says "PASS" or "ACCEPT" or "NO BLOCKERS", re-read the spec and spot-check that the agent actually addressed each criterion. REJECT and re-launch with specific feedback if not.
+- **False confidence is the worst outcome.** Never tell the user "it works" without firsthand evidence. "Tester reports PASS" is not firsthand evidence.
+- **Pipeline always moves forward** between the two human gates. If something needs the user, write `USER ACTION REQUIRED` in the task log and continue. The cap-hit case is the one exception — when a retry cap is reached, surface and stop.
+- **One agent per task.** Never bundle multiple tasks into one agent call.
+- **The orchestrator never writes code, never merges, never touches the diff** beyond inspection (`git diff`, `git log`).
 
-Read `docs/PROCESS.md` first to confirm the active **tracker mode** (`file` or `gh`). All `gh issue` references below have a file-based equivalent — use the matching set.
+Read `docs/PROCESS.md` first to confirm the active **tracker mode** (`file` or `gh`).
 
 ---
 
-## Step 0 — Backlog grooming (parallel, background)
+## Step 0 — Resolve the feature spec
 
-Before picking tasks for implementation, find ungroomed ones and start grooming them in the background. Don't block the implementation loop on grooming.
+If `$ARGUMENTS` is empty: ask the human "What feature should I deliver tonight? (free-form description, path to a spec file, or tracker reference)" and wait for the response.
 
-**GitHub mode** — find issues missing acceptance criteria / BDD scenarios:
+Otherwise, identify the spec form:
+
+- **Path to a markdown file** (`docs/features/foo.md`, `tracker/NNN-foo.todo.md`) → `cat` it.
+- **Tracker reference** (`#42` in gh mode, `NNN-slug` in file mode) → load the existing record.
+- **Free-form text** → use as-is.
+
+Surface the resolved spec back to the human in one paragraph as confirmation, but do NOT block here — proceed.
+
+---
+
+## Step 1 — Create the feature branch + worktree
+
+The feature branch name is derived from the spec title — slugified, prefixed with `feat/`. Example: `feat/add-user-pagination`.
+
 ```bash
-gh issue list --state open --limit 50 \
-  --json number,title,labels,body \
-  --jq 'sort_by(.number)
-        | .[]
-        | select(.labels | map(.name) | (contains(["human"]) | not))
-        | select(.body | test("Acceptance Criteria"; "i") | not)
-        | "#\(.number) \(.title)"'
+# Confirm we're on main
+git rev-parse --abbrev-ref HEAD
+git pull
+
+# Create the feature branch in a worktree at ../{repo-name}-{slug}
+WORKTREE_PATH="$(git rev-parse --show-toplevel)/../$(basename $(git rev-parse --show-toplevel))-{slug}"
+git worktree add -b feat/{slug} "$WORKTREE_PATH" main
+cd "$WORKTREE_PATH"
 ```
 
-**File mode** — find `*.todo.md` files:
-```bash
-ls tracker/*.todo.md 2>/dev/null
-```
+For the rest of the run, all agent commands operate in this worktree path. Spell that out in every agent prompt: include `Working directory: {WORKTREE_PATH}` so launched agents don't get confused.
 
-For each ungroomed task, launch a PM agent in the **background** (`run_in_background: true`):
+If the worktree already exists (re-running `/night` after an aborted run), prompt the human: "Worktree exists at {path}. Reuse it (`r`) or recreate (`d`)?" — default to reuse.
+
+---
+
+## Step 2 — PM grooms the feature → Tasks Plan
+
+Launch ONE PM agent in **feature-level grooming** mode:
 
 ```
 Agent(
   subagent_type="product-manager",
-  run_in_background=true,
-  prompt="Groom task {ID}. Read docs/PROCESS.md and CLAUDE.md first. Follow Part 1 (Grooming) of your role definition. When done, the task should have a Scope, Acceptance Criteria, and BDD Test Scenarios."
+  prompt="""Feature-level grooming. Read docs/PROCESS.md and CLAUDE.md first. Follow Part 1A of your role definition.
+
+  Working directory: {WORKTREE_PATH}
+  Feature spec: {resolved spec from Step 0}
+
+  Decompose the feature into 3–8 ordered, independently-shippable tasks. Each task gets a full groomed spec (Scope, Acceptance Criteria, User Stories, Dependencies). Produce the Tasks Plan summary at tracker/feature-{slug}-plan.md (file mode) or as a pinned `feature-plan` issue (gh mode).
+
+  Hand back: the path to the Tasks Plan and a one-paragraph summary."""
 )
 ```
 
-Move on to Step 1 immediately. Already-groomed tasks are available now; newly-groomed ones will be picked up by later batches.
+Wait for completion. **Verify before forwarding to the human:**
+
+- The plan file/issue actually exists.
+- Each task in the plan has a groomed file/issue (don't take the PM's word for it — `ls tracker/*.groomed.md` or `gh issue list --label rollup-or-equivalent`).
+- Tasks are ordered (no later task is a prerequisite of an earlier one).
+
+If verification fails, re-launch the PM with the gap as concrete feedback.
 
 ---
 
-## Step 1 — Pick the next batch
+## Step 3 — HUMAN GATE #1: Approve the Tasks Plan
 
-**GitHub mode:**
-```bash
-gh issue list --state open --limit 50 \
-  --json number,title,labels \
-  --jq 'sort_by(.number) | .[] | "#\(.number) \(.title) [\(.labels | map(.name) | join(", "))]"'
+Surface the Tasks Plan to the human:
+
+```
+Feature: {title}
+Branch: feat/{slug} (worktree: {path})
+Plan: {path or PR URL}
+
+Tasks ({N}):
+1. {NNN-slug or #N} — {title}
+2. ...
+
+Open questions (if any): ...
+
+Approve to start the inner loop? (y / edit / cancel)
 ```
 
-**File mode:**
-```bash
-ls tracker/*.groomed.md 2>/dev/null | sort
-```
+**Wait for the human's response.** This is the only mid-pipeline blocking gate.
 
-Picking rules (see PROCESS.md for the full list):
+- `y` → proceed to Step 4.
+- `edit` → ask which tasks to add/remove/reorder; re-launch the PM with the human's feedback; loop back to Step 3 with the revised plan.
+- `cancel` → tear down the worktree (`git worktree remove`), report cancelled, stop.
 
-1. **Skip** tasks tagged `needs-grooming` (Step 0 will catch them).
-2. **Skip** tasks tagged `human` (waiting on manual verification).
-3. **Skip** tasks whose `Depends on:` references still-open tasks.
-4. **Pick lowest-numbered first** (lower = more foundational).
-5. Take `$ARGUMENTS` tasks (default 2).
-
-If no actionable tasks remain, report "No actionable tasks — backlog drained" and stop.
+If the human is unreachable (truly unattended run), this is the natural place to stop and wait — `/night` is **not** fully autonomous, by design. Surface the plan in the final message and end the session; the human resumes by re-invoking `/night` with the same spec (Step 1 will detect the existing worktree and reuse).
 
 ---
 
-## Step 1b — Create a visible todo list
+## Step 4 — Inner implementation loop
 
-Use `TaskCreate` to surface progress to the user. One task per pipeline step per issue, using the canonical subjects:
+For each task in the Tasks Plan, **in order**, run:
 
-- `[PM groom] issue #N` — only if grooming was needed
-- `[SWE] implement issue #N`
-- `[QA] verify issue #N` — blocked by SWE
-- `[PM accept] issue #N` — blocked by QA
-- `[Commit] issue #N` — blocked by PM accept
-- `[On-Call] check CI for batch` — blocked by all Commits in this batch
-- `[Pull next] pick {batch-size} issues from backlog` — blocked by On-Call
-
-Set up `blockedBy` dependencies explicitly. The `[Pull next]` task is **mandatory** — it's what keeps the loop running until the backlog is empty.
-
-This gives the user an inspectable progress widget — addressing the article's "no visibility into sub-agents" complaint.
-
----
-
-## Step 2 — Implement (parallel)
-
-Launch one SWE per task. **When >1 SWE in parallel, use `isolation: "worktree"`** so concurrent file writes don't overwrite each other.
+### 4a. SWE implements
 
 ```
 Agent(
   subagent_type="software-engineer",
-  isolation="worktree",      # only when running >1 in parallel
-  prompt="Implement task {ID}. Read docs/PROCESS.md and CLAUDE.md first. Follow your role definition. Write code AND tests. Run make format-fix && make lint-fix && make unit-tests until clean. DO NOT commit. Hand off to Tester when done. Append a SWE Report section to the task."
+  prompt="""Implement task {ID}. Read docs/PROCESS.md and CLAUDE.md first. Follow your role definition.
+
+  Working directory: {WORKTREE_PATH}
+  (Skip Step 3 of your role — branch already exists; you're in the worktree.)
+
+  Write code AND tests. Run make format-fix && make lint-fix && make pre-commit && make unit-tests until clean. DO NOT commit yet — Tester goes first. Append a SWE log entry."""
 )
 ```
 
-Wait for all SWEs in the batch to complete. If a SWE reports a hard blocker (e.g., dependency unavailable, spec ambiguity), skip the task, mark its todo as blocked, and continue with the rest of the batch.
-
----
-
-## Step 3 — QA (parallel)
-
-For each completed implementation, launch a Tester:
+### 4b. Tester verifies
 
 ```
 Agent(
   subagent_type="tester",
-  prompt="QA task {ID}. Read docs/PROCESS.md and CLAUDE.md first. The SWE wrote: {summary from SWE report}. Follow your role definition. Run make pre-commit && make unit-tests && make integration-tests. Verify every acceptance criterion with evidence. Append a QA Report section. Verdict: PASS or FAIL."
+  prompt="""QA task {ID}. Read docs/PROCESS.md and CLAUDE.md first. Follow your role definition — your headline duty is the e2e adversarial pass.
+
+  Working directory: {WORKTREE_PATH}
+  SWE summary: {SWE's hand-off message}
+
+  Run make pre-commit && make unit-tests && make integration-tests. Then run the e2e adversarial pass — happy path first, then 2–3 realistic break paths. Verify every AC with evidence. Append a Tester log entry. Verdict: PASS or FAIL."""
 )
 ```
 
-Wait for all Testers to complete.
+### 4c. Handle Tester verdict
 
----
+**Spot-check the report before accepting** — re-read the AC line by line, confirm evidence is real (test name, file:line, command output), confirm the e2e adversarial section actually attempted break paths.
 
-## Step 4 — Handle QA results
-
-For each task, **spot-check the QA report before accepting**:
-
-1. Re-read the task's acceptance criteria line by line.
-2. For each criterion the Tester marked PASS, check the evidence cited (test name, file:line, command output). If the evidence doesn't actually verify the criterion, **REJECT**.
-3. Red flags: 3-second "all pass" on a multi-step flow, criteria marked PASS with no evidence, runtime criteria (AC says "run the CLI") verified only by unit tests.
-
-Then:
-
-- **PASS (verified)** → mark QA todo `completed`; proceed to Step 5.
-- **FAIL**, or **PASS but rubber-stamped** → relay concrete feedback to the SWE:
+- **PASS (verified)** → move to the next task in the plan. When all tasks done, go to Step 5.
+- **FAIL** or **PASS-but-rubber-stamped** → relay concrete feedback to the SWE:
   ```
   Agent(
     subagent_type="software-engineer",
-    prompt="QA failed on task {ID}. Concrete feedback: {failed AC + fixes}. Apply the fixes. Re-run lint and tests until clean. Append a new log entry. DO NOT commit."
+    prompt="QA failed on task {ID}. Working directory: {WORKTREE_PATH}. Concrete feedback: {failed AC + break-path failures + fixes}. Apply the fixes, re-run the local QA loop. Append a new log entry. DO NOT commit."
   )
   ```
-  Re-run Step 3 (QA re-review) on just that task.
-- **After 2 QA failures** → skip the task, leave its todo blocked with a note in the batch summary, and continue with the rest of the batch.
+  Then re-run Step 4b on the same task.
 
----
+### 4d. Retry cap: Tester FAIL Max 5 per task
 
-## Step 5 — PM acceptance review (parallel)
+Track the FAIL count for the current task. If you hit **5 FAILs on the same task without a PASS**, stop the pipeline:
 
-For each task that passed QA, launch a PM in acceptance mode:
+- Mark the task blocked in the tracker.
+- Surface `USER ACTION REQUIRED` with the failing AC and the last Tester report.
+- End the session. Do not continue with later tasks — the foundation is broken.
 
-```
-Agent(
-  subagent_type="product-manager",
-  prompt="Acceptance review for task {ID} (Tester PASSED). Read docs/PROCESS.md and CLAUDE.md first. Follow Part 2 (Acceptance Review) of your role definition. Read the spec, read the code/copy/templates, walk through user journey. Verdict: ACCEPT or REJECT with specifics. Append a PM Acceptance section."
-)
-```
+The counter resets when the task being implemented changes (next task in plan, or a new rollup task from Step 6 / Step 9).
 
----
+### 4e. Per-task commit (after task PASS only)
 
-## Step 6 — Handle PM results
-
-Same scrutiny as QA: **don't rubber-stamp**. Verify the PM gave a concrete verdict ("I reviewed the evidence, user will be satisfied") and not a hand-wave ("ACCEPTED"). If the PM's verdict doesn't match the evidence, reject it back to the PM.
-
-- **ACCEPT (verified)** → mark PM todo `completed`; proceed to Step 7 (commit).
-- **REJECT**, or **ACCEPT but rubber-stamped** → relay the issue back to the SWE:
-  ```
-  Agent(
-    subagent_type="software-engineer",
-    prompt="PM rejected task {ID}. Concrete issues: {list}. Apply the fixes. Re-run lint + tests. Append a new log entry. Hand back to Tester (re-do Steps 3-5). DO NOT commit."
-  )
-  ```
-  Re-run Steps 3 → 5 on just that task.
-- **After 2 PM rejections** → skip, mark blocked with a note, continue.
-
----
-
-## Step 7 — Commit and push
-
-For each accepted task, hand back to the SWE to commit:
+Once the Tester PASSES a task, the SWE commits **just that task**:
 
 ```
 Agent(
   subagent_type="software-engineer",
-  prompt="Both gates passed for task {ID}. Commit and push per your role definition. Use specific files (no git add -A). Commit message ends with `Closes #N` (or `Refs #N` if the task has [HUMAN] criteria). File-mode: also git mv the tracker file to tracker/done/."
+  prompt="""Tester PASSED task {ID}. Working directory: {WORKTREE_PATH}. Commit per your role definition — `commit-commands` plugin required, specific files only, message ends with `Closes #N` (or `Refs #N` if [HUMAN] criteria, or `Closes-tracker: NNN-slug` in file mode). DO NOT push yet — push happens once for the whole feature after PM ACCEPT."""
 )
 ```
 
-If the project workflow requires PRs (rather than direct push to `main`), the SWE will invoke the `create-pr` skill instead.
+Note the commit lands on the feature branch in the worktree. No push yet.
 
-For tasks with `[HUMAN]` criteria:
-- Use `Refs #N` (not `Closes #N`).
-- GitHub mode: `gh issue edit {N} --add-label human`.
-- Comment listing criteria needing manual verification.
-- Do NOT close the task — leave it open for the user to verify.
+Continue with the next task. When all tasks in the current plan are done (and committed locally), proceed to Step 5.
 
 ---
 
-## Step 8 — On-Call CI check
+## Step 5 — PM acceptance review (whole feature)
 
-After **all** commits in the batch land, launch ONE On-Call agent for the whole batch:
+After every task in the plan has been committed locally, launch ONE PM in acceptance mode:
+
+```
+Agent(
+  subagent_type="product-manager",
+  prompt="""Acceptance review for feature {title}. Read docs/PROCESS.md and CLAUDE.md first. Follow Part 2 of your role definition.
+
+  Working directory: {WORKTREE_PATH}
+  Plan: {path}
+  All tasks completed locally — see git log on feat/{slug} for the commits.
+
+  Walk the feature from the user's perspective. Verdict: ACCEPT or REJECT. On REJECT, write ONE rollup task per Part 2's rules — never one ticket per issue."""
+)
+```
+
+**Spot-check** the PM's verdict:
+
+- ACCEPT must include concrete evidence references, not just "ACCEPTED".
+- Evidence must match the AC; if the PM ACCEPTs criteria the Tester didn't actually verify, treat as rubber-stamp and re-launch.
+
+---
+
+## Step 6 — Handle PM verdict
+
+- **ACCEPT (verified)** → proceed to Step 7 (push).
+- **REJECT** → the PM has filed a rollup task. **Append the rollup task to the end of the plan queue** and loop back to Step 4 with the rollup as the next task to implement. The Tester FAIL counter resets (rollup is a new task).
+- **Cap: PM REJECT Max 3 per feature.** If a 4th REJECT would be needed, stop the pipeline, surface `USER ACTION REQUIRED` with the latest rollup task content and the original feature spec, end the session.
+
+---
+
+## Step 7 — Push to git (open or update Feature PR)
+
+Hand to SWE to push and open/update the Feature PR via the `create-pr` skill:
+
+```
+Agent(
+  subagent_type="software-engineer",
+  prompt="""Feature {title} accepted. Working directory: {WORKTREE_PATH}. Push the feature branch (`git push -u origin feat/{slug}` if first push, else `git push`). Then invoke the `create-pr` skill to open or update the Feature PR. The PR description must summarize the feature and list each task by ID. Hand back the PR number."""
+)
+```
+
+Capture the PR number — you'll need it for Step 8.
+
+---
+
+## Step 8 — Parallel: On-Call (CI) + PR Reviewer (diff)
+
+Launch BOTH agents in **parallel** (one message, two `Agent` calls). They are independent — On-Call reads CI/CD only, PR Reviewer reads the diff only.
 
 ```
 Agent(
   subagent_type="oncall-engineer",
-  prompt="Check CI for the latest batch of pushes. Follow your role definition. If green, report success. If red, trace the failure to the responsible task ({list of task IDs in this batch}), reopen, fix, push with Refs #N, and verify green. Two fix attempts max."
+  prompt="""Watch CI for the latest push on feat/{slug} (PR #{N}). Working directory: {WORKTREE_PATH}. Follow your role definition. CI/CD only — do not read the diff for review. If green, report success. If red, trace, fix, push with `Refs #N`, re-verify. Five fix attempts max."""
+)
+
+Agent(
+  subagent_type="pr-reviewer",
+  prompt="""Review PR #{N} (branch: feat/{slug}). Working directory: {WORKTREE_PATH}. Read docs/PROCESS.md and CLAUDE.md first. Follow your role definition.
+
+  Read the entire diff (`git diff $(git merge-base HEAD origin/main)...HEAD`). Walk the four review dimensions. Tag every finding Blocker or Nit. Produce ONE rollup task if there are Blockers, or report `NO BLOCKERS` and append Nits to the PR description.
+
+  Do NOT read CI status. Do NOT comment on the PR. Do NOT merge."""
 )
 ```
 
-If On-Call reports it couldn't fix a failure in 2 attempts, escalate to the user and pause the loop.
+Wait for both to complete.
 
 ---
 
-## Step 9 — Repeat
+## Step 9 — Handle Step 8 verdicts
 
-Mark all completed tasks done in TaskList. Go back to Step 1 and pick the next batch. **Never stop voluntarily** — only stop when:
+Two independent verdicts. Both must clear before Squash.
 
-- Backlog is empty (Step 1 finds nothing actionable).
-- On-Call escalates an unfixable CI failure.
-- The user interrupts.
+### On-Call verdict
+
+- **Green** → On-Call's gate clears.
+- **Red, fixed by On-Call (push + green)** → On-Call's gate clears (the SWE fix landed; CI is green now).
+- **Red, On-Call hit Max 5** → stop the pipeline, surface `USER ACTION REQUIRED` with the last failure log.
+
+### PR Reviewer verdict
+
+- **NO BLOCKERS** → PR Reviewer's gate clears. Nits already appended to PR description.
+- **Blockers** (rollup task filed) → append the rollup to the plan queue, loop back to Step 4 with the rollup as the next task. After it lands and is committed, the SWE pushes again (Step 7), and Step 8 re-runs (re-launching both On-Call and PR Reviewer fresh on the new push).
+  - **Cap: PR Reviewer Max 3 per feature.** On the 4th would-be Blockers verdict, stop the pipeline.
+
+When both gates have cleared, proceed to Step 10.
 
 ---
 
-## Batch Summary
+## Step 10 — Squash commits
 
-After each batch, report a markdown table to the user:
+You squash the per-task commits into one squashed commit on the feature branch, preserving the PR description.
 
-```markdown
-## Batch N Complete
+```bash
+# In the worktree:
+BASE=$(git merge-base HEAD origin/main)
+git reset --soft $BASE
+git commit -m "$(cat <<'EOF'
+{Feature title}
 
-| Task | Title | SWE | QA | PM | Commit | CI |
-|------|-------|-----|----|----|--------|----|
-| #42  | Add pagination | DONE | PASS | ACCEPT | abc1234 | green |
-| #43  | Refactor auth  | DONE | PASS | ACCEPT | def5678 | green |
+{1-paragraph summary, derived from the PR description}
 
-Tests: {N} unit + {M} integration, all green.
-Next: picking batch N+1 ({K} groomed tasks remaining).
+Tasks:
+- #{N1} {title}
+- #{N2} {title}
+...
+EOF
+)"
+git push --force-with-lease origin feat/{slug}
 ```
 
-If anything was skipped, name it and the reason.
+`--force-with-lease` (not `--force`) so we abort if the remote moved unexpectedly.
+
+Re-invoke `create-pr` to refresh the PR description against the squashed commit:
+
+```
+Agent(
+  subagent_type="software-engineer",
+  prompt="Squash done. Working directory: {WORKTREE_PATH}. Re-invoke the `create-pr` skill to update PR #{N}'s description against the squashed commit (preserve the task list and any Nits already appended)."
+)
+```
 
 ---
 
-## Notes
+## Step 11 — Ask the human about Self-Improve
 
-- **Parallel SWEs require `isolation: "worktree"`** — without it, two SWEs working in the same checkout will overwrite each other's edits. This is a common silent failure.
-- **Don't skip Step 0 (background grooming)** — it's what keeps the pipeline fed without manual prompting.
-- **Don't skip Step 8 (On-Call)** — pushing without checking CI defeats the whole point of the gate.
-- **Don't shortcut the gates** — even if you (the orchestrator) "know" a task is fine, run the SWE → Tester → PM sequence. The whole point is that the agent who writes code does not also decide whether it is correct.
-- **The `commit-commands` plugin** (if enabled in `.claude/settings.json`) should be used by the SWE for commit messages so they stay consistent.
-- **The `self-improve` skill** can be invoked at end of long runs to capture corrections back into `docs/PROCESS.md` or memory.
+Prompt the human:
+
+```
+Feature {title} is squashed and ready to merge: {PR URL}
+
+Optional: Run self-improve to capture corrections from this run into CLAUDE.md? (y/N)
+```
+
+- **N (default)** → skip to Step 12.
+- **y** → invoke the `self-improve` skill on this run; it produces a proposed CLAUDE.md update which the human reviews and accepts/rejects via the skill's normal flow. When the skill returns, proceed to Step 12.
+
+Do NOT run self-improve preemptively. Only on `y`.
+
+---
+
+## Step 12 — Final summary; hand to human
+
+Report a single markdown block to the human:
+
+```markdown
+## /night complete — {Feature title}
+
+**PR:** {URL} (squashed, ready to merge)
+**Branch:** feat/{slug}
+**Worktree:** {path}
+
+**Tasks delivered ({N}):**
+| # | Title | Tester | PM | PR Reviewer | CI |
+|---|-------|--------|----|-------------|----|
+| #{N1} | ... | PASS | ACCEPT | NO BLOCKERS | green |
+| ...   | ... | ...  | ...    | ...         | ... |
+
+**Rollup tasks ({M}):** {list, or "none"}
+**Nits in PR description:** {count, or "none"}
+**Self-Improve:** {ran / skipped}
+
+Next: review the PR and merge when satisfied. Worktree stays in place; remove with `git worktree remove {path}` after merge.
+```
+
+The human merges the PR. `/night` ends here.
+
+---
+
+## Notes on shape
+
+- **No batching, no parallelism within a feature.** The diagram is sequential: one task at a time. Parallelism (if any) lives at the feature level — invoke `/night` twice in two terminals if you want two features in flight.
+- **The two human gates are by design.** Plan approval prevents the agent team from spending hours on a wrong-shaped feature; merge approval keeps the human in control of `main`.
+- **Rollups go to the END of the queue, not interleaved.** A PM rollup or PR Reviewer rollup is implemented after all original-plan tasks are done — it's a "fix everything we missed" coordinated pass, not a per-issue patch.
+- **The `commit-commands` plugin and `create-pr` skill are required, not optional.** SWE invokes them. The orchestrator does not hand-craft commit messages or `gh pr` invocations.
+- **Caps stop the pipeline.** Tester FAIL Max 5 (per task), PM REJECT Max 3, PR Reviewer Max 3, On-Call Max 5. When a cap fires, surface `USER ACTION REQUIRED` and stop. Don't loop forever.
+- **Self-Improve is human-gated, end-of-run only.** Don't propose updates mid-run; don't run the skill before asking.

@@ -1,17 +1,17 @@
 ---
 name: day
-description: Run a single task through a lean, human-supervised pipeline — SWE implements, Tester verifies, you review and commit. No PM grooming, no PM acceptance gate, no On-Call. Trigger when the user wants to ship one task under active supervision (daytime work, fast iteration, human in the loop), or says "/day".
+description: Run a single task through the inner SWE↔Tester loop with the human supervising in real time. SWE implements, Tester verifies (including the e2e adversarial pass), you review the diff and commit. No PM grooming, no PM acceptance, no PR Reviewer, no On-Call. Trigger when the user wants to ship one task under active supervision, or says "/day".
 disable-model-invocation: true
 argument-hint: [task-ref-or-description]
 ---
 
-# Day Mode — Supervised Single-Task Loop
+# Day Mode — Supervised Single-Task Inner Loop
 
-A lean counterpart to [`/night`](../night/SKILL.md). One task, serial pipeline, human commits at the end.
+A lean counterpart to [`/night`](../night/SKILL.md). `/day` is the **same inner SWE↔Tester loop** that `/night` runs internally per task — but standalone, with the human in the human's seat for everything around it (no PM grooming, no PM acceptance, no PR Reviewer, no On-Call).
 
 **Scope:** `$ARGUMENTS` is either a tracker reference (`NNN-slug` or `#N`) or a free-form task description. If empty, ask the human for one before proceeding.
 
-**Pipeline:** `SWE implements → Tester verifies → report to human → human reviews & commits`. No PM grooming, no PM acceptance gate, no On-Call. The human plays both the PM and On-Call roles in real time.
+**Pipeline:** `SWE implements → Tester verifies (suite + e2e adversarial pass) → report to human → human reviews & commits`. The human plays the PM, PR Reviewer, and On-Call roles in real time by reading the diff and watching CI themselves.
 
 You are the **orchestrator** — a MANAGER, not an implementer. You do NOT write code, run tests, or review the diff yourself. You launch agents, enforce the Tester gate, and hand the result back to the human.
 
@@ -71,7 +71,7 @@ If the SWE reports a hard blocker (ambiguous spec, missing dependency), surface 
 ```
 Agent(
   subagent_type="tester",
-  prompt="QA task {ID or description}. Read docs/PROCESS.md and CLAUDE.md first. The SWE wrote: {summary from SWE report}. Follow your role definition. Run make pre-commit && make unit-tests && make integration-tests. Verify every acceptance criterion with evidence. Append a QA Report section. Verdict: PASS or FAIL."
+  prompt="QA task {ID or description}. Read docs/PROCESS.md and CLAUDE.md first. The SWE wrote: {summary from SWE report}. Follow your role definition — your headline duty is the e2e adversarial pass. Run make pre-commit && make unit-tests && make integration-tests, then run the e2e adversarial pass (happy path + 2–3 realistic break paths). Verify every acceptance criterion with evidence. Append a QA Report section. Verdict: PASS or FAIL."
 )
 ```
 
@@ -130,7 +130,8 @@ Mark all `TaskList` items completed once the report is delivered. Do **not** pic
 
 ## Notes
 
-- **Day mode is not a subset of `/night`.** It skips PM grooming and PM acceptance **on purpose** — the human is supervising and can catch the same issues in real time by reading the diff and the Tester's report. The Tester gate is the one automated check that's genuinely hard for a human to replicate (runs the full suite, cross-references every AC) and is therefore kept.
+- **Day mode is not a subset of `/night`.** Both modes use the same SWE and Tester agents and the same inner loop, but `/night` chains it inside a longer pipeline (PM groom + acceptance + PR Reviewer + On-Call + squash). `/day` skips all of that on purpose — the human supervises and plays those roles in real time. The Tester gate stays automated because it's the one check that's genuinely hard for a human to replicate (full suite + every AC + e2e adversarial pass).
+- **No retry caps applied here.** `/day` retries until the human says stop. `/night`'s Tester FAIL Max 5 cap doesn't apply because the human is in the loop and can intervene any time.
 - **If the task turns out to need design input** (ambiguous scope, multiple plausible approaches), stop and ask the human rather than letting the SWE guess. In `/night`, PM grooming absorbs that ambiguity; in `/day`, the human does.
-- **The `commit-commands` plugin** (if enabled) is the recommended tool for the human's commit step.
+- **The `commit-commands` plugin** (if enabled) is the recommended tool for the human's commit step — same as in `/night`.
 - **Don't auto-create tracker files** for free-form tasks. If the human wants a log entry, they'll create one. Keeping day mode ephemeral by default is the point.
