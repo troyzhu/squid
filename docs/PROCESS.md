@@ -1,271 +1,304 @@
 # Development Process
 
-This document defines the agent-team workflow for this project. It is the **single source of truth** for the pipeline. Every agent (PM, SWE, Tester, On-Call) reads this file before acting, and the `/night` and `/day` skills drive the loops described here.
+This document defines the agent-team workflow for this project. It is the **single source of truth** for the pipeline. Every agent (PM, SWE, Tester, PR Reviewer, On-Call) reads this file before acting, and the `/night` and `/day` skills drive the loops described here.
 
 ## Modes
 
 The agent team ships with two entry points:
 
-| Mode | Entry | Gates active | Commits? | When to use |
-|---|---|---|---|---|
-| Night | `/night [batch-size]` | PM-groom, Tester, PM-accept, On-Call CI | Yes — agent commits | Unattended batch runs, draining the backlog, overnight work |
-| Day | `/day [task]` | Tester only | No — human commits | Supervised single-task work, fast iteration, human in the loop |
+| Mode | Entry | Scope | Gates active | Commits? | When to use |
+|---|---|---|---|---|---|
+| Night | `/night [feature-spec]` | One feature, end-to-end | PM groom + human-approve plan, Tester, PM accept, Push, On-Call (CI), PR Reviewer (diff), Squash, optional Self-Improve | Yes — agent commits + pushes; **human merges PR** | Unattended end-to-end delivery of a single feature |
+| Day | `/day [task]` | One task, supervised | Tester only | No — human commits | On-demand single-task work, fast iteration, human in the loop |
 
-**Night mode** runs the full pipeline described below. It's engineered for unattended runs: the PM absorbs spec ambiguity up front (grooming) and catches user-experience regressions at the end (acceptance); On-Call absorbs CI regressions after push. Parallel batches, worktree isolation, and rubber-stamp spot-checks keep the loop honest with no human present.
+**Night mode** runs the whole feature-level pipeline described below. It blocks on the human exactly twice by design: once after the PM produces the Tasks Plan (approve the plan), and once at the end (merge the squashed PR). Every other gate is automated; failures route back into the inner loop as new rollup tasks rather than stopping the pipeline.
 
-**Day mode** is the lean counterpart. The human is supervising in real time and plays the PM and On-Call roles themselves — so those stages are skipped. Only the Tester gate remains automated (it's the one check that's genuinely hard for a human to replicate, since it runs the whole suite and cross-references every AC). Day mode handles one task per invocation, does not commit, and hands the uncommitted diff back to the human for review. Everything else — agent role definitions, tracker format, Definition of Done, and the false-confidence rules — is shared between the two modes.
+**Day mode** is the lean inner loop: SWE implements, Tester verifies, human commits. No PM grooming, no PM acceptance, no PR Reviewer, no On-Call. Use it for the kinds of changes you'd otherwise type by hand — the Tester gate is the one automated check that's hard for a human to replicate (full suite + every AC + e2e adversarial pass).
 
 ## Lifecycle (night mode)
 
-Every night-mode task moves through this sequence:
-
 ```
-PM grooms  →  SWE implements  →  Tester verifies  →  PM accepts  →  Commit & push  →  On-Call watches CI
-(raw spec)    (code + tests,     (runs all tests,    (user POV     (only after PM    (fixes failures,
-              uncommitted)        evidence-based)     review)        accepts)          re-runs CI)
+Feature raw spec
+    │
+    ▼
+Orchestrator creates feature branch + worktree
+    │
+    ▼
+PM grooms the feature → Tasks Plan (ordered list of groomed tasks)
+    │
+    ▼
+HUMAN APPROVES the Tasks Plan         ← blocking gate #1
+    │
+    ▼
+Inner implementation loop, per task in order:
+    SWE implements → Tester verifies → (FAIL → SWE; loop, Max 5)
+    │
+    ▼
+All tasks done in this round
+    │
+    ▼
+PM acceptance review (whole feature, user POV)
+    │
+    ├── REJECT → PM writes ONE rollup task with all issues → back to inner loop (Max 3)
+    │
+    └── ACCEPT
+        │
+        ▼
+    Push to git (open or update Feature PR via `create-pr`)
+        │
+        ├──► On-Call (CI/CD only)
+        │       └── Fail → SWE fix → loop (Max 5)
+        │
+        └──► PR Reviewer (git diff only)
+                └── Blockers → write ONE rollup task → back to inner loop (Max 3)
+    │
+    ▼
+Both gates green
+    │
+    ▼
+Orchestrator squashes feature-branch commits into one commit on the feature branch
+    │
+    ▼
+Ask human: "Run self-improve to capture corrections into CLAUDE.md?"
+    │
+    ├── Yes → Self-Improve runs → produces a CLAUDE.md update proposal → human accepts/rejects
+    │
+    └── No → skip
+    │
+    ▼
+Hand the squashed Feature PR to the human
+    │
+    ▼
+HUMAN MERGES the Feature PR          ← blocking gate #2
 ```
 
-Day mode collapses the sequence to `SWE implements → Tester verifies → human reviews and commits`.
+Day mode collapses to: `SWE implements → Tester verifies → human reviews and commits`.
 
 ## Agents
 
-Four sub-agents plus the orchestrator (the top-level Claude Code session).
+Five sub-agents plus the orchestrator (the top-level Claude Code session).
 
 | Agent | File | Role |
 |---|---|---|
-| Orchestrator | `CLAUDE.md` + `.claude/skills/night/SKILL.md` / `.claude/skills/day/SKILL.md` | Picks tasks, launches agents, enforces the pipeline. Never writes code itself. |
-| Product Manager | `.claude/agents/product-manager.md` | Grooms raw tasks into specs (start) + user-perspective acceptance review (end) |
-| Software Engineer | `.claude/agents/software-engineer.md` | Implements code + tests; does NOT commit until Tester PASS |
-| Tester | `.claude/agents/tester.md` | Runs the full suite; verifies every acceptance criterion with evidence; reports PASS/FAIL |
-| On-Call Engineer | `.claude/agents/oncall-engineer.md` | Monitors CI/CD after push; reopens, fixes, and closes failures |
+| Orchestrator | `CLAUDE.md` + `.claude/skills/night/SKILL.md` / `.claude/skills/day/SKILL.md` | Drives the pipeline; never writes code itself. |
+| Product Manager | `.claude/agents/product-manager.md` | Grooms a feature into a Tasks Plan; user-perspective acceptance review at the end of the inner loop. |
+| Software Engineer | `.claude/agents/software-engineer.md` | Implements code + tests; commits only after Tester PASS + PM ACCEPT. |
+| Tester | `.claude/agents/tester.md` | Runs the full suite; verifies every AC with evidence; **headline duty: e2e adversarial QA — break the feature from multiple user perspectives**. |
+| PR Reviewer | `.claude/agents/pr-reviewer.md` | Reads the git diff after push. Narrow performance review (hot path / asymptotic / material framework underuse only), clean code, untested code, standards. Produces a rollup task with Blockers + Nits. Never reads CI, never merges. |
+| On-Call Engineer | `.claude/agents/oncall-engineer.md` | Watches CI/CD after push. On red, traces to a task, fixes, pushes (`Refs #N`), confirms green. CI/CD-only — does not read the diff. |
+
+## Retry Caps
+
+Hard caps. When a cap is hit, the orchestrator stops the pipeline and surfaces a `USER ACTION REQUIRED` summary.
+
+| Loop | Cap | Counter resets when |
+|---|---|---|
+| Tester FAIL → SWE fix → re-test | **5** | The task being implemented changes (next task in Plan, or a new rollup task) |
+| PM REJECT → SWE fix (rollup task) | **3** | Per feature |
+| PR Reviewer Blockers → SWE fix (rollup task) | **3** | Per feature |
+| On-Call CI Fail → SWE fix → re-push | **5** | Per push attempt |
+
+## Severity Rule (PR Reviewer)
+
+The PR Reviewer tags every finding as Blocker or Nit. Severity decides what the orchestrator does with it.
+
+| Severity | Definition | Outcome |
+|---|---|---|
+| **Blocker** | Real defect: bug, security issue, dead/duplicate code being shipped, untested non-trivial logic, hot-path performance regression, material framework underuse, standards violation that would fail review at any team. | Goes into the rollup task body; the rollup task loops the SWE. Pipeline does not advance to Squash until zero Blockers. |
+| **Nit** | Subjective preference, micro-optimization on a non-hot path, naming taste, doc polish, suggestion-not-requirement. | Goes into the same rollup task under a Nits section AND appended to the PR description (so the human merger sees them) — but **does NOT block the pipeline**. |
+
+If the rollup contains zero Blockers (only Nits), the PR Reviewer reports `NO BLOCKERS` and the pipeline advances. The PR Reviewer never blocks on style preferences.
+
+The performance review is **narrow**: hot path, concrete asymptotic problem, or material framework underuse. It does NOT over-engineer in advance, micro-optimize, or worry about one-off scripts.
+
+## Branch Lifecycle
+
+| Step | Who | What |
+|---|---|---|
+| Create feature branch + worktree | Orchestrator (`/night` Step 1) | New branch off `main`, isolated worktree |
+| Commit per task | SWE (after Tester PASS + PM ACCEPT) | One commit per task, references the task |
+| Squash before merge | Orchestrator (after On-Call green + PR Reviewer no-blockers) | Single squashed commit on the feature branch; PR description preserved |
+| Merge to `main` | **Human** | The merge button is the human's, always |
+
+**The orchestrator never merges.** It pushes, squashes, and asks the human to merge.
+
+## CLI-Only Tooling Rule
+
+All agents that touch git, datastores, cloud services, or CI **must** use the relevant CLI (`git`, `gh`, `psql`, `aws`, `docker`, etc.). No web UIs, no ad-hoc REST wrappers when a CLI exists.
+
+Reasons:
+1. CLIs are scriptable and reproducible — agents leave a trail the orchestrator can verify.
+2. CLIs version with the project (locked deps); web UIs drift.
+3. The orchestrator can spot-check by re-running the same command.
+
+Applies to: SWE, On-Call, Tester (running suites), PR Reviewer (reading diff/tracker), PM (reading tracker).
 
 ## Responsibility Model
 
-Every role owns their deliverable. Quality is not centralized — it is distributed across the team.
+Every role owns their deliverable. Quality is distributed across the team.
 
 | Role | Owns | Accountable For |
 |---|---|---|
-| PM | The whole feature — UX, functionality, quality | Ensuring the feature actually works as the user expects. If PM says "accepted" and the user finds it broken, that's a PM failure. The PM is the user's last line of defense. |
-| SWE | Code correctness, tests | Writing code that works and tests that prove it. If the Tester finds bugs, that's an SWE failure. |
-| Tester | Verification, evidence | Providing proof that things work — not claims. If the Tester says "PASS" without running the test, that's a Tester failure. |
-| Orchestrator | The team | Managing the pipeline and verifying each agent did their job. If an agent cuts corners and the orchestrator accepts it, that's an orchestrator failure. |
-| On-Call | Pipeline health after push | Catching and fixing CI breakages. If a red pipeline sits red and unattended, that's an On-Call failure. |
+| PM | The whole feature — UX, scope, quality | The user's last line of defense. If PM ACCEPTS and the user finds it broken, that's a PM failure. |
+| SWE | Code correctness, tests, regression coverage | If the Tester finds bugs, that's an SWE failure. |
+| Tester | Verification, evidence, e2e QA-style break-it testing | If Tester says "PASS" without running the test or without trying realistic break paths, that's a Tester failure. |
+| PR Reviewer | Diff quality | If a Blocker-grade defect lands and the PR Reviewer didn't flag it, that's a PR Reviewer failure. |
+| On-Call | Pipeline health after push | If a red pipeline sits red, that's an On-Call failure. |
+| Orchestrator | The team | Verifying each agent's report before forwarding it. If an agent cuts corners and the orchestrator accepts it, that's an orchestrator failure. |
 
-**The PM owns the user experience.** The PM is the user's advocate. When accepting a deliverable, the PM must verify the feature works from the user's perspective — not just that code was written and tests pass. The PM should:
+**The PM owns the user experience.** When accepting a deliverable, the PM verifies the feature works from the user's perspective — actual output, UI, logs — not just that code exists and tests pass.
 
-- Verify actual output / UI matches what the user asked for.
-- Check test output, logs, and any generated artifacts — not just agent claims.
-- Reject if the deliverable doesn't meet user expectations.
-- Think "if the user checks this right now, will they be satisfied?"
-
-**The orchestrator is a MANAGER, not an implementer.** The orchestrator NEVER writes or modifies code. It only touches tracker files, task panel items, and git commits (after PM accepts). Writing code, running tests, reviewing the diff — all of that belongs to the sub-agents.
+**The orchestrator is a MANAGER, not an implementer.** The orchestrator NEVER writes or modifies code. It launches agents, enforces gates, verifies reports.
 
 ## False Confidence Is the Worst Outcome
 
-The single worst thing the orchestrator can do is tell the user "it works" when it doesn't. This destroys trust. Four rules to prevent it:
+The single worst thing the orchestrator can do is tell the user "it works" when it doesn't.
 
-1. **Never say "it works" unless you have firsthand evidence.** An agent saying "PASS" is not firsthand evidence. Actual test output showing real data, logs showing real requests, artifacts produced by the code — that is evidence.
-2. **If you're not sure, say you're not sure.** "The Tester reports PASS but I haven't independently verified" is always better than "it works." Honesty about uncertainty is valued. False certainty is not.
-3. **If something contradicts user experience, the user is right.** The user is testing the real app. If they say it's broken, it's broken — regardless of what any test or agent claims. Investigate why the test passed when the feature is broken.
-4. **Treat every "it works" claim as a promise.** Before making it, ask yourself: "If the user checks right now, will it actually work?" If you can't answer yes with evidence, don't make the claim.
+1. **Never say "it works" without firsthand evidence.** An agent saying "PASS" is not firsthand evidence. Test output, logs, and produced artifacts are.
+2. **If you're not sure, say so.** "Tester reports PASS but I haven't independently verified" beats false certainty.
+3. **If something contradicts user experience, the user is right.** Investigate why the test passed when the feature is broken.
+4. **Treat every "it works" claim as a promise.** Before making it, ask: "If the user checks right now, will it work?"
 
-The orchestrator must verify each agent's results before forwarding them. When the Tester or PM reports back:
+The orchestrator must verify each agent's report:
 
-1. Re-read the task's acceptance criteria line by line.
-2. Check each criterion against the agent's report — did the agent actually address it, or just say "tests pass"?
-3. **Reject and re-launch if any criterion was skipped** — with specific instructions about what was missed.
+1. Re-read the AC line by line.
+2. Check each criterion against the agent's report.
+3. **REJECT and re-launch if any criterion was skipped** — with specific instructions about what was missed.
 
-Common failures to watch for:
-
-- AC says "run e2e test" → agent wrote the test file but never ran it. **REJECT.**
+Common failures:
+- AC says "run e2e" → agent wrote the test but never ran it. **REJECT.**
 - AC says "verify CLI output" → agent only ran unit tests. **REJECT.**
 - AC says "no regressions in module X" → agent only ran new tests. **REJECT.**
-- AC says "logs show correct values" → agent checked that the log call compiles. **REJECT.**
 
 "Tests pass" is NEVER sufficient if the AC requires runtime or visual verification.
 
 ## Pipeline Always Moves Forward
 
-- **NEVER wait for user input.** The pipeline runs autonomously. If something needs the user (configuring a secret, testing on their machine, confirming a deployment), write it as a `USER ACTION REQUIRED` entry in the task file and move on to the next task. Do not stop the pipeline.
-- **NEVER block on dependencies within a batch.** If task A is groomed but task B is still grooming, launch the SWE for A immediately. Each task's pipeline is independent — launch agents as soon as their predecessor step completes, regardless of other tasks in the batch.
-- **Always queue a "pick next" task.** When starting a batch, immediately create a `[Pull next]` task panel item blocked on the current batch's commit. The loop stops only when the backlog is empty, not after one batch.
-- **One agent per task.** When working on N tasks in parallel, launch N separate agents — never combine multiple tasks into a single agent call.
+Between its two human gates, `/night` runs autonomously:
+
+- **NEVER wait for additional user input** between gates. Write blockers as `USER ACTION REQUIRED` in the task log and continue.
+- **Never silently skip.** If a task can't be completed, file it as a follow-up and surface it in the final summary.
+- **One agent per task.** When fanning out, launch N separate agents — never combine multiple tasks into one agent call.
 
 ## Orchestrator Commit Rules
 
-- Commit code ONLY after the PM accepts.
-- The orchestrator does not `git add` arbitrary file trees — the SWE stages specific files, then the orchestrator commits.
-- The commit message ends with `Closes #N` (issue) or moves the tracker file to `done/` in the same commit.
-- If the SWE's work includes `[HUMAN]` acceptance criteria: use `Refs #N`, add the `human` label / note, do NOT close the task.
+- The SWE commits per task (specific files only, never `git add -A` / `git add .`); each commit references the task ID.
+- The SWE pushes to the feature branch (or invokes `create-pr`) after PM ACCEPT.
+- After On-Call green AND PR Reviewer no-blockers, the **orchestrator** squashes the per-task commits into one squashed commit on the feature branch (e.g. `git reset --soft <merge-base> && git commit`), preserving the PR description.
+- The orchestrator never merges to `main`.
 
 ## Definition of Done
 
-"Done" has a specific meaning at each stage. Each role has concrete checkboxes.
-
 ### SWE Done
 
-- [ ] Code follows existing patterns (see `CLAUDE.md`).
-- [ ] Unit tests written and passing — **actual test output appended to the task log**.
-- [ ] Format + lint clean (`make format-check && make lint-check`) — output appended to log.
-- [ ] For any runtime behavior: the code was actually exercised (CLI invoked, service started, endpoint called) — output appended to log.
-- [ ] For bug fixes: TDD — a failing regression test was added FIRST, confirmed to fail, then the fix, then confirmed to pass. Both outputs appended to log.
-- [ ] If a verification step couldn't be completed, explicitly say `NOT RUN — reason` (never silently skip).
+- [ ] Code follows existing patterns (`CLAUDE.md`).
+- [ ] Tests written and passing — actual output appended to the task log.
+- [ ] Format + lint clean (`make format-fix && make lint-fix && make format-check && make lint-check && make pre-commit`) — output appended.
+- [ ] For runtime behavior: actually exercised (CLI invoked, service started, endpoint called) — output appended.
+- [ ] For bug fixes: regression test added FIRST, confirmed red, then fixed, then confirmed green.
+- [ ] TDD red/green when the contract is **decidable** (new logic; regression test for a known bug). NOT required for refactors, glue code, migrations, or one-off scripts.
+- [ ] Any verification that couldn't run: `NOT RUN — reason` (never silently skip).
+- [ ] All git/datastore/cloud/CI access via CLI.
+- [ ] Commit via the `commit-commands` plugin (required, not optional, when present).
 
 "It compiles" is NOT done. "I ran it, here's the output" IS done.
 
 ### Tester Done
 
-- [ ] Every acceptance criterion walked through and marked PASS / FAIL with evidence (command output, file:line, artifact path).
-- [ ] Full suite run (`make unit-tests`, integration if relevant) — output appended to log.
-- [ ] Any SWE `NOT RUN` items: either run them now or explain why they can't run.
-- [ ] Any suspicious results investigated (a 3-second pass on a multi-step flow is a red flag — check what was actually executed).
+- [ ] Every acceptance criterion walked through and marked PASS / FAIL with evidence.
+- [ ] Full suite run (`make pre-commit && make unit-tests && make integration-tests`) — output appended.
+- [ ] **E2E QA-style break-it pass**: ran the feature the way users will (CLI / HTTP / UI), tried at least 2–3 realistic break paths (empty input, malformed input, large input, concurrent invocation, etc.), recorded what happened. **This is the headline duty, not a formality.**
+- [ ] Any SWE `NOT RUN` items: either run them now, or explain why not.
+- [ ] Suspicious results investigated (a 3-second pass on a multi-step flow is a red flag).
 - [ ] Verdict: PASS or FAIL, with reasons.
 
-"I read the diff and it looks right" is NOT done. "I ran every test, walked every AC, here's the evidence" IS done.
+"I read the diff and it looks right" is NOT done. "I ran every test, walked every AC, tried to break it, here's the evidence" IS done.
 
-### PM Done
+### PM Done (acceptance)
 
-- [ ] Reviewed the Tester's evidence — read every log entry, check artifact paths.
+- [ ] Reviewed the Tester's evidence.
 - [ ] Verified each user story has a corresponding test that passed.
-- [ ] Walked through the feature from the user's perspective.
-- [ ] Any silently-dropped scope: filed as a new task and linked.
-- [ ] Verdict: "If the user checks this right now, they will be satisfied" — yes or no?
+- [ ] Walked the feature from the user's perspective.
+- [ ] Silently-dropped scope: filed as a new task and linked.
+- [ ] On REJECT: produced ONE rollup task containing **all** issues (file, expected, actual, suggested fix) — not separate tickets per issue.
+- [ ] Verdict: "If the user checks this right now, they will be satisfied" — yes or no.
 
 "QA said PASS" is NOT done. "I reviewed the evidence, I guarantee user satisfaction" IS done.
+
+### PR Reviewer Done
+
+- [ ] Read the entire diff (every file in `git diff $(git merge-base HEAD origin/main)...HEAD`).
+- [ ] Tagged every finding as Blocker or Nit (per Severity Rule).
+- [ ] Performance review stayed within the narrow scope (hot path / asymptotic / material framework underuse).
+- [ ] Produced ONE rollup task with all findings, OR reported `NO BLOCKERS`.
+- [ ] Did NOT comment on the PR, did NOT merge, did NOT touch CI.
+
+### On-Call Done
+
+- [ ] Pulled the failing CI run and identified the responsible task from the commit message.
+- [ ] Reproduced the failure locally (same command CI ran).
+- [ ] Fixed the root cause, not the symptom.
+- [ ] Pushed the fix with `Refs #N` (never `Closes #N`).
+- [ ] Confirmed CI is green after the fix.
+- [ ] All access (git, gh, etc.) via CLI.
 
 ### Orchestrator Done
 
 - [ ] PM gave a concrete verdict with evidence references (not just "ACCEPTED").
-- [ ] PM's evidence matches the acceptance criteria (orchestrator spot-checks).
-- [ ] No contradictions with user feedback.
-- [ ] Commit only after all the above.
+- [ ] PM's evidence matches the AC (orchestrator spot-checks).
+- [ ] Squash commit only after On-Call green AND PR Reviewer no-blockers.
+- [ ] Asked the human about Self-Improve at the end (not before).
+- [ ] Never merged to `main`.
 
 ## No Silent Descoping
 
 The PM must NEVER silently drop acceptance criteria. If something is too large or out of scope:
 
-1. Call out what is being descoped and why.
-2. File a new `tracker/NNN-{slug}.todo.md` (or GitHub issue) for each descoped item.
-3. The descoped items must reference the original task so the trail is preserved.
+1. Call out what is being descoped and why (in the Tasks Plan or in the acceptance review).
+2. File a new task for each descoped item.
+3. The descoped items must reference the original feature so the trail is preserved.
 
 ## Issue Log (single source of truth)
 
-Every agent MUST append log entries to the task file as they work. The task file is the single source of truth for what happened.
-
-Each agent appends to a `## Log` section with timestamped entries:
+Every agent appends timestamped entries to the task's `## Log` section as they work.
 
 ```markdown
 ## Log
 
-### [PM] 2026-04-20 12:30 — Grooming
-- Researched related code: {file paths}
-- Identified dependencies: #N1, #N2
-- Wrote 6 acceptance criteria, 4 user stories
+### [PM] 2026-04-27 12:30 — Grooming
+...
 
-### [SWE] 2026-04-20 14:00 — Implementation
-- Created `src/{{pkg}}/...`
-- Added 8 unit tests; `make unit-tests` → 12 pass, 0 fail
-- Files modified: ...
+### [SWE] 2026-04-27 14:00 — Implementation
+...
 
-### [Tester] 2026-04-20 14:45 — QA
-- AC 1-5: PASS (evidence inline)
-- AC 6: FAIL — {expected vs actual}
-- VERDICT: FAIL
+### [Tester] 2026-04-27 14:45 — QA
+...
 
-### [SWE] 2026-04-20 15:10 — Fix
-- Fixed AC 6; tests 13 pass, 0 fail
+### [PM] 2026-04-27 15:40 — Acceptance
+...
 
-### [Tester] 2026-04-20 15:25 — QA re-review
-- All AC PASS
-- VERDICT: PASS
+### [PR Reviewer] 2026-04-27 16:00 — Review (rollup)
+...
 
-### [PM] 2026-04-20 15:40 — Acceptance
-- Reviewed evidence; user satisfaction verified
-- VERDICT: ACCEPT
+### [On-Call] 2026-04-27 16:30 — CI
+...
 ```
 
-Format: `### [ROLE] YYYY-MM-DD HH:MM — Short subject`. Entries are append-only; do not rewrite history.
+Format: `### [ROLE] YYYY-MM-DD HH:MM — Short subject`. Append-only.
 
-## Orchestrator Workflow
+## How `/night` Picks the Feature
 
-```
-Raw task
-    │
-    ▼
-Product Manager ─────► grooms into agent-ready spec (AC + BDD scenarios)
-    │
-    ▼
-Orchestrator picks groomed task
-    │
-    ├─► Software Engineer ──► writes code + tests (uncommitted)
-    │           │
-    │           ▼
-    │     Tester ──► runs tests, verifies AC, reports PASS/FAIL
-    │           │
-    │     ┌─────┴─────┐
-    │     │           │
-    │   FAIL        PASS
-    │     │           │
-    │     ▼           ▼
-    │   SWE fixes   Product Manager ──► acceptance review (user POV)
-    │   (loop)            │
-    │               ┌─────┴──────┐
-    │             REJECT       ACCEPT
-    │               │            │
-    │               ▼            ▼
-    │            SWE fixes    SWE commits + pushes (Closes #N)
-    │            (loop)            │
-    │                              ▼
-    │                       On-Call ──► watches CI, fixes any failure
-    │
-    └─► Pick next batch
-```
+`/night` takes the feature spec from `$ARGUMENTS` (a free-form description, a path to a spec file, or a tracker reference). It does NOT pick from a backlog — `/night` is invoked per feature.
 
-## Mandatory Steps (never skip)
+The PM, during grooming, produces the **Tasks Plan**: an ordered list of groomed tasks. The orchestrator processes those tasks in order during the inner loop. New rollup tasks (from PM REJECT or PR Reviewer Blockers) are inserted at the end of the queue.
 
-- Every task goes through **all** stages: PM groom → SWE implement → Tester verify → PM accept → commit → On-Call CI check.
-- **Tester must actually run the full suite**, not just review code. The QA report must include test counts by type (unit, integration, e2e if applicable).
-- **Tester must update acceptance criteria checkboxes** in the task body (`- [ ]` → `- [x]`) for every criterion they verified.
-- **Never commit without Tester PASS**, even for "trivial" changes. The whole point of the pipeline is that the agent who writes code does not also decide whether it is correct.
-- **Never use `git add -A` / `git add .`**. Always commit specific files, with a commit message that ends in `Closes #N` (issue) or appropriate tracker reference.
-- **After push, always run On-Call Engineer** to check CI. Don't just "look manually."
+## Self-Improve
 
-## How to Pick Tasks
-
-1. List open tasks in the active tracker (see "Tracker Modes" below).
-2. Skip tasks tagged `needs-grooming` (groom them first via PM agent — typically in parallel/background, see Continuous Pipeline).
-3. Skip tasks tagged `human` (waiting on manual verification).
-4. Skip tasks whose `Depends on:` field references still-open tasks.
-5. Pick the **lowest-numbered** open groomed tasks first (lower number = more foundational).
-6. Default batch size: **2 tasks in parallel**. Configurable via `/night [batch-size]`. (`/day` is single-task, always — no batching.)
-7. When running >1 SWE agent in parallel on different tasks, launch each with `isolation: "worktree"` so concurrent file writes don't overwrite each other.
-
-## Continuous Pipeline
-
-The pipeline must keep itself fed. When the orchestrator starts a batch, it immediately queues a "pick next batch" task that depends on the current batch's commit step. This makes the loop continuous: as soon as Batch N commits, Batch N+1 starts. Stop only when the backlog is empty.
-
-```
-Batch N: groom → implement → verify → accept → commit
-                                                    │
-                                                    ▼
-                                              Pick Batch N+1 → ...
-```
-
-## Human Verification Escape Hatch
-
-Some acceptance criteria can't be verified by an agent: OAuth flows, third-party redirects, visual judgment, real payment captures. The PM marks these `[HUMAN]` during grooming.
-
-When a task passes all agent reviews **but has `[HUMAN]` criteria**:
-
-1. Commit and push the code (use `Refs #N`, not `Closes #N` — don't auto-close).
-2. Add the `human` label to the issue/task.
-3. Comment listing the criteria that need manual verification.
-4. **Do NOT close the task** — leave it open for the human to verify and close.
-5. Continue to the next task; don't block on the human.
+Run **only** when the human says yes at the end of the run. Produces a proposed update to `CLAUDE.md` (or another project doc) capturing corrections from the run; the human reviews and accepts. See `.claude/skills/self-improve/SKILL.md`.
 
 ## Tracker Modes
 
-This template supports two trackers. Pick one per project; document the choice at the top of this file.
+Pick one per project; document the choice at the top of this file.
 
 ### Default: file-based tracker (`tracker/`)
 
@@ -273,36 +306,30 @@ Filename encodes the state:
 
 ```
 tracker/
-├── 001-add-feature.todo.md         # raw, awaiting grooming
-├── 002-pagination.groomed.md       # PM-groomed, ready for SWE
+├── 001-add-feature.todo.md         # raw, awaiting grooming (uncommon in /night — PM creates groomed tasks directly)
+├── 002-pagination.groomed.md       # PM-groomed, in Tasks Plan
 ├── 003-search.in-progress.md       # SWE/Tester actively working
 └── done/
     └── 000-bootstrap.md            # accepted, committed
 ```
 
 State transitions are file renames:
-- New task → write `NNN-slug.todo.md`
-- After PM grooming → rename to `NNN-slug.groomed.md`
-- When SWE picks up → rename to `NNN-slug.in-progress.md`
+- New task → `NNN-slug.todo.md`
+- After PM grooming → `NNN-slug.groomed.md`
+- When SWE picks up → `NNN-slug.in-progress.md`
 - After PM accepts and commit lands → `git mv` to `done/NNN-slug.md`
-
-Agents append their reports as sections within the file (`## SWE Report`, `## QA Report`, `## PM Acceptance`) instead of separate comments. See `tracker/README.md` for the full format.
 
 ### Opt-in: GitHub Issues
 
-Use `gh issue ...` for everything: PM edits the issue body during grooming, SWE/Tester comment on the issue with reports, commit messages use `Closes #N`. Best when the project has visible coordination needs (multiple humans, public repo).
+Use `gh issue ...` for everything. Best when the project has visible coordination needs.
 
-To switch a project from file-based to GitHub Issues mode:
-
-1. Set `TRACKER_MODE: gh` at the top of this file (replace the default).
-2. Migrate any open `tracker/*.md` files into GitHub Issues (or leave them; agents will treat the file-based ones as legacy).
-3. Agents check the `TRACKER_MODE` line before acting.
+To switch, set `TRACKER_MODE: gh` at the top of this file.
 
 **Active tracker for this project:** `TRACKER_MODE: file` *(change to `gh` to switch)*
 
 ## Tech Stack Hooks
 
-Agents reference these stack-agnostic conventions instead of hardcoded tools. Each project's `CLAUDE.md` fills in the specifics.
+Stack-agnostic conventions. Each project's `CLAUDE.md` fills in the specifics.
 
 - **Format / lint**: `make format-fix && make lint-fix && make format-check && make lint-check`
 - **Pre-commit**: `make pre-commit`
@@ -314,16 +341,14 @@ Agents reference these stack-agnostic conventions instead of hardcoded tools. Ea
 
 ## Reuse Existing Skills
 
-Agents do not duplicate logic that lives in the project's skill catalog:
-
-- **Test writing conventions** — defer to `.claude/skills/testing-python/SKILL.md`.
-- **PR creation** — defer to `.claude/skills/create-pr/SKILL.md` (when the project pushes via PR rather than directly to `main`).
-- **Commit messages** — defer to the `commit-commands` plugin.
+- **Test writing conventions** — `.claude/skills/testing-python/SKILL.md`.
+- **PR creation** — `.claude/skills/create-pr/SKILL.md`.
+- **Commit messages** — `commit-commands` plugin (required for SWE commits when present).
 - **Code review** — Tester may invoke the `code-review` plugin as an extra signal.
-- **Self-improvement** — orchestrator runs `.claude/skills/self-improve/SKILL.md` at end of long sessions to capture corrections back into this file or memory.
+- **Self-improvement** — `.claude/skills/self-improve/SKILL.md`, run only on human request at end of `/night`.
 
 ## When to Use Which Workflow
 
 - **Direct chat / single-session**: trivial edits, one-shot questions, typo fixes.
-- **`/day`**: a single feature, bug fix, or refactor you want to ship under active supervision with a Tester gate but without PM ceremony. You stay in the loop and commit yourself.
-- **`/night`**: multi-task projects, overnight runs, parallel work across independent tasks, anything where you want both PM gates plus On-Call enforced.
+- **`/day [task]`**: a single task you want to ship under active supervision with the Tester gate. You commit yourself.
+- **`/night [feature]`**: end-to-end delivery of a feature with all gates active and exactly two human approvals (plan + merge).

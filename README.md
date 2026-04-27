@@ -11,9 +11,9 @@ After `/plugin install`, in any repo:
 | Surface | What it does |
 |---|---|
 | `/scaffold` | Interactive bootstrap. Asks what you're building (backend / frontend / TUI / mix), reads the relevant specs, writes a tailored `CLAUDE.md`, and lays down an empty folder skeleton. Run `/day` next to have the agents fill it in. |
-| `/day <task>` | Single-task supervised pipeline. `SWE implements → Tester verifies → you review + commit`. Use during active work. |
-| `/night [batch-size]` | Unattended batched pipeline. `PM grooms → SWE → Tester → PM accepts → Commit → On-Call watches CI`. Use for overnight backlog runs. |
-| `product-manager`, `software-engineer`, `tester`, `oncall-engineer` | Sub-agents invoked by the pipelines. Also available for direct use via the `Agent` tool. |
+| `/day <task>` | Single-task supervised inner loop. `SWE implements → Tester verifies → you review + commit`. Use during active work. |
+| `/night <feature-spec>` | End-to-end single-feature pipeline. `Branch + worktree → PM grooms Tasks Plan → human approves → SWE/Tester loop per task → PM accepts → push → On-Call (CI) ‖ PR Reviewer (diff) → squash → optional Self-Improve → human merges`. Two human gates (plan approval + final merge); everything else is automated. |
+| `product-manager`, `software-engineer`, `tester`, `pr-reviewer`, `oncall-engineer` | Sub-agents invoked by the pipelines. Also available for direct use via the `Agent` tool. |
 | `testing-python`, `create-pr`, `self-improve` | Support skills referenced by the pipelines and agents. |
 
 The `/scaffold` spec library (under `.claude/skills/scaffold/specs/`) covers:
@@ -71,7 +71,7 @@ The SWE agent reads `CLAUDE.md`, picks up the specs it references, writes real c
 - **Progressive disclosure.** A session loads only the skills whose descriptions match the task. The spec library under `scaffold/specs/` is gated behind `/scaffold` — it doesn't pollute every session's index.
 - **One skill per concern.** Six skills, twenty specs. Adding a new stack is one markdown file, not a new scaffolding engine.
 - **The CLAUDE.md is the brief.** After `/scaffold`, the generated `CLAUDE.md` is the single source of truth for how that project builds. Specs are referenced, not transcluded.
-- **Agents are gates.** PM catches scope drift. Tester catches false-confidence "tests pass" claims. On-Call catches CI breakage. No agent writes code and also decides whether the code is correct.
+- **Agents are gates.** PM catches scope drift (and signs off from the user's perspective). Tester catches false-confidence "tests pass" claims (and runs an e2e adversarial QA pass). PR Reviewer catches dead/duplicate/untested code and narrow performance regressions in the diff. On-Call catches CI breakage. No agent writes code and also decides whether the code is correct.
 
 ## Repo layout (plugin internals)
 
@@ -79,7 +79,7 @@ The SWE agent reads `CLAUDE.md`, picks up the specs it references, writes real c
 .
 ├── .claude-plugin/plugin.json      # manifest
 ├── .claude/
-│   ├── agents/                     # 4 sub-agents
+│   ├── agents/                     # 5 sub-agents
 │   └── skills/                     # 6 skills
 │       └── scaffold/specs/         # 19 reference specs
 ├── docs/PROCESS.md                 # canonical agent-team lifecycle
