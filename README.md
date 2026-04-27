@@ -28,19 +28,46 @@ Several specs are still stubs — first-pass content is in place for the foundat
 
 ## Install
 
-**From GitHub:**
+Two install paths — pick whichever fits your workflow.
+
+### As a Claude Code plugin (global, all sessions)
 
 ```
 /plugin install iusztinpaul/engineering-agent-team
 ```
 
-**From a local clone (for plugin development):**
+Or from a local clone (for plugin development):
 
 ```
 /plugin install /path/to/engineering-agent-team
 ```
 
-After install, the agents and skills appear in `/agents` and `/help` in any Claude Code session.
+The agents and skills appear in `/agents` and `/help` in any Claude Code session.
+
+### As a per-project install via `npx` (drops files into your repo)
+
+```
+npx engineering-agent-team
+```
+
+Run this from inside the project you want to set up. It writes:
+
+- `.claude/agents/` — the five sub-agent contracts (overwrites)
+- `.claude/skills/` — `/day`, `/night`, `/scaffold`, plus support skills (overwrites)
+- `.claude/settings.json` — **smart-merged** with any existing file (permissions union'd + deduped, `enabledPlugins` shallow-merged, every other key preserved)
+- `docs/PROCESS.md` — the canonical lifecycle (skipped if it already exists; pass `--force` to overwrite)
+
+Useful flags:
+
+```
+npx engineering-agent-team [target-dir]   # default: cwd
+  --force         Overwrite docs/PROCESS.md if it already exists
+  --no-process    Skip docs/PROCESS.md entirely
+  --dry-run       Print what would be written, change nothing
+  --help          Show all options
+```
+
+The npx path is project-local and version-able through your repo (no global plugin registration). The `/plugin install` path is global and managed by Claude Code's plugin system. Both produce the same agent behaviour.
 
 ## Quick start
 

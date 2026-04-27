@@ -1,0 +1,40 @@
+{
+  "name": "engineering-agent-team",
+  "version": "0.1.0",
+  "description": "Opinionated Claude Code agent team (PM / SWE / Tester / PR Reviewer / On-Call) plus /day, /night, and /scaffold pipelines. Install into a project with `npx engineering-agent-team`.",
+  "keywords": [
+    "claude-code",
+    "claude",
+    "agent",
+    "agents",
+    "ai",
+    "scaffold",
+    "pipeline"
+  ],
+  "homepage": "https://github.com/iusztinpaul/squid",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/iusztinpaul/squid.git"
+  },
+  "bugs": {
+    "url": "https://github.com/iusztinpaul/squid/issues"
+  },
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "engineering-agent-team": "./bin/install.mjs"
+  },
+  "files": [
+    "bin/",
+    ".claude/agents/",
+    ".claude/skills/",
+    ".claude/settings.json",
+    ".claude-plugin/",
+    "docs/PROCESS.md",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  }
+}
