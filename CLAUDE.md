@@ -4,7 +4,7 @@ This repo **is** a Claude Code plugin. The contract layer is markdown — agents
 
 Consumers install it two ways:
 
-1. `/plugin marketplace add iusztinpaul/squid && /plugin install squid@squid` — global, all Claude Code sessions. The repo is a one-plugin marketplace (`.claude-plugin/marketplace.json`); the leading `marketplace add` registers it, the trailing `install` enables it.
+1. `/plugin marketplace add iusztinpaul/squid && /plugin install squid@squid` — global, all Claude Code sessions. The repo is a one-plugin marketplace (`.claude-plugin/marketplace.json`); the leading `marketplace add` registers it, the trailing `install` enables it. Swap the GitHub shorthand for an absolute path (`/plugin marketplace add /abs/path/to/squid`) to test a local clone before pushing.
 2. `npx squid [target]` — project-local, drops `.claude/agents/`, `.claude/skills/`, `.claude/settings.json` (smart-merged) and `docs/PROCESS.md` into the target.
 3. `claude --plugin-dir /path/to/squid` — for plugin-development sessions only; loads the plugin from the working tree without registering or installing anything.
 

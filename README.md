@@ -32,14 +32,21 @@ Three install paths — pick whichever fits your workflow.
 
 ### As a Claude Code plugin (global, all sessions)
 
-The repo is a one-plugin marketplace (`.claude-plugin/marketplace.json` lists it). Register the marketplace, then install:
+The repo is a one-plugin marketplace (`.claude-plugin/marketplace.json` lists it). Register the marketplace, then install. Two source forms:
 
 ```
+# From GitHub (most users)
 /plugin marketplace add iusztinpaul/squid
 /plugin install squid@squid
 ```
 
-`/plugin marketplace update squid` later pulls fresh changes. The agents and skills appear in `/agents` and `/help` in any Claude Code session.
+```
+# From a local clone (use during plugin development, or before pushing changes)
+/plugin marketplace add /absolute/path/to/squid
+/plugin install squid@squid
+```
+
+`/plugin marketplace update squid` later pulls fresh changes (re-clones for the GitHub source; re-reads the directory for the local source). The agents and skills appear in `/agents` and `/help` in any Claude Code session.
 
 ### Local plugin development (no install)
 
