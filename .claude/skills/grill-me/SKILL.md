@@ -62,9 +62,11 @@ Agent(
   (3) the project's error-handling convention (exception types, HTTP error mapping, log shape);
   (4) the project's persistence layer (which datastore; where transactions are scoped; soft-delete or hard-delete);
   (5) the project's observability convention (logging style, metric/trace naming);
-  (6) the project's feature-flag mechanism, if any.
+  (6) the project's feature-flag mechanism, if any;
+  (7) `docs/glossary.md` if it exists — list every term defined there (one-line each), so I can map spec vocabulary to canonical terms;
+  (8) `docs/adr/` if it exists — list every Accepted ADR by `NNNN: title` and one-line Decision summary, so I can identify which prior decisions this spec touches.
 
-  Report as six sections. Be concrete with file:line. If a category isn't present in the codebase, say so explicitly."""
+  Report as eight sections. Be concrete with file:line. If a category isn't present in the codebase, say so explicitly."""
 )
 ```
 
@@ -90,6 +92,8 @@ Walk these dimensions for every spec. For each one, decide: (a) the spec already
 | **Testing strategy** | Unit / integration / e2e split? Any external service that needs a fake / fixture? |
 | **Documentation** | What docs / changelog / runbook entries does shipping this require? |
 | **Security & privacy** | New attack surface? PII handling? Audit-log entries? Rate limiting? |
+| **Glossary alignment** | *Only if `docs/glossary.md` exists.* Does the spec use canonical glossary terms throughout, or does it use synonyms / coinages? Does it introduce a domain concept not yet in the glossary (→ glossary update needed during PM grooming)? Is any term used in a way that conflicts with the glossary's definition? |
+| **ADR exposure** | *Only if `docs/adr/` exists.* Does the spec touch a decision already governed by an existing ADR (cite which `NNNN`s)? Does it require a new architectural decision (→ new ADR needed during PM grooming)? Does it contradict any existing Accepted ADR (→ supersession or scope-shrink decision needed)? |
 
 Not every dimension applies to every spec — discard the irrelevant ones explicitly with a one-line reason ("no persistence: this is a stateless transformation"). Don't pad the matrix.
 
@@ -145,6 +149,24 @@ Update the spec (or write a sibling `*-grilled.md`) with every decision now expl
 {...}
 
 (... one section per dimension that applied ...)
+
+## Glossary alignment
+
+*Only emit if `docs/glossary.md` exists.*
+
+- **Terms used in this spec, mapped to glossary:**
+  - `{spec term}` → canonical `{glossary term}` (matches / synonym normalised / new — needs glossary entry).
+  - ...
+- **New terms required (PM must add to `docs/glossary.md` during grooming):** {list, or "none"}
+- **Conflicts (term used here disagrees with glossary definition):** {list with the disagreement spelled out, or "none"}
+
+## ADR exposure
+
+*Only emit if `docs/adr/` exists.*
+
+- **Existing ADRs implicated by this spec:** ADR-{NNNN}: {title} — {how this spec touches it: "implements", "extends", "respects but doesn't change"}.
+- **New ADRs required (PM must author during grooming):** {list with one-sentence Decision each, or "none"}
+- **Contradictions with existing ADRs:** {list each as "ADR-{NNNN} says X; this spec implies Y → resolve via supersede / scope-shrink / escalate", or "none"}
 
 ## Open questions deferred to PM grooming
 
