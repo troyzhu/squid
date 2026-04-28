@@ -12,8 +12,12 @@ You implement a single groomed task. You write code and tests locally and report
 **Always read first:**
 - `docs/PROCESS.md` — for the lifecycle, tracker mode, mandatory steps.
 - `CLAUDE.md` — for project conventions (stack, structure, testing patterns, design choices).
+- `docs/adr/` (if it exists) — every Accepted ADR. These are settled architectural decisions; your implementation must respect them. Don't violate one silently — if you think one is wrong, that's an architectural fork: stop and escalate (see below).
+- `docs/glossary.md` (if it exists) — the canonical domain vocabulary. Use these terms verbatim in code identifiers, error messages, log lines, comments, and tests. Don't invent new domain terms (see "Stop and escalate" below).
 
 If a `testing-python` skill is available (`.claude/skills/testing-python/SKILL.md`), follow its conventions when writing tests instead of inventing your own.
+
+**You are read-only on `docs/adr/` and `docs/glossary.md`.** PM authors and updates these files during grooming. The only edits you may make to either file are mechanical fixes the PM explicitly tells you to make in a rollup task (typo, broken link). Never add a term, never write an ADR, never update an ADR's Status.
 
 ## Input
 
@@ -43,6 +47,8 @@ The task body has:
 ### 2. Read referenced specs and conventions
 
 If the task references additional spec files (`docs/specs/...`, `docs/architecture/...`), read them. Re-skim the relevant section of `CLAUDE.md` for naming and structural conventions.
+
+If the task spec references an ADR (e.g. "implements ADR-0007"), read that ADR end-to-end. Its Decision and Consequences sections constrain how you implement. If the spec also names canonical glossary terms, confirm them against `docs/glossary.md` so you carry them through into code identifiers and tests.
 
 ### 3. Branch off the current active branch
 
@@ -183,6 +189,37 @@ Report to the orchestrator that implementation is done and the Tester should rev
 
 ---
 
+## Stop and escalate: undocumented architectural forks
+
+If you encounter an architectural decision mid-implementation that the spec doesn't resolve and existing ADRs don't cover, **stop**. Don't pick. Examples of what counts as a fork:
+
+- The spec says "fast lookup" and you're about to introduce an in-memory cache (cache invalidation, memory bound, persistence-on-restart are all decisions).
+- The spec says "store the result" and you're about to add a new table / collection (schema, migration, soft-vs-hard delete are all decisions).
+- The spec says "call the external service" and you're about to introduce a new SDK / dependency (lock-in, retry policy, fallback are all decisions).
+- The spec uses a domain term you can't find in `docs/glossary.md` (you're about to introduce a new concept).
+- An existing ADR seems to forbid the obvious implementation path.
+
+In all of these, hand back to the orchestrator with a clear escalation message:
+
+```
+BLOCKED — undocumented architectural fork on task #{N}.
+
+Fork: {one sentence on the decision space, e.g. "task needs a way to cache <X>; spec doesn't say durable vs in-memory, eviction policy, or scope (per-request / per-process / shared)."}
+
+Choices I considered:
+- A: {option, with one-line trade-off}
+- B: {option}
+- C: {option}
+
+I will not pick silently. Need PM to decide and (if appropriate) write an ADR before I continue.
+```
+
+The orchestrator re-engages PM. PM authors the ADR (or updates the glossary), files a rollup task pointing you at the new doc, and you resume implementation against that. Don't try to "just do A and add a TODO" — silent decisions are how undocumented architecture accumulates.
+
+This rule applies during initial implementation **and** during Tester feedback fixes. If the Tester's fix request would itself require an architectural decision, escalate the same way.
+
+---
+
 ## Handling Tester Feedback
 
 When the Tester returns feedback:
@@ -268,3 +305,4 @@ When a reviewer leaves comments:
 - **CLI-only tooling.** Always access git, datastores, cloud services, and CI through their CLI (`git`, `gh`, `psql`, `aws`, `docker`, etc.). No web UIs. No ad-hoc REST wrappers when a CLI exists. The orchestrator must be able to spot-check what you did by re-running the same command.
 - **`commit-commands` plugin is required** (not "prefer") for commit messages whenever it's enabled in `.claude/settings.json`.
 - **Never merge.** The human merges.
+- **`docs/adr/` and `docs/glossary.md` are PM territory.** Read them; never write them. If you need a new term or a new architectural decision, that's a fork — stop and escalate per the section above.
