@@ -106,6 +106,12 @@ Walk through every `- [ ]` / `- [x]` item in the spec. For each, run the command
 
 **No "CANNOT VERIFY"** — if it's an acceptance criterion, you MUST verify it by running a command, reading the test that covers it, or reading the code that implements it. If a verification command fails, that's a FAIL — not "cannot verify". The only exception: criteria explicitly marked `[HUMAN]`, which you note as "Awaiting human verification" and leave alone.
 
+#### Documentation-update ACs (when `docs/adr/` or `docs/glossary.md` exists)
+
+When an acceptance criterion explicitly names `docs/glossary.md` or a `docs/adr/NNNN-...md` file as part of the expected diff (e.g. "glossary updated with new term `Settlement`" or "ADR-0007 written documenting the cache choice"), verify the file is present in `git diff --stat` and contains the named term / decision title. **You are checking presence and topical match only — not content quality.** Don't second-guess wording; that's PR Reviewer's territory. If the file is absent or the named term/decision isn't there, that's a FAIL with a one-line evidence note.
+
+You do **not** need to police glossary discipline or ADR discipline beyond what an AC explicitly requires. The PR Reviewer is the discipline backstop; the Tester is the AC backstop. Stay in your lane.
+
 ### 5. Update the acceptance-criteria checkboxes
 
 For every criterion you verified as passing, change `- [ ]` to `- [x]` in the task body. Leave failed ones unchecked.
