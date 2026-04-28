@@ -98,6 +98,22 @@ Hard caps. When a cap is hit, the orchestrator stops the pipeline and surfaces a
 | PR Reviewer Blockers → SWE fix (rollup task) | **3** | Per feature |
 | On-Call CI Fail → SWE fix → re-push | **5** | Per push attempt |
 
+## Documentation discipline
+
+*This section applies only when `docs/adr/` and/or `docs/glossary.md` exist in the project. On projects that opted out during scaffold, ignore — agents skip the corresponding checks.*
+
+A standing invariant across both `/day` and `/night`: when the project has chosen to maintain ADRs or a glossary, those files are part of every PR's contract.
+
+| Role | Responsibility |
+|---|---|
+| **PM** | Authors `docs/adr/NNNN-...md` and updates `docs/glossary.md` during grooming — before implementation tasks ship. The Tasks Plan's "Documentation updates" section enumerates what was added. |
+| **SWE** | Reads both. Uses canonical glossary terms verbatim. Respects existing Accepted ADRs as binding. **Stops and escalates** if implementation reveals an undocumented architectural fork or requires a domain term the glossary doesn't have — never silently authors. |
+| **Tester** | When an AC names `docs/glossary.md` or a `docs/adr/NNNN` file as expected output, verifies presence and topical match in the diff. No content judgement. |
+| **PR Reviewer** | Discipline backstop (review dimension E). Blocks on missing glossary update for new domain concepts, missing ADR for new architectural decisions, ADR contradictions without supersession. Doc-discipline Blockers are prefixed `[PM]` in the rollup so the orchestrator routes the rollup through PM grooming first. |
+| **Orchestrator** | Routes `[PM]`-prefixed Blocker rollups to PM (re-engagement entry-point) before handing back to SWE. Standard SWE-fix rollups continue to route normally. |
+
+Rollups for documentation discipline route to PM, not SWE — the cure for missing or wrong docs is grooming, not implementation.
+
 ## Severity Rule (PR Reviewer)
 
 The PR Reviewer tags every finding as Blocker or Nit. Severity decides what the orchestrator does with it.
