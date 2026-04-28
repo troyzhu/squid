@@ -1,6 +1,6 @@
 {
   "name": "squid",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Opinionated Claude Code agent team (PM / SWE / Tester / PR Reviewer / On-Call) plus /day, /night, and /scaffold pipelines. Install into a project with `npx squid`.",
   "keywords": [
     "claude-code",
