@@ -28,21 +28,28 @@ Several specs are still stubs — first-pass content is in place for the foundat
 
 ## Install
 
-Two install paths — pick whichever fits your workflow.
+Three install paths — pick whichever fits your workflow.
 
 ### As a Claude Code plugin (global, all sessions)
 
-```
-/plugin install iusztinpaul/squid
-```
-
-Or from a local clone (for plugin development):
+The repo is a one-plugin marketplace (`.claude-plugin/marketplace.json` lists it). Register the marketplace, then install:
 
 ```
-/plugin install /path/to/squid
+/plugin marketplace add iusztinpaul/squid
+/plugin install squid@squid
 ```
 
-The agents and skills appear in `/agents` and `/help` in any Claude Code session.
+`/plugin marketplace update squid` later pulls fresh changes. The agents and skills appear in `/agents` and `/help` in any Claude Code session.
+
+### Local plugin development (no install)
+
+When you're editing the plugin itself and want to test against your changes without registering or installing anything:
+
+```
+claude --plugin-dir /path/to/squid
+```
+
+This launches Claude Code with the plugin loaded for the session. No marketplace, no install, no cache. Re-run after edits to pick up changes.
 
 ### As a per-project install via `npx` (drops files into your repo)
 
@@ -82,7 +89,7 @@ npx squid [target-dir]   # default: cwd
   --help          Show all options
 ```
 
-The npx path is project-local and version-able through your repo (no global plugin registration). The `/plugin install` path is global and managed by Claude Code's plugin system. Both produce the same agent behaviour.
+The npx path is project-local and version-able through your repo (no global plugin registration). The `/plugin install` path is global and managed by Claude Code's plugin system. Both produce the same agent behaviour. `--plugin-dir` is for editing the plugin itself, not for running against it long-term.
 
 ## Quick start
 
