@@ -44,9 +44,10 @@ Use `AskUserQuestion` to collect answers. Consolidate where possible — one or 
 5. **Frontend-web framework** (if frontend-web chosen): `react` / `vue` / `svelte` / `vanilla`.
 6. **Frontend-tui framework** (if frontend-tui chosen): `bubbletea` (default) / `tview`.
 7. **Shared OpenAPI contracts** (only if backend + ≥1 frontend): yes / no.
-8. **Infra** (multi-select): `docker`, `github-actions`.
+8. **Infra** (multi-select): `docker`, `github-actions`, `pre-commit-hooks`.
 9. **Agent team + tracker?** yes (recommended) / no. Also: file-based tracker or GitHub Issues?
-10. **External services** (optional, multi-select — skip any category that doesn't apply). Each selection pulls a `specs/<category>-<choice>.md` stub and emits a one-line bullet into the generated CLAUDE.md, wrapped in `<!-- stack:<slug> -->` comments so the user can find-and-delete it later:
+10. **Process & documentation** (multi-select, optional): `adr` (Architecture Decision Records under `docs/adr/`), `ubiquitous-language` (project glossary at `docs/glossary.md`). Recommend `adr` for any project expected to live > 6 months; recommend `ubiquitous-language` for backend services with named domain entities.
+11. **External services** (optional, multi-select — skip any category that doesn't apply). Each selection pulls a `specs/<category>-<choice>.md` stub and emits a one-line bullet into the generated CLAUDE.md, wrapped in `<!-- stack:<slug> -->` comments so the user can find-and-delete it later:
    - **Datastore:** `mongodb` / `postgresql` / `redis` / `sqlite` / `other` / `none`
    - **Orchestrator:** `prefect` / `dagster` / `temporal` / `other` / `none`
    - **Observability & evals:** `opik` / `opentelemetry` / `sentry` / `other` / `none`
@@ -79,7 +80,10 @@ Conditionally include (from answers):
 | shared OpenAPI contracts | [`openapi-contracts.md`](specs/openapi-contracts.md) |
 | docker | [`docker.md`](specs/docker.md) |
 | github-actions | [`github-actions.md`](specs/github-actions.md) |
+| pre-commit-hooks | [`pre-commit-hooks.md`](specs/pre-commit-hooks.md) |
 | agent team + tracker | [`tracker-workflow.md`](specs/tracker-workflow.md) |
+| process: `adr` | [`adr.md`](specs/adr.md) |
+| process: `ubiquitous-language` | [`ubiquitous-language.md`](specs/ubiquitous-language.md) |
 | datastore = `mongodb` / `postgresql` / `redis` / `sqlite` | + [`datastore-<choice>.md`](specs/) |
 | orchestrator = `prefect` / `dagster` / `temporal` | + [`orchestrator-<choice>.md`](specs/) |
 | observability = `opik` / `opentelemetry` / `sentry` | + [`observability-<choice>.md`](specs/) |
@@ -430,9 +434,12 @@ The spec library lives at [`specs/`](specs/). Each file is a standalone referenc
 - [`docker.md`](specs/docker.md) — slim Dockerfile + docker-compose opinions.
 - [`github-actions.md`](specs/github-actions.md) — monorepo CI patterns.
 - [`openapi-contracts.md`](specs/openapi-contracts.md) — contract-first OpenAPI 3.1 workflow.
+- [`pre-commit-hooks.md`](specs/pre-commit-hooks.md) — project-side hook conventions (`pre-commit` / `lefthook` / `husky`), what runs in `pre-commit` vs `pre-push`, escape-hatch policy.
 
-**Process**
+**Process & documentation**
 - [`tracker-workflow.md`](specs/tracker-workflow.md) — file-based task tracker format.
+- [`adr.md`](specs/adr.md) — Architecture Decision Records (`docs/adr/NNNN-title.md`), Nygard template, status lifecycle.
+- [`ubiquitous-language.md`](specs/ubiquitous-language.md) — project glossary at `docs/glossary.md`; one canonical name per domain concept.
 
 **External services** *(all stubs — flesh out as real projects reveal opinions; delete any category or file you decide isn't worth maintaining, and drop the matching row in Step 2's decision table)*
 - Datastore: [`datastore-mongodb.md`](specs/datastore-mongodb.md), [`datastore-postgresql.md`](specs/datastore-postgresql.md), [`datastore-redis.md`](specs/datastore-redis.md), [`datastore-sqlite.md`](specs/datastore-sqlite.md).

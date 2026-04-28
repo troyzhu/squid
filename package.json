@@ -1,7 +1,7 @@
 {
-  "name": "engineering-agent-team",
-  "version": "0.1.0",
-  "description": "Opinionated Claude Code agent team (PM / SWE / Tester / PR Reviewer / On-Call) plus /day, /night, and /scaffold pipelines. Install into a project with `npx engineering-agent-team`.",
+  "name": "squid",
+  "version": "0.2.0",
+  "description": "Opinionated Claude Code agent team (PM / SWE / Tester / PR Reviewer / On-Call) plus /day, /night, and /scaffold pipelines. Install into a project with `npx squid`.",
   "keywords": [
     "claude-code",
     "claude",
@@ -22,7 +22,7 @@
   "license": "MIT",
   "type": "module",
   "bin": {
-    "engineering-agent-team": "./bin/install.mjs"
+    "squid": "./bin/install.mjs"
   },
   "files": [
     "bin/",

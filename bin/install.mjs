@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Installs the engineering-agent-team into a target project's .claude/ directory.
+// Installs the squid into a target project's .claude/ directory.
 // Zero runtime dependencies — uses only built-in Node modules (Node 18+).
 
 import { cp, readFile, writeFile, mkdir, access } from 'node:fs/promises';
@@ -24,10 +24,10 @@ const skipProcess = flags.has('--no-process');
 const dryRun = flags.has('--dry-run');
 
 function printHelp() {
-  console.log(`engineering-agent-team — install the agent team into a Claude Code project
+  console.log(`squid — install the agent team into a Claude Code project
 
 Usage:
-  npx engineering-agent-team [target-dir] [options]
+  npx squid [target-dir] [options]
 
 If target-dir is omitted, installs into the current working directory.
 
@@ -150,7 +150,7 @@ async function mergeSettings(srcPath, dstPath) {
 async function main() {
   const banner = dryRun ? '(dry-run) ' : '';
   console.log(
-    `${banner}Installing engineering-agent-team into ${target}\n`,
+    `${banner}Installing squid into ${target}\n`,
   );
 
   // 1. Copy .claude/agents/
