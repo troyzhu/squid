@@ -7,7 +7,7 @@
   "plugins": [
     {
       "name": "squid",
-      "source": ".",
+      "source": "./",
       "description": "PM / SWE / Tester / PR Reviewer / On-Call sub-agents plus /day, /night, /scaffold, /triage-issue, /refactor, /grill-me, /architecture-review, and supporting workflow skills.",
       "homepage": "https://github.com/iusztinpaul/squid",
       "license": "MIT",
