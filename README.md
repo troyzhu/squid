@@ -32,31 +32,26 @@ Three install paths — pick whichever fits your workflow.
 
 ### As a Claude Code plugin (global, all sessions)
 
-The repo is a one-plugin marketplace (`.claude-plugin/marketplace.json` lists it). Register the marketplace, then install. Two source forms:
+The repo is a one-plugin marketplace (`.claude-plugin/marketplace.json` lists it). Register the marketplace, then install:
 
 ```
-# From GitHub (most users)
 /plugin marketplace add iusztinpaul/squid
 /plugin install squid@squid
 ```
 
-```
-# From a local clone (use during plugin development, or before pushing changes)
-/plugin marketplace add /absolute/path/to/squid
-/plugin install squid@squid
-```
+`/plugin marketplace update squid` later pulls fresh changes. The agents and skills appear in `/agents` and `/help` in any Claude Code session.
 
-`/plugin marketplace update squid` later pulls fresh changes (re-clones for the GitHub source; re-reads the directory for the local source). The agents and skills appear in `/agents` and `/help` in any Claude Code session.
+> **Note on local clones.** `/plugin marketplace add /path/to/squid` reads the local marketplace.json, but the plugin's `source` points at the GitHub repo — so the install still fetches from `iusztinpaul/squid` on GitHub, not from your working tree. For testing uncommitted changes, use the next section instead.
 
 ### Local plugin development (no install)
 
-When you're editing the plugin itself and want to test against your changes without registering or installing anything:
+When you're editing the plugin itself and want to test against your **uncommitted** changes without registering or installing anything:
 
 ```
 claude --plugin-dir /path/to/squid
 ```
 
-This launches Claude Code with the plugin loaded for the session. No marketplace, no install, no cache. Re-run after edits to pick up changes.
+This launches Claude Code with the plugin loaded for the session. No marketplace, no install, no cache. Re-run after edits to pick up changes. This is the only path that exercises your local working tree directly on Claude Code v2.1+.
 
 ### As a per-project install via `npx` (drops files into your repo)
 
