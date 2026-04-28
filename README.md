@@ -33,13 +33,13 @@ Two install paths — pick whichever fits your workflow.
 ### As a Claude Code plugin (global, all sessions)
 
 ```
-/plugin install iusztinpaul/engineering-agent-team
+/plugin install iusztinpaul/squid
 ```
 
 Or from a local clone (for plugin development):
 
 ```
-/plugin install /path/to/engineering-agent-team
+/plugin install /path/to/squid
 ```
 
 The agents and skills appear in `/agents` and `/help` in any Claude Code session.
@@ -50,7 +50,7 @@ Three sources, in increasing order of pinning rigour:
 
 ```bash
 # Published to npm (once `npm publish` has been run)
-npx engineering-agent-team
+npx squid
 
 # Directly from a public GitHub repo (no npm publish needed)
 npx github:iusztinpaul/squid
@@ -75,7 +75,7 @@ Once invoked, run from inside the project you want to set up. It writes:
 Useful flags:
 
 ```
-npx engineering-agent-team [target-dir]   # default: cwd
+npx squid [target-dir]   # default: cwd
   --force         Overwrite docs/PROCESS.md if it already exists
   --no-process    Skip docs/PROCESS.md entirely
   --dry-run       Print what would be written, change nothing
