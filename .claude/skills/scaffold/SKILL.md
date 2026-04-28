@@ -315,6 +315,16 @@ External CLIs used during development:
 
 External-service CLIs (datastore, orchestrator, observability, LLM, embedding, serving, scraping) are documented per-service in [**Tech Stack › External services**](#external-services) above — each `<!-- stack:<slug> -->` block there includes its invocation. Delete a block to drop the service from the project.
 
+## Documentation Conventions
+
+*Only emit if `adr` and/or `ubiquitous-language` were chosen in step 1.*
+
+{If `adr` chosen, emit:}
+- **ADRs.** Architecture Decision Records live at [`docs/adr/`](docs/adr/) as `NNNN-kebab-title.md`. Every non-obvious architectural choice (datastore, async/sync default, auth boundary, dependency lock-in) ships with one. Use the four-section Nygard template — Status / Context / Decision / Consequences. ADR-0001 ([`docs/adr/0001-record-architecture-decisions.md`](docs/adr/0001-record-architecture-decisions.md)) is already in the repo and explains the convention. Spec depth: [`adr.md`](.claude/skills/scaffold/specs/adr.md).
+
+{If `ubiquitous-language` chosen, emit:}
+- **Glossary.** The canonical domain vocabulary lives at [`docs/glossary.md`](docs/glossary.md). One canonical name per concept; code identifiers, OpenAPI schemas, database columns, and customer-facing UI all use the term as it appears there. Update the glossary in the same PR that introduces or renames a domain concept — never after. PM grooming and [`/grill-me`](.claude/skills/grill-me/SKILL.md) read it as the tie-breaker when specs and code disagree. Spec depth: [`ubiquitous-language.md`](.claude/skills/scaffold/specs/ubiquitous-language.md).
+
 ## Self Improve
 
 If a `self-improve` skill is available in your Claude Code session, run it at the end of a session to analyse corrections and persist lessons learned into `CLAUDE.md` or the memory system.
@@ -324,7 +334,7 @@ If a `self-improve` skill is available in your Claude Code session, run it at th
 
 **Distil, don't copy.** For each `Key {Lang} Design Choices` section, extract 3–5 headline rules from the relevant spec's "Canonical principles". The *rationale* and canonical examples stay in the spec files; CLAUDE.md states the rule and points to the spec for depth.
 
-**Gate sections on component presence.** If `backend` isn't chosen, drop "Key Python Design Choices", "Writing Scripts", "Writing Tests" (unless another language's tests apply), and every Python bullet under the tables. Same for TypeScript and Go. Drop "Shared contracts" bullets when `include_shared_contracts` is false. Drop the whole "Agent Team & Pipeline" section if the user opted out of the agent team. Do not leave empty sections.
+**Gate sections on component presence.** If `backend` isn't chosen, drop "Key Python Design Choices", "Writing Scripts", "Writing Tests" (unless another language's tests apply), and every Python bullet under the tables. Same for TypeScript and Go. Drop "Shared contracts" bullets when `include_shared_contracts` is false. Drop the whole "Agent Team & Pipeline" section if the user opted out of the agent team. Drop the whole "Documentation Conventions" section if neither `adr` nor `ubiquitous-language` was chosen; otherwise emit only the bullets matching the chosen options. Do not leave empty sections.
 
 **Fill placeholders inline.** The `{...}` braces in the template are *instructions to you* — replace with concrete content from the user's answers and the specs. The `AGENT: fill in` markers inside the rendered CLAUDE.md are for the SWE agent to address on the first `/day` run (datastore CLI specifics, orchestrator CLI specifics, etc.) — leave those literal in the output.
 
@@ -383,6 +393,24 @@ If agent team + tracker chosen:
 - `docs/PROCESS.md` — copy from the plugin (same file).
 - `tracker/README.md` + `tracker/done/.gitkeep`.
 - `.claude/` — only if the user isn't installing the plugin globally; otherwise skip (the plugin provides it).
+
+If `adr` chosen (Process & documentation):
+
+- `docs/adr/0001-record-architecture-decisions.md` — drop the canonical ADR-0001 boilerplate verbatim from [`adr.md`'s Bootstrap section](specs/adr.md), with `{YYYY-MM-DD}` replaced by today's date. This is the only ADR scaffold writes — subsequent ADRs are authored by the SWE / PR Reviewer / `/architecture-review` flow as decisions arise. Do **not** emit a `docs/adr/.gitkeep` (ADR-0001 already keeps the directory non-empty).
+
+If `ubiquitous-language` chosen (Process & documentation):
+
+- `docs/glossary.md` — minimal seed: a one-paragraph header declaring the discipline ("The canonical vocabulary for {project}. When code, docs, specs, or conversation use a domain concept, use the term as it appears here.") + an empty 3-column table (`| Term | Definition | Notes |`) with a single commented-out example row so the format is unambiguous. Do **not** invent domain terms — the SWE / PM agent populate it as the first feature lands. Recommended seed body:
+
+  ```markdown
+  # Glossary
+
+  The canonical vocabulary for {project name}. When code, docs, specs, or conversation use a domain concept, use the term as it appears here. PRs that introduce or rename a domain concept update this file in the same change.
+
+  | Term | Definition | Notes |
+  |---|---|---|
+  <!-- | **OrderLine** | One line item within an Order, identified by `order_line_id`. | Distinct from "Item" (the catalogue entry). | -->
+  ```
 
 ### 5. Report back
 
