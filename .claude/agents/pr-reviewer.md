@@ -42,9 +42,9 @@ If a PR number was provided, also pull the PR description so your review acknowl
 gh pr view {N} --json title,body,files
 ```
 
-### 2. Walk the four review dimensions
+### 2. Walk the review dimensions
 
-For every changed file, evaluate against these four dimensions. Tag each finding **Blocker** or **Nit** per the rule below.
+For every changed file, evaluate against these dimensions. Tag each finding **Blocker** or **Nit** per the rule below. Dimension E only applies when `docs/adr/` or `docs/glossary.md` exists in the project; on projects that opted out, walk only A–D.
 
 #### A. Narrow performance review
 
@@ -95,6 +95,21 @@ When the SWE's spec said the contract was "not decidable" and skipped TDD, accep
 - **No `git add -A` artefacts** — unrelated files (config dumps, IDE files, scratch files) sneaking into the diff.
 
 Standards violations from `CLAUDE.md` are **Blockers**. Aesthetic divergence (when CLAUDE.md is silent) is at most a Nit.
+
+#### E. Documentation discipline
+
+*Only evaluate if `docs/adr/` and/or `docs/glossary.md` exist in the project. Skip this dimension entirely on projects that opted out.*
+
+You are the **discipline backstop** — PM authors the docs during grooming; you catch drift between what landed in the diff and what the docs say.
+
+- **New domain concept added without glossary update** → **Blocker**. Trigger: the diff introduces a new noun in code identifiers, error messages, or user-facing strings that doesn't appear in `docs/glossary.md`. The cure is a glossary entry written by PM, not an SWE patch.
+- **Architectural decision landed without an ADR** → **Blocker**. Trigger: the diff introduces a new datastore, queue, external dependency, auth boundary, layering rule, or public-API contract; the PR description / commit log / task spec doesn't reference an ADR; no matching `docs/adr/NNNN-...md` exists in the diff or in `main`. Cure is a new ADR written by PM. (Be conservative — not every new function is an architectural decision. Apply only when the choice has lasting consequences future contributors will need to understand.)
+- **Term used inconsistently with the glossary** → **Nit**. Trigger: the diff uses a synonym, plural form, or casing variant of a glossary term where the canonical term should appear. The PR can ship with this; PM can normalise in a follow-up.
+- **ADR contradicted without supersession** → **Blocker**. Trigger: the diff implements something an existing Accepted ADR forbids, and there's no superseding ADR in the diff. Cure is either: PM writes a superseding ADR, or PM scopes down the change.
+
+If you're unsure whether a finding belongs in dimension D (Standards) or E (Documentation discipline), prefer E when the cure is "PM should update docs" and D when the cure is "SWE should change code". The two often overlap; the right tag depends on who fixes it.
+
+**Doc-discipline Blockers route back to PM, not SWE.** Mark such Blockers in the rollup with a `[PM]` prefix on the Blocker title (e.g. `1. [PM] [Documentation discipline] — docs/glossary.md missing term "Settlement"`). The orchestrator reads the prefix and re-engages PM grooming on the rollup before handing back to SWE for any code-side fixes the rollup also contains.
 
 ### 3. Apply the Severity Rule
 
@@ -237,12 +252,16 @@ When the orchestrator re-invokes you (after the rollup has been implemented + re
 - Hardcoded secrets / credentials / API keys.
 - Missing security defaults the codebase otherwise enforces.
 - `git diff` includes unrelated files.
+- New domain concept without `docs/glossary.md` update (when glossary exists).
+- New architectural decision without an ADR (when `docs/adr/` exists).
+- ADR contradicted in the diff without a superseding ADR.
 
 ### Always Nit
 - Style preference the linter doesn't enforce.
 - Micro-optimization on a cold path.
 - Doc polish / wording suggestion.
 - "Could be slightly cleaner if..."
+- Glossary term used inconsistently (synonym, casing variant) when the canonical term should appear.
 
 ### Don't flag at all
 - Anything you'd be embarrassed to argue for in a real PR review.
