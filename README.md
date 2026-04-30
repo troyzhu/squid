@@ -16,7 +16,7 @@ After `/plugin install`, in any repo:
 | `product-manager`, `software-engineer`, `tester`, `pr-reviewer`, `oncall-engineer` | Sub-agents invoked by the pipelines. Also available for direct use via the `Agent` tool. |
 | `testing-python`, `create-pr`, `self-improve` | Support skills referenced by the pipelines and agents. |
 
-The `/scaffold` spec library (under `.claude/skills/scaffold/specs/`) covers:
+The `/scaffold` spec library (under `skills/scaffold/specs/`) covers:
 
 - **Python:** backend layout, uv, pyproject, ruff, FastAPI, FastMCP, CLI tools
 - **TypeScript frontend:** package/tsconfig/vite conventions, React, Vue, Svelte, vanilla
@@ -28,10 +28,6 @@ Several specs are still stubs — first-pass content is in place for the foundat
 
 ## Install
 
-Three install paths — pick whichever fits your workflow.
-
-### As a Claude Code plugin (global, all sessions)
-
 The repo is a one-plugin marketplace (`.claude-plugin/marketplace.json` lists it). Register the marketplace, then install:
 
 ```
@@ -41,7 +37,7 @@ The repo is a one-plugin marketplace (`.claude-plugin/marketplace.json` lists it
 
 `/plugin marketplace update squid` later pulls fresh changes. The agents and skills appear in `/agents` and `/help` in any Claude Code session.
 
-> **Note on local clones.** `/plugin marketplace add /path/to/squid` reads the local marketplace.json, but the plugin's `source` points at the GitHub repo — so the install still fetches from `iusztinpaul/squid` on GitHub, not from your working tree. For testing uncommitted changes, use the next section instead.
+> **Note on local clones.** `/plugin marketplace add /path/to/squid` reads the local marketplace.json, but the plugin's `source` points at the GitHub repo — so the install still fetches from `iusztinpaul/squid` on GitHub, not from your working tree. For testing uncommitted changes, see the next section.
 
 ### Local plugin development (no install)
 
@@ -52,46 +48,6 @@ claude --plugin-dir /path/to/squid
 ```
 
 This launches Claude Code with the plugin loaded for the session. No marketplace, no install, no cache. Re-run after edits to pick up changes. This is the only path that exercises your local working tree directly on Claude Code v2.1+.
-
-### As a per-project install via `npx` (drops files into your repo)
-
-Three sources, in increasing order of pinning rigour:
-
-```bash
-# Published to npm (once `npm publish` has been run)
-npx squid
-
-# Directly from a public GitHub repo (no npm publish needed)
-npx github:iusztinpaul/squid
-
-# Directly from a private GitHub repo (uses your local git auth — SSH key or PAT)
-npx git+ssh://git@github.com/iusztinpaul/squid.git
-
-# Pin to a specific tag or commit (recommended for reproducibility)
-npx github:iusztinpaul/squid#v0.1.0
-npx github:iusztinpaul/squid#<commit-sha>
-```
-
-The git-URL forms work because `npx` clones the repo into its cache, runs `npm install` (zero deps here), and invokes the `bin` script. For private repos, **git auth** is what matters — not npm: if `git clone git@github.com:iusztinpaul/squid.git` works on your machine, the SSH form above works too.
-
-Once invoked, run from inside the project you want to set up. It writes:
-
-- `.claude/agents/` — the five sub-agent contracts (overwrites)
-- `.claude/skills/` — `/day`, `/night`, `/scaffold`, plus support skills (overwrites)
-- `.claude/settings.json` — **smart-merged** with any existing file (permissions union'd + deduped, `enabledPlugins` shallow-merged, every other key preserved)
-- `docs/PROCESS.md` — the canonical lifecycle (skipped if it already exists; pass `--force` to overwrite)
-
-Useful flags:
-
-```
-npx squid [target-dir]   # default: cwd
-  --force         Overwrite docs/PROCESS.md if it already exists
-  --no-process    Skip docs/PROCESS.md entirely
-  --dry-run       Print what would be written, change nothing
-  --help          Show all options
-```
-
-The npx path is project-local and version-able through your repo (no global plugin registration). The `/plugin install` path is global and managed by Claude Code's plugin system. Both produce the same agent behaviour. `--plugin-dir` is for editing the plugin itself, not for running against it long-term.
 
 ## Quick start
 
@@ -128,14 +84,15 @@ The SWE agent reads `CLAUDE.md`, picks up the specs it references, writes real c
 
 ```
 .
-├── .claude-plugin/plugin.json      # manifest
-├── .claude/
-│   ├── agents/                     # 5 sub-agents
-│   └── skills/                     # 6 skills
-│       └── scaffold/specs/         # 19 reference specs
-├── docs/PROCESS.md                 # canonical agent-team lifecycle
-├── CLAUDE.md                       # plugin-dev brief
-├── README.md                       # this file
+├── .claude-plugin/
+│   ├── plugin.json                # manifest
+│   └── marketplace.json           # one-plugin marketplace catalog
+├── agents/                        # 5 sub-agents
+├── skills/                        # 12 skills
+│   └── scaffold/specs/            # 19 reference specs
+├── docs/PROCESS.md                # canonical agent-team lifecycle
+├── CLAUDE.md                      # plugin-dev brief
+├── README.md                      # this file
 └── LICENSE
 ```
 

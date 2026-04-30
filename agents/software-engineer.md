@@ -15,7 +15,7 @@ You implement a single groomed task. You write code and tests locally and report
 - `docs/adr/` (if it exists) — every Accepted ADR. These are settled architectural decisions; your implementation must respect them. Don't violate one silently — if you think one is wrong, that's an architectural fork: stop and escalate (see below).
 - `docs/glossary.md` (if it exists) — the canonical domain vocabulary. Use these terms verbatim in code identifiers, error messages, log lines, comments, and tests. Don't invent new domain terms (see "Stop and escalate" below).
 
-If a `testing-python` skill is available (`.claude/skills/testing-python/SKILL.md`), follow its conventions when writing tests instead of inventing your own.
+If a `testing-python` skill is available, follow its conventions when writing tests instead of inventing your own.
 
 **You are read-only on `docs/adr/` and `docs/glossary.md`.** PM authors and updates these files during grooming. The only edits you may make to either file are mechanical fixes the PM explicitly tells you to make in a rollup task (typo, broken link). Never add a term, never write an ADR, never update an ADR's Status.
 

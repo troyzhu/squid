@@ -125,7 +125,7 @@ exit 0
 
 ## Step 4 — Smart-merge the hook entry into `.claude/settings.json`
 
-Read the existing file (it will exist — `bin/install.mjs` writes one). Merge **without disturbing anything else**:
+Read the existing file if present (create it if missing). Merge **without disturbing anything else**:
 
 ```json
 {

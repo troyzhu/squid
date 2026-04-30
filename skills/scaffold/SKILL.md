@@ -122,7 +122,7 @@ Write a single `CLAUDE.md` at the target project root (or wherever `/scaffold` w
 
 ## Key Python Design Choices
 
-*Only emit if `backend` ∈ components. Distil 5 headline rules from [`python-backend.md`](.claude/skills/scaffold/specs/python-backend.md) — do NOT copy-paste the spec.*
+*Only emit if `backend` ∈ components. Distil 5 headline rules from [`python-backend.md`](skills/scaffold/specs/python-backend.md) — do NOT copy-paste the spec.*
 
 - Python 3.12+ minimum; async for I/O-bound work, sync for CPU.
 - Loose clean architecture — `entities/` for shared ODM/Pydantic models and enums; per-module `types.py` for narrow types used only within that module or layers upward.
@@ -142,11 +142,11 @@ Every entry-point module in `scripts/` calls `init_logger()` (or the project's l
 - `@pytest.mark.parametrize` for table tests.
 - **Zero warnings.** `filterwarnings = ["error"]` in pytest config.
 - **AVOID** unit-testing infrastructure components (orchestrator adapters, model-serving runtime, observability client) — those belong in integration tests only.
-- See the [`testing-python`](.claude/skills/testing-python/SKILL.md) skill for depth.
+- See the [`testing-python`](skills/testing-python/SKILL.md) skill for depth.
 
 ## Key TypeScript Design Choices
 
-*Only emit if `frontend-web` ∈ components. Distil from [`typescript-frontend.md`](.claude/skills/scaffold/specs/typescript-frontend.md) + the chosen framework spec (`react-app.md` / `vue-app.md` / `svelte-app.md` / `vanilla-ts-app.md`).*
+*Only emit if `frontend-web` ∈ components. Distil from [`typescript-frontend.md`](skills/scaffold/specs/typescript-frontend.md) + the chosen framework spec (`react-app.md` / `vue-app.md` / `svelte-app.md` / `vanilla-ts-app.md`).*
 
 - Node 20+, `npm` (lockfile `package-lock.json`), Vite bundler, Vitest + jsdom for tests.
 - `tsconfig`: `strict: true`, `noUnusedLocals`, `noUnusedParameters`, `noFallthroughCasesInSwitch`, `isolatedModules`, `moduleResolution: "bundler"`.
@@ -156,7 +156,7 @@ Every entry-point module in `scripts/` calls `init_logger()` (or the project's l
 
 ## Key Go Design Choices
 
-*Only emit if `frontend-tui` ∈ components. Distil from [`go-tui.md`](.claude/skills/scaffold/specs/go-tui.md).*
+*Only emit if `frontend-tui` ∈ components. Distil from [`go-tui.md`](skills/scaffold/specs/go-tui.md).*
 
 - Go 1.22+, `gofmt` authoritative, `go vet ./...` for lint, stdlib `testing`.
 - `cmd/<slug>/main.go` is thin — wires the framework, calls `run()`. `internal/` holds ~95% of code; `pkg/` only for externally importable API.
@@ -181,7 +181,7 @@ Example (MongoDB selected):
 
 ```
 <!-- stack:mongodb -->
-- **MongoDB** — async ODM (Beanie / PyMongo); `mongosh "$MONGODB_URL"` for local queries. Spec: [`datastore-mongodb`](.claude/skills/scaffold/specs/datastore-mongodb.md).
+- **MongoDB** — async ODM (Beanie / PyMongo); `mongosh "$MONGODB_URL"` for local queries. Spec: [`datastore-mongodb`](skills/scaffold/specs/datastore-mongodb.md).
 <!-- /stack:mongodb -->
 ```
 
@@ -214,10 +214,10 @@ This project ships with an opinionated **agent team workflow** in two modes. The
 
 | Role | File | Responsibility |
 |---|---|---|
-| Product Manager | [`.claude/agents/product-manager.md`](.claude/agents/product-manager.md) | Grooms tasks; final user-POV acceptance (night mode). |
-| Software Engineer | [`.claude/agents/software-engineer.md`](.claude/agents/software-engineer.md) | Implements code + tests; no commit until Tester PASS. |
-| Tester | [`.claude/agents/tester.md`](.claude/agents/tester.md) | Runs full suite; verifies every AC with evidence. |
-| On-Call Engineer | [`.claude/agents/oncall-engineer.md`](.claude/agents/oncall-engineer.md) | Watches CI after push (night mode). |
+| Product Manager | [`agents/product-manager.md`](agents/product-manager.md) | Grooms tasks; final user-POV acceptance (night mode). |
+| Software Engineer | [`agents/software-engineer.md`](agents/software-engineer.md) | Implements code + tests; no commit until Tester PASS. |
+| Tester | [`agents/tester.md`](agents/tester.md) | Runs full suite; verifies every AC with evidence. |
+| On-Call Engineer | [`agents/oncall-engineer.md`](agents/oncall-engineer.md) | Watches CI after push (night mode). |
 
 **Entry points:**
 
@@ -236,7 +236,7 @@ This project ships with an opinionated **agent team workflow** in two modes. The
 
 Direct chat is for trivial edits and one-shot questions. For anything that needs a test gate, use `/day`; for unattended batches, use `/night`.
 
-**Engineering discipline lives in the agent contracts — not here.** TDD-first ordering, branching off the current active branch, running the feature end-to-end before hand-off, regression-test-first for bugs, the PR / review-response loop, and the format/lint/unit-tests/integration-tests cadence are all defined in [`.claude/agents/software-engineer.md`](.claude/agents/software-engineer.md) and [`.claude/agents/tester.md`](.claude/agents/tester.md). Read those for the general rules; `/day` and `/night` enforce them automatically.
+**Engineering discipline lives in the agent contracts — not here.** TDD-first ordering, branching off the current active branch, running the feature end-to-end before hand-off, regression-test-first for bugs, the PR / review-response loop, and the format/lint/unit-tests/integration-tests cadence are all defined in [`agents/software-engineer.md`](agents/software-engineer.md) and [`agents/tester.md`](agents/tester.md). Read those for the general rules; `/day` and `/night` enforce them automatically.
 
 Project-specific invariants the agents can't fully own:
 
@@ -320,10 +320,10 @@ External-service CLIs (datastore, orchestrator, observability, LLM, embedding, s
 *Only emit if `adr` and/or `ubiquitous-language` were chosen in step 1.*
 
 {If `adr` chosen, emit:}
-- **ADRs.** Architecture Decision Records live at [`docs/adr/`](docs/adr/) as `NNNN-kebab-title.md`. Every non-obvious architectural choice (datastore, async/sync default, auth boundary, dependency lock-in) ships with one. Use the four-section Nygard template — Status / Context / Decision / Consequences. ADR-0001 ([`docs/adr/0001-record-architecture-decisions.md`](docs/adr/0001-record-architecture-decisions.md)) is already in the repo and explains the convention. Spec depth: [`adr.md`](.claude/skills/scaffold/specs/adr.md).
+- **ADRs.** Architecture Decision Records live at [`docs/adr/`](docs/adr/) as `NNNN-kebab-title.md`. Every non-obvious architectural choice (datastore, async/sync default, auth boundary, dependency lock-in) ships with one. Use the four-section Nygard template — Status / Context / Decision / Consequences. ADR-0001 ([`docs/adr/0001-record-architecture-decisions.md`](docs/adr/0001-record-architecture-decisions.md)) is already in the repo and explains the convention. Spec depth: [`adr.md`](skills/scaffold/specs/adr.md).
 
 {If `ubiquitous-language` chosen, emit:}
-- **Glossary.** The canonical domain vocabulary lives at [`docs/glossary.md`](docs/glossary.md). One canonical name per concept; code identifiers, OpenAPI schemas, database columns, and customer-facing UI all use the term as it appears there. Update the glossary in the same PR that introduces or renames a domain concept — never after. PM grooming and [`/grill-me`](.claude/skills/grill-me/SKILL.md) read it as the tie-breaker when specs and code disagree. Spec depth: [`ubiquitous-language.md`](.claude/skills/scaffold/specs/ubiquitous-language.md).
+- **Glossary.** The canonical domain vocabulary lives at [`docs/glossary.md`](docs/glossary.md). One canonical name per concept; code identifiers, OpenAPI schemas, database columns, and customer-facing UI all use the term as it appears there. Update the glossary in the same PR that introduces or renames a domain concept — never after. PM grooming and [`/grill-me`](skills/grill-me/SKILL.md) read it as the tie-breaker when specs and code disagree. Spec depth: [`ubiquitous-language.md`](skills/scaffold/specs/ubiquitous-language.md).
 
 ## Self Improve
 
