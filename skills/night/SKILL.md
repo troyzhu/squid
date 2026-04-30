@@ -75,7 +75,7 @@ Launch ONE PM agent in **feature-level grooming** mode:
 
 ```
 Agent(
-  subagent_type="product-manager",
+  subagent_type="squid:product-manager",
   prompt="""Feature-level grooming. Read docs/PROCESS.md and CLAUDE.md first. Follow Part 1A of your role definition.
 
   Working directory: {WORKTREE_PATH}
@@ -133,7 +133,7 @@ For each task in the Tasks Plan, **in order**, run:
 
 ```
 Agent(
-  subagent_type="software-engineer",
+  subagent_type="squid:software-engineer",
   prompt="""Implement task {ID}. Read docs/PROCESS.md and CLAUDE.md first. Follow your role definition.
 
   Working directory: {WORKTREE_PATH}
@@ -147,7 +147,7 @@ Agent(
 
 ```
 Agent(
-  subagent_type="tester",
+  subagent_type="squid:tester",
   prompt="""QA task {ID}. Read docs/PROCESS.md and CLAUDE.md first. Follow your role definition — your headline duty is the e2e adversarial pass.
 
   Working directory: {WORKTREE_PATH}
@@ -165,7 +165,7 @@ Agent(
 - **FAIL** or **PASS-but-rubber-stamped** → relay concrete feedback to the SWE:
   ```
   Agent(
-    subagent_type="software-engineer",
+    subagent_type="squid:software-engineer",
     prompt="QA failed on task {ID}. Working directory: {WORKTREE_PATH}. Concrete feedback: {failed AC + break-path failures + fixes}. Apply the fixes, re-run the local QA loop. Append a new log entry. DO NOT commit."
   )
   ```
@@ -187,7 +187,7 @@ Once the Tester PASSES a task, the SWE commits **just that task**:
 
 ```
 Agent(
-  subagent_type="software-engineer",
+  subagent_type="squid:software-engineer",
   prompt="""Tester PASSED task {ID}. Working directory: {WORKTREE_PATH}. Commit per your role definition — `commit-commands` plugin required, specific files only, message ends with `Closes #N` (or `Refs #N` if [HUMAN] criteria, or `Closes-tracker: NNN-slug` in file mode). DO NOT push yet — push happens once for the whole feature after PM ACCEPT."""
 )
 ```
@@ -204,7 +204,7 @@ After every task in the plan has been committed locally, launch ONE PM in accept
 
 ```
 Agent(
-  subagent_type="product-manager",
+  subagent_type="squid:product-manager",
   prompt="""Acceptance review for feature {title}. Read docs/PROCESS.md and CLAUDE.md first. Follow Part 2 of your role definition.
 
   Working directory: {WORKTREE_PATH}
@@ -236,7 +236,7 @@ Hand to SWE to push and open/update the Feature PR via the `create-pr` skill:
 
 ```
 Agent(
-  subagent_type="software-engineer",
+  subagent_type="squid:software-engineer",
   prompt="""Feature {title} accepted. Working directory: {WORKTREE_PATH}. Push the feature branch (`git push -u origin feat/{slug}` if first push, else `git push`). Then invoke the `create-pr` skill to open or update the Feature PR. The PR description must summarize the feature and list each task by ID. Hand back the PR number."""
 )
 ```
@@ -251,12 +251,12 @@ Launch BOTH agents in **parallel** (one message, two `Agent` calls). They are in
 
 ```
 Agent(
-  subagent_type="oncall-engineer",
+  subagent_type="squid:oncall-engineer",
   prompt="""Watch CI for the latest push on feat/{slug} (PR #{N}). Working directory: {WORKTREE_PATH}. Follow your role definition. CI/CD only — do not read the diff for review. If green, report success. If red, trace, fix, push with `Refs #N`, re-verify. Five fix attempts max."""
 )
 
 Agent(
-  subagent_type="pr-reviewer",
+  subagent_type="squid:pr-reviewer",
   prompt="""Review PR #{N} (branch: feat/{slug}). Working directory: {WORKTREE_PATH}. Read docs/PROCESS.md and CLAUDE.md first. Follow your role definition.
 
   Read the entire diff (`git diff $(git merge-base HEAD origin/main)...HEAD`). Walk the four review dimensions. Tag every finding Blocker or Nit. Produce ONE rollup task if there are Blockers, or report `NO BLOCKERS` and append Nits to the PR description.
@@ -317,7 +317,7 @@ Re-invoke `create-pr` to refresh the PR description against the squashed commit:
 
 ```
 Agent(
-  subagent_type="software-engineer",
+  subagent_type="squid:software-engineer",
   prompt="Squash done. Working directory: {WORKTREE_PATH}. Re-invoke the `create-pr` skill to update PR #{N}'s description against the squashed commit (preserve the task list and any Nits already appended)."
 )
 ```

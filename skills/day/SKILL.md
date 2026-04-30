@@ -57,7 +57,7 @@ Launch ONE SWE on the human's working tree (no worktree isolation):
 
 ```
 Agent(
-  subagent_type="software-engineer",
+  subagent_type="squid:software-engineer",
   prompt="Implement task {ID or description}. Read docs/PROCESS.md and CLAUDE.md first. Follow your role definition. Write code AND tests. Run make format-fix && make lint-fix && make unit-tests until clean. DO NOT commit. Append a SWE Report section (or, for ephemeral tasks, include the report in your final message). Hand off to Tester when done."
 )
 ```
@@ -70,7 +70,7 @@ If the SWE reports a hard blocker (ambiguous spec, missing dependency), surface 
 
 ```
 Agent(
-  subagent_type="tester",
+  subagent_type="squid:tester",
   prompt="QA task {ID or description}. Read docs/PROCESS.md and CLAUDE.md first. The SWE wrote: {summary from SWE report}. Follow your role definition — your headline duty is the e2e adversarial pass. Run make pre-commit && make unit-tests && make integration-tests, then run the e2e adversarial pass (happy path + 2–3 realistic break paths). Verify every acceptance criterion with evidence. Append a QA Report section. Verdict: PASS or FAIL."
 )
 ```
@@ -90,7 +90,7 @@ Then:
 - **FAIL**, or **PASS but rubber-stamped** → one feedback loop back to the SWE with concrete fixes:
   ```
   Agent(
-    subagent_type="software-engineer",
+    subagent_type="squid:software-engineer",
     prompt="QA failed on {task}. Concrete feedback: {failed AC + fixes}. Apply the fixes. Re-run lint + tests. Append a new log entry. DO NOT commit."
   )
   ```
