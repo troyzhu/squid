@@ -80,12 +80,12 @@ Five sub-agents plus the orchestrator (the top-level Claude Code session).
 
 | Agent | File | Role |
 |---|---|---|
-| Orchestrator | `CLAUDE.md` + `.claude/skills/night/SKILL.md` / `.claude/skills/day/SKILL.md` | Drives the pipeline; never writes code itself. |
-| Product Manager | `.claude/agents/product-manager.md` | Grooms a feature into a Tasks Plan; user-perspective acceptance review at the end of the inner loop. |
-| Software Engineer | `.claude/agents/software-engineer.md` | Implements code + tests; commits only after Tester PASS + PM ACCEPT. |
-| Tester | `.claude/agents/tester.md` | Runs the full suite; verifies every AC with evidence; **headline duty: e2e adversarial QA — break the feature from multiple user perspectives**. |
-| PR Reviewer | `.claude/agents/pr-reviewer.md` | Reads the git diff after push. Narrow performance review (hot path / asymptotic / material framework underuse only), clean code, untested code, standards. Produces a rollup task with Blockers + Nits. Never reads CI, never merges. |
-| On-Call Engineer | `.claude/agents/oncall-engineer.md` | Watches CI/CD after push. On red, traces to a task, fixes, pushes (`Refs #N`), confirms green. CI/CD-only — does not read the diff. |
+| Orchestrator | `CLAUDE.md` + `skills/night/SKILL.md` / `skills/day/SKILL.md` | Drives the pipeline; never writes code itself. |
+| Product Manager | `agents/product-manager.md` | Grooms a feature into a Tasks Plan; user-perspective acceptance review at the end of the inner loop. |
+| Software Engineer | `agents/software-engineer.md` | Implements code + tests; commits only after Tester PASS + PM ACCEPT. |
+| Tester | `agents/tester.md` | Runs the full suite; verifies every AC with evidence; **headline duty: e2e adversarial QA — break the feature from multiple user perspectives**. |
+| PR Reviewer | `agents/pr-reviewer.md` | Reads the git diff after push. Narrow performance review (hot path / asymptotic / material framework underuse only), clean code, untested code, standards. Produces a rollup task with Blockers + Nits. Never reads CI, never merges. |
+| On-Call Engineer | `agents/oncall-engineer.md` | Watches CI/CD after push. On red, traces to a task, fixes, pushes (`Refs #N`), confirms green. CI/CD-only — does not read the diff. |
 
 ## Retry Caps
 
@@ -310,7 +310,7 @@ The PM, during grooming, produces the **Tasks Plan**: an ordered list of groomed
 
 ## Self-Improve
 
-Run **only** when the human says yes at the end of the run. Produces a proposed update to `CLAUDE.md` (or another project doc) capturing corrections from the run; the human reviews and accepts. See `.claude/skills/self-improve/SKILL.md`.
+Run **only** when the human says yes at the end of the run. Produces a proposed update to `CLAUDE.md` (or another project doc) capturing corrections from the run; the human reviews and accepts. See `skills/self-improve/SKILL.md`.
 
 ## Tracker Modes
 
@@ -357,11 +357,11 @@ Stack-agnostic conventions. Each project's `CLAUDE.md` fills in the specifics.
 
 ## Reuse Existing Skills
 
-- **Test writing conventions** — `.claude/skills/testing-python/SKILL.md`.
-- **PR creation** — `.claude/skills/create-pr/SKILL.md`.
+- **Test writing conventions** — `skills/testing-python/SKILL.md`.
+- **PR creation** — `skills/create-pr/SKILL.md`.
 - **Commit messages** — `commit-commands` plugin (required for SWE commits when present).
 - **Code review** — Tester may invoke the `code-review` plugin as an extra signal.
-- **Self-improvement** — `.claude/skills/self-improve/SKILL.md`, run only on human request at end of `/night`.
+- **Self-improvement** — `skills/self-improve/SKILL.md`, run only on human request at end of `/night`.
 
 ## When to Use Which Workflow
 

@@ -122,7 +122,7 @@ We expect to make architectural decisions over the lifetime of this project — 
 
 ## Decision
 
-We will use Architecture Decision Records, as described by Michael Nygard, stored in `docs/adr/` as `NNNN-kebab-title.md`. Each ADR has four sections: Status, Context, Decision, Consequences. The convention and template are documented in [`pre-commit-hooks.md`'s sibling spec `adr.md`](.claude/skills/scaffold/specs/adr.md).
+We will use Architecture Decision Records, as described by Michael Nygard, stored in `docs/adr/` as `NNNN-kebab-title.md`. Each ADR has four sections: Status, Context, Decision, Consequences. The convention and template are documented in [`pre-commit-hooks.md`'s sibling spec `adr.md`](adr.md).
 
 ## Consequences
 

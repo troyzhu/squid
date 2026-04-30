@@ -204,7 +204,7 @@ Single block:
 
 {One of:}
 - "Recommend ADR-{NNNN} to record the resolution of F{X} when its refactor lands."
-- "No ADRs in `docs/adr/` — recommend bootstrapping with [`adr.md`](.claude/skills/scaffold/specs/adr.md) before proceeding so this review's findings stay durable."
+- "No ADRs in `docs/adr/` — recommend bootstrapping with [`adr.md`](../scaffold/specs/adr.md) before proceeding so this review's findings stay durable."
 ```
 
 ## Notes on shape

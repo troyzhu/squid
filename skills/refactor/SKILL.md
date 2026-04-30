@@ -134,7 +134,7 @@ If task N goes sideways and the team needs to ship before it's resolved, revert 
 
 ## Notes for the SWE
 
-- This is a refactor — **add no behaviour, fix no bugs**, even if you spot one. File a [`/triage-issue`](.claude/skills/triage-issue/SKILL.md) for any bug found mid-refactor; do not let it ride along.
+- This is a refactor — **add no behaviour, fix no bugs**, even if you spot one. File a [`/triage-issue`](../triage-issue/SKILL.md) for any bug found mid-refactor; do not let it ride along.
 - If a task's AC turns out to be wrong (e.g., a hidden import the planner missed), update the plan via the orchestrator before adapting code — drift between plan and reality is the source of "refactor went off the rails" stories.
 ```
 
