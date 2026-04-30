@@ -28,6 +28,8 @@ Several specs are still stubs — first-pass content is in place for the foundat
 
 ## Install
 
+### As a Claude Code plugin (global, all sessions)
+
 The repo is a one-plugin marketplace (`.claude-plugin/marketplace.json` lists it). Register the marketplace, then install:
 
 ```
@@ -37,7 +39,31 @@ The repo is a one-plugin marketplace (`.claude-plugin/marketplace.json` lists it
 
 `/plugin marketplace update squid` later pulls fresh changes. The agents and skills appear in `/agents` and `/help` in any Claude Code session.
 
-> **Note on local clones.** `/plugin marketplace add /path/to/squid` reads the local marketplace.json, but the plugin's `source` points at the GitHub repo — so the install still fetches from `iusztinpaul/squid` on GitHub, not from your working tree. For testing uncommitted changes, see the next section.
+> **Note on local clones.** `/plugin marketplace add /path/to/squid` reads the local marketplace.json, but the plugin's `source` points at the GitHub repo — so the install still fetches from `iusztinpaul/squid` on GitHub, not from your working tree. For testing uncommitted changes, see the [Local plugin development](#local-plugin-development-no-install) section.
+
+### Per-project install (committed to `.claude/settings.json`)
+
+If you want squid enabled automatically for **anyone who clones a particular repo** — without them having to run `/plugin marketplace add` first — commit this into the target repo's `.claude/settings.json`:
+
+```json
+{
+  "extraKnownMarketplaces": {
+    "squid": {
+      "source": {
+        "source": "github",
+        "repo": "iusztinpaul/squid"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "squid@squid": true
+  }
+}
+```
+
+When a teammate (or future-you on a fresh machine) opens that repo in Claude Code and trusts the folder, they're prompted to add the `squid` marketplace and install the plugin in one step.
+
+`enabledPlugins` alone isn't enough on a fresh machine — Claude Code needs to know what marketplace `squid@squid` resolves to, and `extraKnownMarketplaces` is what tells it. You can leave both keys in the same file alongside any other plugins you have enabled.
 
 ### Local plugin development (no install)
 
