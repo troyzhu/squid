@@ -1,49 +1,58 @@
-# Engineering Agent Team
+# Squid — an engineering agent team for Claude Code
 
-A [Claude Code](https://claude.com/claude-code) plugin that installs an opinionated **agent team** plus a `/scaffold` bootstrap flow into any repo — so Claude builds software the way *this* team builds it.
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Claude Code](https://img.shields.io/badge/Claude%20Code-2.1%2B-blue)](https://claude.com/claude-code)
+[![Plugin version](https://img.shields.io/github/v/tag/iusztinpaul/squid?label=version)](https://github.com/iusztinpaul/squid/tags)
 
-No file templates. No rendering step. The plugin is markdown specs and agent contracts; every file in your project gets written by an agent that reads those specs and follows them.
+Claude Code writes code fast. It's worse at writing the code *your team* would actually ship — the kind that follows your conventions, has tests you trust, and survives review.
 
-## What you get
+**Squid is a [Claude Code](https://claude.com/claude-code) plugin that turns a feature spec into a reviewed PR using a 5-agent pipeline — PM → SWE → Tester → PR Reviewer → On-Call — with exactly two human gates: plan approval and final merge.**
 
-After `/plugin install`, in any repo:
+No file templates. No render step. Markdown specs + agent contracts only; every file in your project gets written by an agent that reads those specs and follows them.
 
-| Surface | What it does |
-|---|---|
-| `/scaffold` | Interactive bootstrap. Asks what you're building (backend / frontend / TUI / mix), reads the relevant specs, writes a tailored `CLAUDE.md`, and lays down an empty folder skeleton. Run `/day` next to have the agents fill it in. |
-| `/day <task>` | Single-task supervised inner loop. `SWE implements → Tester verifies → you review + commit`. Use during active work. |
-| `/night <feature-spec>` | End-to-end single-feature pipeline. `Branch + worktree → PM grooms Tasks Plan → human approves → SWE/Tester loop per task → PM accepts → push → On-Call (CI) ‖ PR Reviewer (diff) → squash → optional Self-Improve → human merges`. Two human gates (plan approval + final merge); everything else is automated. |
-| `product-manager`, `software-engineer`, `tester`, `pr-reviewer`, `oncall-engineer` | Sub-agents invoked by the pipelines. Also available for direct use via the `Agent` tool. |
-| `testing-python`, `create-pr`, `self-improve` | Support skills referenced by the pipelines and agents. |
+## How it works
 
-The `/scaffold` spec library (under `skills/scaffold/specs/`) covers:
+Run `/night <feature-spec>` and Squid drives this pipeline end-to-end:
 
-- **Python:** backend layout, uv, pyproject, ruff, FastAPI, FastMCP, CLI tools
-- **TypeScript frontend:** package/tsconfig/vite conventions, React, Vue, Svelte, vanilla
-- **Go TUI:** layout + Bubbletea / tview patterns
-- **Infra:** Docker, docker-compose, GitHub Actions monorepo CI, OpenAPI contracts
-- **Process:** monorepo layout, Makefile delegator, tracker workflow
+```
+   feature spec
+        │
+        ▼
+  ┌─────────────┐     ┌─────────────────────┐     ┌────────────────────┐
+  │ PM grooms   │────▶│  HUMAN approves     │────▶│ SWE ↔ Tester loop  │
+  │ Tasks Plan  │     │  Tasks Plan  (1/2)  │     │      (per task)    │
+  └─────────────┘     └─────────────────────┘     └────────────────────┘
+                                                            │
+                                                            ▼
+  ┌─────────────┐     ┌─────────────────────┐     ┌────────────────────┐
+  │ HUMAN       │◀────│  PR Reviewer  ‖     │◀────│ PM accepts + push  │
+  │ merges PR   │     │  On-Call (CI)       │     │                    │
+  │     (2/2)   │     │  (run in parallel)  │     │                    │
+  └─────────────┘     └─────────────────────┘     └────────────────────┘
+```
 
-Several specs are still stubs — first-pass content is in place for the foundations (`python-backend`, `typescript-frontend`, `go-tui`, `uv-python`, `pyproject`, `makefile-delegator`, `monorepo-layout`); others will be fleshed out as they're used.
+Branch + worktree, grooming, the per-task implement/verify loop, push, parallel CI + diff review, squash — all automated. You only show up for the two gates.
+
+For active iteration on a single task, use `/day <task>` instead — same SWE ↔ Tester loop, no PM grooming, no PR pipeline. Use `/scaffold` first if you're starting from an empty directory; it interviews you about the stack, picks the right specs, and writes a tailored `CLAUDE.md` plus a folder skeleton (no application source).
+
+## Who this is for
+
+- **Yes:** solo devs and small teams shipping Python backends, TypeScript frontends, or Go TUIs who want Claude Code to *consistently* hit your team's bar without re-explaining conventions every session.
+- **Maybe not:** teams with an established in-house agent pipeline they don't want to displace, or stacks Squid doesn't cover yet (Rust, Java, mobile — [PRs welcome](#contributing)).
 
 ## Install
-
-### As a Claude Code plugin (global, all sessions)
-
-The repo is a one-plugin marketplace (`.claude-plugin/marketplace.json` lists it). Register the marketplace, then install:
 
 ```
 /plugin marketplace add iusztinpaul/squid
 /plugin install squid@squid
 ```
 
-`/plugin marketplace update squid` later pulls fresh changes. The agents and skills appear in `/agents` and `/help` in any Claude Code session.
+That's it. Open any repo in Claude Code; the agents and skills appear in `/agents` and `/help`. Run `/plugin marketplace update squid` later to pull fresh changes.
 
-> **Note on local clones.** `/plugin marketplace add /path/to/squid` reads the local marketplace.json, but the plugin's `source` points at the GitHub repo — so the install still fetches from `iusztinpaul/squid` on GitHub, not from your working tree. For testing uncommitted changes, see the [Local plugin development](#local-plugin-development-no-install) section.
+<details>
+<summary><b>Per-project install</b> — auto-prompt for everyone who clones a specific repo</summary>
 
-### Per-project install (committed to `.claude/settings.json`)
-
-If you want squid enabled automatically for **anyone who clones a particular repo** — without them having to run `/plugin marketplace add` first — commit this into the target repo's `.claude/settings.json`:
+Commit this into the target repo's `.claude/settings.json`:
 
 ```json
 {
@@ -61,19 +70,46 @@ If you want squid enabled automatically for **anyone who clones a particular rep
 }
 ```
 
-When a teammate (or future-you on a fresh machine) opens that repo in Claude Code and trusts the folder, they're prompted to add the `squid` marketplace and install the plugin in one step.
+When a teammate (or future-you on a fresh machine) opens that repo and trusts the folder, Claude Code prompts them to add the marketplace and install in one step. `enabledPlugins` alone isn't enough — `extraKnownMarketplaces` is what tells Claude Code where `squid@squid` resolves to.
 
-`enabledPlugins` alone isn't enough on a fresh machine — Claude Code needs to know what marketplace `squid@squid` resolves to, and `extraKnownMarketplaces` is what tells it. You can leave both keys in the same file alongside any other plugins you have enabled.
+</details>
 
-### Local plugin development (no install)
-
-When you're editing the plugin itself and want to test against your **uncommitted** changes without registering or installing anything:
+<details>
+<summary><b>Local plugin development</b> — test uncommitted changes to Squid itself</summary>
 
 ```
 claude --plugin-dir /path/to/squid
 ```
 
-This launches Claude Code with the plugin loaded for the session. No marketplace, no install, no cache. Re-run after edits to pick up changes. This is the only path that exercises your local working tree directly on Claude Code v2.1+.
+Launches Claude Code with the plugin loaded for the session. No marketplace, no install, no cache. Re-run after edits. This is the only path that exercises your local working tree directly on Claude Code v2.1+.
+
+> `/plugin marketplace add /path/to/squid` reads the local `marketplace.json` but the plugin's `source` points at GitHub — so the install still fetches from `iusztinpaul/squid`, not your working tree.
+
+</details>
+
+## What you get
+
+| Surface | What it does |
+|---|---|
+| `/scaffold` | Interactive bootstrap. Asks what you're building (backend / frontend / TUI / mix), reads the relevant specs, writes a tailored `CLAUDE.md`, and lays down an empty folder skeleton. Run `/day` next to have the agents fill it in. |
+| `/day <task>` | Single-task supervised inner loop. `SWE implements → Tester verifies → you review + commit`. Use during active work. |
+| `/night <feature-spec>` | End-to-end single-feature pipeline (the diagram above). |
+| `product-manager`, `software-engineer`, `tester`, `pr-reviewer`, `oncall-engineer` | Sub-agents invoked by the pipelines. Also available for direct use via the `Agent` tool. |
+| `testing-python`, `create-pr`, `self-improve` | Support skills referenced by the pipelines and agents. |
+
+The `/scaffold` spec library (under `skills/scaffold/specs/`) covers:
+
+- **Python:** backend layout, uv, pyproject, ruff, FastAPI, FastMCP, CLI tools
+- **TypeScript frontend:** package/tsconfig/vite conventions, React, Vue, Svelte, vanilla
+- **Go TUI:** layout + Bubbletea / tview patterns
+- **Infra:** Docker, docker-compose, GitHub Actions monorepo CI, OpenAPI contracts
+- **Process:** monorepo layout, Makefile delegator, tracker workflow
+
+Several specs are still stubs — foundations are filled in (`python-backend`, `typescript-frontend`, `go-tui`, `uv-python`, `pyproject`, `makefile-delegator`, `monorepo-layout`); the rest are good first contributions.
+
+## Contributing
+
+Issues and PRs welcome — especially for new specs (Rust, Java, mobile, additional Python/TS frameworks) and stub fill-ins. See [`CONTRIBUTING.md`](CONTRIBUTING.md) to get started, and [`CLAUDE.md`](CLAUDE.md) for the underlying plugin-dev conventions.
 
 ## Quick start
 
