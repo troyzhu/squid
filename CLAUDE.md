@@ -71,12 +71,11 @@ There is no `make test` or pytest suite — testing this plugin means running th
 
 ## Publishing
 
-For Claude Code plugin discoverability:
+Run `scripts/release.sh patch` (or `minor` / `major` / explicit `X.Y.Z`) from a clean `main`. The script bumps `.claude-plugin/plugin.json`, commits as `chore: release vX.Y.Z`, creates an annotated tag, and pushes both after a confirmation prompt. `.github/workflows/release-check.yml` enforces that the tag matches `plugin.json` on every tag push.
 
-1. Bump `version` in `.claude-plugin/plugin.json`.
-2. Commit and push.
-3. `git tag v0.x.y && git push --tags`.
-4. Smoke-test from another machine (or a fresh Claude Code session): `/plugin marketplace update squid && /plugin update squid@squid`.
+Then smoke-test from another machine (or a fresh Claude Code session): `/plugin marketplace update squid && /plugin update squid@squid`.
+
+See `CONTRIBUTING.md` → "Releasing (maintainers)" for full usage, the manual fallback, and a note on how git tags actually reach GitHub.
 
 ## What this repo used to be
 
