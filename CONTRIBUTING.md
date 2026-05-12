@@ -80,6 +80,34 @@ Open an issue with:
 - Claude Code version (`claude --version`).
 - Squid plugin version (visible in `/plugin list`).
 
+## Releasing (maintainers)
+
+The single source of truth for the plugin version is `.claude-plugin/plugin.json`. Git tags `vX.Y.Z` must agree with it; CI (`.github/workflows/release-check.yml`) blocks any tag push where they disagree.
+
+Use the release script:
+
+```
+scripts/release.sh patch          # 0.2.5 -> 0.2.6
+scripts/release.sh minor          # 0.2.5 -> 0.3.0
+scripts/release.sh major          # 0.2.5 -> 1.0.0
+scripts/release.sh 0.3.0          # explicit version
+scripts/release.sh patch --dry-run
+scripts/release.sh patch --yes    # skip the push confirmation
+```
+
+What it does, in order: verifies you're on `main` with a clean tree synced to `origin/main`; checks the new tag doesn't already exist; rewrites `plugin.json` via a Python JSON round-trip (preserves key order, no `jq` dependency); commits as `chore: release vX.Y.Z`; creates an annotated tag; and prompts before pushing the commit and the tag to `origin`.
+
+After release, smoke-test from a fresh Claude Code session:
+
+```
+/plugin marketplace update squid
+/plugin update squid@squid
+```
+
+**Manual fallback.** If the script can't run, the equivalent steps are: bump `version` in `.claude-plugin/plugin.json` by hand → `git commit -m "chore: release v0.X.Y"` → `git tag -a v0.X.Y -m "v0.X.Y"` → `git push origin main` → `git push origin v0.X.Y`. CI still verifies the tag matches `plugin.json`.
+
+**How git tags work.** Tags are local until you push them — plain `git push` does not send tags; you need `git push origin vX.Y.Z` (or `--tags`). The shields.io version badge on `README.md` queries GitHub's API for the highest-versioned *pushed* tag on the public repo, so it can lag your local state by exactly one push.
+
 ## License
 
 By contributing, you agree that your contributions will be licensed under the MIT License — see [`LICENSE`](LICENSE).
