@@ -43,7 +43,7 @@ For active iteration on a single task, use `/day <task>` instead â€” same SWE â†
 
 ## Learn Agentic Coding and Engineering
 
-For weekly content on agentic coding and engineering, consider subscribing to [the Decoding AI Magazine](https://decodingai.com).
+For weekly content on agentic coding and engineering, consider joining 40k+ engineers by subscribing to [the Decoding AI Magazine](https://decodingai.com).
 
 ![Decoding AI Magazine](./assets/decodingai.jpg)
 
