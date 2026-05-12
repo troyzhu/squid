@@ -41,9 +41,9 @@ For active iteration on a single task, use `/day <task>` instead — same SWE �
 - **Maybe not:** teams with an established in-house agent pipeline they don't want to displace, or stacks Squid doesn't cover yet (Rust, Java, mobile — [PRs welcome](#contributing)).
 
 
-## Learn Agentic Coding and Engineering
+## [Learn How to Build Agentic Coding Frameworks From Scratch](https://decodingai.com)
 
-For weekly content on agentic coding and engineering, consider joining 40k+ engineers by subscribing to [the Decoding AI Magazine](https://decodingai.com).
+If you want to learn how to build agentic coding frameworks such as Squid from scratch, consider joining 40k+ engineers by subscribing to [the Decoding AI Magazine](https://decodingai.com).
 
 ![Decoding AI Magazine](./assets/decodingai.jpg)
 
