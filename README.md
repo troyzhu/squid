@@ -1,4 +1,4 @@
-# Squid — an engineering agent team for Claude Code
+# Squid: An Opinionated Agentic Engineering Team for Claude Code
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Claude Code](https://img.shields.io/badge/Claude%20Code-2.1%2B-blue)](https://claude.com/claude-code)
@@ -39,6 +39,13 @@ For active iteration on a single task, use `/day <task>` instead — same SWE �
 
 - **Yes:** solo devs and small teams shipping Python backends, TypeScript frontends, or Go TUIs who want Claude Code to *consistently* hit your team's bar without re-explaining conventions every session.
 - **Maybe not:** teams with an established in-house agent pipeline they don't want to displace, or stacks Squid doesn't cover yet (Rust, Java, mobile — [PRs welcome](#contributing)).
+
+
+## Learn Agentic Coding and Engineering
+
+For weekly content on agentic coding and engineering, consider subscribing to [the Decoding AI Magazine](https://decodingai.com).
+
+![Decoding AI Magazine](./assets/decodingai.jpg)
 
 ## Install
 
