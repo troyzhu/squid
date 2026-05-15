@@ -8,10 +8,12 @@ The agent team ships with two entry points:
 
 | Mode | Entry | Scope | Gates active | Commits? | When to use |
 |---|---|---|---|---|---|
-| Night | `/night [feature-spec]` | One feature, end-to-end | PM groom + human-approve plan, Tester, PM accept, Push, On-Call (CI), PR Reviewer (diff), Squash, optional Self-Improve | Yes — agent commits + pushes; **human merges PR** | Unattended end-to-end delivery of a single feature |
+| Night | `/night [feature-spec]` | One feature, end-to-end | PM groom + human-approve plan, Tester, PM accept, Push, On-Call (CI), PR Reviewer (diff), optional Self-Improve | Yes — agent commits + pushes one commit per task (squash-ready); **human squash-merges PR via GitHub** | Unattended end-to-end delivery of a single feature |
 | Day | `/day [task]` | One task, supervised | Tester only | No — human commits | On-demand single-task work, fast iteration, human in the loop |
 
-**Night mode** runs the whole feature-level pipeline described below. It blocks on the human exactly twice by design: once after the PM produces the Tasks Plan (approve the plan), and once at the end (merge the squashed PR). Every other gate is automated; failures route back into the inner loop as new rollup tasks rather than stopping the pipeline.
+**Night mode** runs the whole feature-level pipeline described below. It blocks on the human exactly twice by design: once after the PM produces the Tasks Plan (approve the plan), and once at the end (squash-merge the PR via GitHub). Every other gate is automated; failures route back into the inner loop as new rollup tasks rather than stopping the pipeline.
+
+The orchestrator does NOT squash commits itself. Per-task commits stay on the feature branch so that GitHub's "Squash and merge" collapses them at merge time. This means **commit-message hygiene matters**: each commit must use a Conventional Commits prefix (`feat:`, `fix:`, `refactor:`, …) so the auto-generated squash-commit body reads as a clean changelog.
 
 **Day mode** is the lean inner loop: SWE implements, Tester verifies, human commits. No PM grooming, no PM acceptance, no PR Reviewer, no On-Call. Use it for the kinds of changes you'd otherwise type by hand — the Tester gate is the one automated check that's hard for a human to replicate (full suite + every AC + e2e adversarial pass).
 
@@ -56,9 +58,6 @@ PM acceptance review (whole feature, user POV)
 Both gates green
     │
     ▼
-Orchestrator squashes feature-branch commits into one commit on the feature branch
-    │
-    ▼
 Ask human: "Run self-improve to capture corrections into CLAUDE.md?"
     │
     ├── Yes → Self-Improve runs → produces a CLAUDE.md update proposal → human accepts/rejects
@@ -66,10 +65,10 @@ Ask human: "Run self-improve to capture corrections into CLAUDE.md?"
     └── No → skip
     │
     ▼
-Hand the squashed Feature PR to the human
+Hand the Feature PR to the human (per-task commits intact)
     │
     ▼
-HUMAN MERGES the Feature PR          ← blocking gate #2
+HUMAN SQUASH-MERGES the Feature PR via GitHub   ← blocking gate #2
 ```
 
 Day mode collapses to: `SWE implements → Tester verifies → human reviews and commits`.
@@ -120,7 +119,7 @@ The PR Reviewer tags every finding as Blocker or Nit. Severity decides what the 
 
 | Severity | Definition | Outcome |
 |---|---|---|
-| **Blocker** | Real defect: bug, security issue, dead/duplicate code being shipped, untested non-trivial logic, hot-path performance regression, material framework underuse, standards violation that would fail review at any team. | Goes into the rollup task body; the rollup task loops the SWE. Pipeline does not advance to Squash until zero Blockers. |
+| **Blocker** | Real defect: bug, security issue, dead/duplicate code being shipped, untested non-trivial logic, hot-path performance regression, material framework underuse, standards violation that would fail review at any team. | Goes into the rollup task body; the rollup task loops the SWE. Pipeline does not hand the PR back to the human until zero Blockers. |
 | **Nit** | Subjective preference, micro-optimization on a non-hot path, naming taste, doc polish, suggestion-not-requirement. | Goes into the same rollup task under a Nits section AND appended to the PR description (so the human merger sees them) — but **does NOT block the pipeline**. |
 
 If the rollup contains zero Blockers (only Nits), the PR Reviewer reports `NO BLOCKERS` and the pipeline advances. The PR Reviewer never blocks on style preferences.
@@ -132,11 +131,10 @@ The performance review is **narrow**: hot path, concrete asymptotic problem, or 
 | Step | Who | What |
 |---|---|---|
 | Create feature branch + worktree | Orchestrator (`/night` Step 1) | New branch off `main`, isolated worktree |
-| Commit per task | SWE (after Tester PASS + PM ACCEPT) | One commit per task, references the task |
-| Squash before merge | Orchestrator (after On-Call green + PR Reviewer no-blockers) | Single squashed commit on the feature branch; PR description preserved |
-| Merge to `main` | **Human** | The merge button is the human's, always |
+| Commit per task | SWE (after Tester PASS + PM ACCEPT) | One commit per task with a Conventional Commits subject; references the task |
+| Squash-merge to `main` | **Human** | GitHub's "Squash and merge" button. The orchestrator never squashes the branch itself. |
 
-**The orchestrator never merges.** It pushes, squashes, and asks the human to merge.
+**The orchestrator never squashes and never merges.** It pushes per-task commits and asks the human to squash-merge via GitHub.
 
 ## CLI-Only Tooling Rule
 
@@ -198,10 +196,10 @@ Between its two human gates, `/night` runs autonomously:
 
 ## Orchestrator Commit Rules
 
-- The SWE commits per task (specific files only, never `git add -A` / `git add .`); each commit references the task ID.
+- The SWE commits per task (specific files only, never `git add -A` / `git add .`); each commit references the task ID and uses a Conventional Commits subject prefix (`feat:`, `fix:`, `refactor:`, `docs:`, `test:`, `chore:`, etc.).
 - The SWE pushes to the feature branch (or invokes `create-pr`) after PM ACCEPT.
-- After On-Call green AND PR Reviewer no-blockers, the **orchestrator** squashes the per-task commits into one squashed commit on the feature branch (e.g. `git reset --soft <merge-base> && git commit`), preserving the PR description.
-- The orchestrator never merges to `main`.
+- After On-Call green AND PR Reviewer no-blockers, the orchestrator hands the PR back to the human **with per-task commits intact**. The orchestrator does NOT squash. GitHub's "Squash and merge" collapses them at merge time, and the Conventional Commits prefixes make the auto-generated squash body read as a clean changelog.
+- The orchestrator never squashes and never merges to `main`.
 
 ## Definition of Done
 
@@ -262,9 +260,9 @@ Between its two human gates, `/night` runs autonomously:
 
 - [ ] PM gave a concrete verdict with evidence references (not just "ACCEPTED").
 - [ ] PM's evidence matches the AC (orchestrator spot-checks).
-- [ ] Squash commit only after On-Call green AND PR Reviewer no-blockers.
+- [ ] PR handed back to the human only after On-Call green AND PR Reviewer no-blockers (per-task commits intact, no orchestrator squash).
 - [ ] Asked the human about Self-Improve at the end (not before).
-- [ ] Never merged to `main`.
+- [ ] Never squashed, never merged to `main`.
 
 ## No Silent Descoping
 

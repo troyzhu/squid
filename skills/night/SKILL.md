@@ -1,6 +1,6 @@
 ---
 name: night
-description: Run the full agent-team pipeline end-to-end for a single feature — branch + worktree, PM grooms a Tasks Plan, human approves the plan, inner SWE/Tester loop per task, PM acceptance, push, parallel On-Call (CI) + PR Reviewer (diff), squash, optional Self-Improve, hand the squashed PR to the human to merge. Trigger when the user wants to ship one whole feature unattended between two human gates, or says "/night".
+description: Run the full agent-team pipeline end-to-end for a single feature — branch + worktree, PM grooms a Tasks Plan, human approves the plan, inner SWE/Tester loop per task, PM acceptance, push, parallel On-Call (CI) + PR Reviewer (diff), optional Self-Improve, hand the PR to the human to squash-merge. Trigger when the user wants to ship one whole feature unattended between two human gates, or says "/night".
 disable-model-invocation: true
 argument-hint: <feature-spec | path/to/spec.md | tracker-ref>
 ---
@@ -16,7 +16,7 @@ You are the **orchestrator** — a MANAGER, not an implementer. You do NOT write
 The pipeline blocks on the human exactly **twice**, by design:
 
 1. **After PM produces the Tasks Plan** — human approves the plan before the inner loop runs.
-2. **At the very end** — human merges the squashed Feature PR.
+2. **At the very end** — human squash-merges the Feature PR via GitHub. (The orchestrator does NOT squash — per-task commits stay on the branch and GitHub's "Squash and merge" collapses them at merge time.)
 
 There is also one optional human prompt: "Run self-improve to capture corrections into CLAUDE.md? (y/N)". This runs only on yes.
 
@@ -188,7 +188,7 @@ Once the Tester PASSES a task, the SWE commits **just that task**:
 ```
 Agent(
   subagent_type="squid:software-engineer",
-  prompt="""Tester PASSED task {ID}. Working directory: {WORKTREE_PATH}. Commit per your role definition — `commit-commands` plugin required, specific files only, message ends with `Closes #N` (or `Refs #N` if [HUMAN] criteria, or `Closes-tracker: NNN-slug` in file mode). DO NOT push yet — push happens once for the whole feature after PM ACCEPT."""
+  prompt="""Tester PASSED task {ID}. Working directory: {WORKTREE_PATH}. Commit per your role definition — `commit-commands` plugin required, specific files only. Subject MUST start with a Conventional Commits prefix (`feat:`, `fix:`, `refactor:`, `docs:`, `test:`, `chore:`, etc.) so the squash-merged PR body reads as a clean changelog. Message ends with `Closes #N` (or `Refs #N` if [HUMAN] criteria, or `Closes-tracker: NNN-slug` in file mode). DO NOT push yet — push happens once for the whole feature after PM ACCEPT."""
 )
 ```
 
@@ -271,7 +271,7 @@ Wait for both to complete.
 
 ## Step 9 — Handle Step 8 verdicts
 
-Two independent verdicts. Both must clear before Squash.
+Two independent verdicts. Both must clear before the orchestrator hands the PR back to the human.
 
 ### On-Call verdict
 
@@ -289,67 +289,34 @@ When both gates have cleared, proceed to Step 10.
 
 ---
 
-## Step 10 — Squash commits
+## Step 10 — Ask the human about Self-Improve
 
-You squash the per-task commits into one squashed commit on the feature branch, preserving the PR description.
-
-```bash
-# In the worktree:
-BASE=$(git merge-base HEAD origin/main)
-git reset --soft $BASE
-git commit -m "$(cat <<'EOF'
-{Feature title}
-
-{1-paragraph summary, derived from the PR description}
-
-Tasks:
-- #{N1} {title}
-- #{N2} {title}
-...
-EOF
-)"
-git push --force-with-lease origin feat/{slug}
-```
-
-`--force-with-lease` (not `--force`) so we abort if the remote moved unexpectedly.
-
-Re-invoke `create-pr` to refresh the PR description against the squashed commit:
-
-```
-Agent(
-  subagent_type="squid:software-engineer",
-  prompt="Squash done. Working directory: {WORKTREE_PATH}. Re-invoke the `create-pr` skill to update PR #{N}'s description against the squashed commit (preserve the task list and any Nits already appended)."
-)
-```
-
----
-
-## Step 11 — Ask the human about Self-Improve
+The orchestrator does NOT squash. Per-task commits stay on the feature branch; the human chooses GitHub's "Squash and merge" at merge time so the per-commit messages collapse into one tidy commit on `main`.
 
 Prompt the human:
 
 ```
-Feature {title} is squashed and ready to merge: {PR URL}
+Feature {title} is ready to squash-merge: {PR URL}
 
 Optional: Run self-improve to capture corrections from this run into CLAUDE.md? (y/N)
 ```
 
-- **N (default)** → skip to Step 12.
-- **y** → invoke the `self-improve` skill on this run; it produces a proposed CLAUDE.md update which the human reviews and accepts/rejects via the skill's normal flow. When the skill returns, proceed to Step 12.
+- **N (default)** → skip to Step 11.
+- **y** → invoke the `self-improve` skill on this run; it produces a proposed CLAUDE.md update which the human reviews and accepts/rejects via the skill's normal flow. When the skill returns, proceed to Step 11.
 
 Do NOT run self-improve preemptively. Only on `y`.
 
 ---
 
-## Step 12 — Final summary; hand to human
+## Step 11 — Final summary; hand to human
 
 Report a single markdown block to the human:
 
 ```markdown
 ## /night complete — {Feature title}
 
-**PR:** {URL} (squashed, ready to merge)
-**Branch:** feat/{slug}
+**PR:** {URL} (ready to squash-merge)
+**Branch:** feat/{slug} ({N} per-task commits — GitHub will squash on merge)
 **Worktree:** {path}
 
 **Tasks delivered ({N}):**
@@ -362,10 +329,10 @@ Report a single markdown block to the human:
 **Nits in PR description:** {count, or "none"}
 **Self-Improve:** {ran / skipped}
 
-Next: review the PR and merge when satisfied. Worktree stays in place; remove with `git worktree remove {path}` after merge.
+Next: review the PR, then use GitHub's **Squash and merge** button. The PR description has the curated Tasks list — copy it into the squash-commit body if GitHub doesn't pre-fill it. Worktree stays in place; remove with `git worktree remove {path}` after merge.
 ```
 
-The human merges the PR. `/night` ends here.
+The human squash-merges the PR via GitHub. `/night` ends here.
 
 ---
 
@@ -375,5 +342,6 @@ The human merges the PR. `/night` ends here.
 - **The two human gates are by design.** Plan approval prevents the agent team from spending hours on a wrong-shaped feature; merge approval keeps the human in control of `main`.
 - **Rollups go to the END of the queue, not interleaved.** A PM rollup or PR Reviewer rollup is implemented after all original-plan tasks are done — it's a "fix everything we missed" coordinated pass, not a per-issue patch.
 - **The `commit-commands` plugin and `create-pr` skill are required, not optional.** SWE invokes them. The orchestrator does not hand-craft commit messages or `gh pr` invocations.
+- **Per-task commits, no orchestrator squash.** Every task lands as its own commit on the feature branch with a Conventional Commits subject (`feat:`, `fix:`, `refactor:`, …). The human squash-merges via GitHub at the end — the per-commit subjects concatenate into a clean changelog body. This is why commit-message hygiene matters here even though the branch never preserves the commits.
 - **Caps stop the pipeline.** Tester FAIL Max 5 (per task), PM REJECT Max 3, PR Reviewer Max 3, On-Call Max 5. When a cap fires, surface `USER ACTION REQUIRED` and stop. Don't loop forever.
 - **Self-Improve is human-gated, end-of-run only.** Don't propose updates mid-run; don't run the skill before asking.
