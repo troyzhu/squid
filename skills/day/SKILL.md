@@ -130,7 +130,7 @@ Mark all `TaskList` items completed once the report is delivered. Do **not** pic
 
 ## Notes
 
-- **Day mode is not a subset of `/night`.** Both modes use the same SWE and Tester agents and the same inner loop, but `/night` chains it inside a longer pipeline (PM groom + acceptance + PR Reviewer + On-Call + squash). `/day` skips all of that on purpose — the human supervises and plays those roles in real time. The Tester gate stays automated because it's the one check that's genuinely hard for a human to replicate (full suite + every AC + e2e adversarial pass).
+- **Day mode is not a subset of `/night`.** Both modes use the same SWE and Tester agents and the same inner loop, but `/night` chains it inside a longer pipeline (PM groom + acceptance + PR Reviewer + On-Call + hand-off for human squash-merge). `/day` skips all of that on purpose — the human supervises and plays those roles in real time. The Tester gate stays automated because it's the one check that's genuinely hard for a human to replicate (full suite + every AC + e2e adversarial pass).
 - **No retry caps applied here.** `/day` retries until the human says stop. `/night`'s Tester FAIL Max 5 cap doesn't apply because the human is in the loop and can intervene any time.
 - **If the task turns out to need design input** (ambiguous scope, multiple plausible approaches), stop and ask the human rather than letting the SWE guess. In `/night`, PM grooming absorbs that ambiguity; in `/day`, the human does.
 - **The `commit-commands` plugin** (if enabled) is the recommended tool for the human's commit step — same as in `/night`.

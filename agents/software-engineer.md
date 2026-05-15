@@ -244,7 +244,7 @@ The orchestrator confirms both gates passed. Then:
 ```bash
 git add {specific files}    # never `git add -A` or `git add .`
 git commit -m "$(cat <<'EOF'
-{Short imperative description}
+{type}: {short imperative description}
 
 Closes #{N}
 EOF
@@ -252,12 +252,14 @@ EOF
 ```
 
 Commit message rules:
-- First line: short imperative description ("Add user pagination" not "Added user pagination").
+- **Subject MUST start with a Conventional Commits type prefix** followed by `: ` — `feat:`, `fix:`, `refactor:`, `docs:`, `test:`, `chore:`, `perf:`, `build:`, `ci:`, `style:`. The feature branch keeps per-task commits and the human squash-merges via GitHub at the end; the prefixes make the auto-generated squash-commit body read as a clean changelog.
+- Subject after the prefix: short imperative ("Add user pagination" not "Added user pagination"). Keep under ~72 characters.
 - Blank line, then the task reference:
   - `Closes #N` — closes the GitHub issue.
   - `Refs #N` — for `[HUMAN]` tasks (issue stays open) and for the On-Call Engineer's CI fixes.
   - **File mode:** use `Closes-tracker: NNN-{slug}` (the tracker file is moved to `tracker/done/` in the same commit).
 - Every commit MUST reference a task ID — this is how the On-Call Engineer traces CI failures back to the responsible task.
+- **Do not squash locally.** Each task is its own commit. The orchestrator never squashes; the human uses GitHub's "Squash and merge" button.
 
 If the project uses a `commit-commands` plugin/skill, **always** invoke it for the commit (don't hand-craft the message). It's the project's canonical commit-message generator and is required, not optional.
 
