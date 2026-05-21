@@ -11,6 +11,10 @@ Either way they get an opinionated agent team plus a `/scaffold` flow that boots
 
 > **For users of this plugin:** read [`README.md`](README.md). This file is for people editing the plugin itself.
 
+## Key Principles You Will Respect All Over Your Work
+
+- Always prioritize removing instructions over adding more.
+
 ## What's in the repo
 
 ```
