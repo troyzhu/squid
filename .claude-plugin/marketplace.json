@@ -5,14 +5,14 @@
   },
   "metadata": {
     "description": "Opinionated engineering agent team plus /day, /night, /scaffold, and a library of language/framework/infra specs.",
-    "version": "0.2.5"
+    "version": "0.2.7"
   },
   "plugins": [
     {
       "name": "squid",
       "source": "./",
       "description": "PM / SWE / Tester / PR Reviewer / On-Call sub-agents plus /day, /night, /scaffold, /triage-issue, /refactor, /grill-me, /architecture-review, and supporting workflow skills.",
-      "version": "0.2.5",
+      "version": "0.2.7",
       "author": {
         "name": "iusztinpaul",
         "url": "https://github.com/iusztinpaul"
