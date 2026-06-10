@@ -51,10 +51,10 @@ If you want to learn how to build agentic coding frameworks such as Squid from s
 
 ```
 /plugin marketplace add iusztinpaul/squid
-/plugin install squid@squid
+/plugin install squid@iusztinpaul
 ```
 
-That's it. Open any repo in Claude Code; the agents and skills appear in `/agents` and `/help`. Run `/plugin marketplace update squid` later to pull fresh changes.
+That's it. Open any repo in Claude Code; the agents and skills appear in `/agents` and `/help`. Run `/plugin marketplace update iusztinpaul` later to pull fresh changes.
 
 <details>
 <summary><b>Per-project install</b> — auto-prompt for everyone who clones a specific repo</summary>
@@ -64,7 +64,7 @@ Commit this into the target repo's `.claude/settings.json`:
 ```json
 {
   "extraKnownMarketplaces": {
-    "squid": {
+    "iusztinpaul": {
       "source": {
         "source": "github",
         "repo": "iusztinpaul/squid"
@@ -72,12 +72,12 @@ Commit this into the target repo's `.claude/settings.json`:
     }
   },
   "enabledPlugins": {
-    "squid@squid": true
+    "squid@iusztinpaul": true
   }
 }
 ```
 
-When a teammate (or future-you on a fresh machine) opens that repo and trusts the folder, Claude Code prompts them to add the marketplace and install in one step. `enabledPlugins` alone isn't enough — `extraKnownMarketplaces` is what tells Claude Code where `squid@squid` resolves to.
+When a teammate (or future-you on a fresh machine) opens that repo and trusts the folder, Claude Code prompts them to add the marketplace and install in one step. `enabledPlugins` alone isn't enough — `extraKnownMarketplaces` is what tells Claude Code where `squid@iusztinpaul` resolves to.
 
 </details>
 

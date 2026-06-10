@@ -130,7 +130,7 @@ Per-component dependency managers:
 
 What this project expects connected/enabled in the Claude Code session before `/day` or `/night`. Derive the gated bullets from the step-1 answers; leave the project-specific MCP line as an `AGENT: fill in` placeholder.
 
-{- **`squid` plugin** — supplies the agent team and the `/day` / `/night` / `/scaffold` pipelines, and bundles the `self-improve` skill used below. Install: `/plugin marketplace add iusztinpaul/squid && /plugin install squid@squid`. *Only if agent team chosen.*}
+{- **`squid` plugin** — supplies the agent team and the `/day` / `/night` / `/scaffold` pipelines, and bundles the `self-improve` skill used below. Install: `/plugin marketplace add iusztinpaul/squid && /plugin install squid@iusztinpaul`. *Only if agent team chosen.*}
 {- **`context7` MCP server** — authoritative library/API docs for the tech stack (see [Access Documentation](#access-documentation)). Doc lookups fall back to web search when it isn't connected. *Only if any framework or external service is in the stack.*}
 - **Project MCP servers** — *AGENT: fill in any MCP server this project's code talks to (datastore, browser, internal tooling) and the config each needs on first use.*
 
