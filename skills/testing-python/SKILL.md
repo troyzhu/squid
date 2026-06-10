@@ -11,6 +11,14 @@ Every test should be **atomic**, **self-contained**, and test **single functiona
 
 ## Test Structure
 
+### Mirror the module layout
+
+Keep a one-to-one relationship between test files and the modules they cover: `myapp/service.py` → `tests/.../test_service.py`. This makes the test for any given module obvious and keeps coverage gaps visible.
+
+### Follow AAA (Arrange, Act, Assert)
+
+Structure each test body in three beats — set up inputs (Arrange), call the thing under test (Act), then assert on the result. Keep them in that order; don't interleave more setup after the act.
+
 ### Atomic unit tests
 
 Each test should verify a single behavior. The test name should tell you what's broken when it fails. Multiple assertions are fine when they all verify the same behavior.
@@ -117,6 +125,10 @@ Commands:
 
 ## Fixtures
 
+### Share setup through fixtures, not setup/teardown methods
+
+Put shared fixtures in `conftest.py` so they're available across test files without imports. Use fixtures (and their `yield`-based teardown) for setup and cleanup — avoid xUnit-style `setUp`/`tearDown` methods.
+
 ### Prefer function-scoped fixtures
 
 ```python
@@ -164,7 +176,7 @@ Orchestrators, model-serving runtimes, observability clients, and similar infras
 
 ## Test Naming
 
-Use descriptive names that explain the scenario:
+Test files must be named `test_*.py` and test functions `test_*` so pytest discovers them. Beyond that, use descriptive names that explain the scenario:
 
 ```python
 # Good
