@@ -32,7 +32,8 @@ See [`tree.md`](tree.md) for the annotated tree. Headline:
 ├── CLAUDE.md                    # repo-level brief for agents (what this project is)
 ├── README.md                    # user-facing
 ├── docs/
-│   └── PROCESS.md               # agent-team lifecycle (ships with the plugin)
+│   ├── adr/                     # Architecture Decision Records (if chosen)
+│   └── glossary.md              # ubiquitous-language glossary (if chosen)
 ├── tracker/                     # file-based task state (see tracker-workflow)
 └── packages/
     ├── backend/                 # Python service (API / pipelines / library)
@@ -154,7 +155,8 @@ Full canonical tree for a `backend` + `frontend-web` + `frontend-tui` + `shared`
 ├── LICENSE
 │
 ├── docs/
-│   └── PROCESS.md                        # Agent-team lifecycle. Ships with the plugin.
+│   ├── adr/                              # Architecture Decision Records (if chosen).
+│   └── glossary.md                       # Ubiquitous-language glossary (if chosen).
 │
 ├── tracker/                              # File-based task state. See tracker-workflow.
 │   ├── README.md
@@ -164,14 +166,15 @@ Full canonical tree for a `backend` + `frontend-web` + `frontend-tui` + `shared`
 │
 ├── .claude/                              # Agent team + skills (installed by the plugin).
 │   ├── agents/
-│   │   ├── product-manager.md
+│   │   ├── product-architect.md
 │   │   ├── software-engineer.md
 │   │   ├── tester.md
 │   │   └── oncall-engineer.md
 │   └── skills/
-│       ├── day/
-│       ├── night/
-│       └── <all the spec skills>
+│       ├── plan/
+│       ├── implement-task/
+│       ├── implement-night/
+│       └── <review, review-ci, and the spec skills>
 │
 └── packages/
     │

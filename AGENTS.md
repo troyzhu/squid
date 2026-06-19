@@ -1,6 +1,6 @@
 # Engineering Agent Team — plugin dev brief
 
-This repo **is** a Claude Code plugin. The contract layer is markdown — agents, skills, `docs/PROCESS.md`. Nothing else ships; there is no build step, no test suite, no language-specific runtime tooling.
+This repo **is** a Claude Code plugin. The contract layer is markdown — agents and skills. Nothing else ships; there is no build step, no test suite, no language-specific runtime tooling.
 
 Consumers install it two ways:
 
@@ -23,7 +23,7 @@ Either way they get an opinionated agent team plus a `/scaffold` flow that boots
 │   ├── plugin.json                    # Claude Code plugin manifest (name, version, description)
 │   └── marketplace.json               # one-plugin marketplace catalog so `/plugin install squid@iusztinpaul` works
 ├── agents/                            # five sub-agents
-│   ├── product-manager.md
+│   ├── product-architect.md
 │   ├── software-engineer.md
 │   ├── tester.md
 │   ├── pr-reviewer.md
@@ -31,16 +31,19 @@ Either way they get an opinionated agent team plus a `/scaffold` flow that boots
 ├── skills/
 │   ├── scaffold/                      # /scaffold — bootstrap a new repo
 │   │   ├── SKILL.md
-│   │   └── specs/                     # 19 reference specs read by scaffold
-│   ├── day/                           # /day — supervised single-task inner loop (SWE↔Tester)
-│   ├── night/                         # /night — end-to-end single-feature pipeline
+│   │   ├── AGENTS_TEMPLATE.md         # template /scaffold distils into each project's AGENTS.md
+│   │   └── specs/                     # reference specs read by scaffold
+│   ├── plan/                          # /plan — feature spec → approved Tasks Plan (+ worktree)
+│   ├── implement-task/                # /implement-task — autonomous task loop (SWE↔Tester, commit each)
+│   ├── implement-night/               # /implement-night — end-to-end pipeline (thin orchestrator)
+│   ├── review/                        # /review — push + PA acceptance + PR-Reviewer
+│   ├── review-ci/                     # /review-ci — On-Call drives CI green
+│   ├── grilling/                      # /grilling — stress-test a plan (used inside /plan)
 │   ├── testing-python/                # test-writing conventions
-│   ├── create-pr/                     # PR skill
-│   └── self-improve/                  # end-of-session corrections capture (human-gated by /night)
-├── docs/PROCESS.md                    # canonical agent-team lifecycle
+│   └── self-improve/                  # end-of-session corrections capture (human-gated by /implement-night)
 ├── LICENSE
 ├── README.md                          # user-facing (install + what's inside)
-├── CLAUDE.md                          # (this file)
+├── AGENTS.md                          # (this file; CLAUDE.md symlinks to it)
 └── .gitignore
 ```
 
@@ -51,7 +54,7 @@ The directory layout is what Claude Code's plugin loader expects natively: `agen
 - **Editing an agent** — edit the `.md` under `agents/`. No mirror to keep in sync.
 - **Editing a skill** — edit `skills/<name>/SKILL.md`. Co-locate supporting docs in the same dir if depth warrants it (but prefer single-file skills).
 - **Adding a spec** — write `skills/scaffold/specs/<name>.md`. Update the "Index of specs" table in `skills/scaffold/SKILL.md` and the spec-selection table (Step 2 of the flow) so `/scaffold` knows when to pull it in.
-- **Editing `docs/PROCESS.md`** — it's the canonical lifecycle doc referenced by `day`, `night`, and every agent. Changes propagate to every consumer install.
+- **Editing the lifecycle** — the pipeline is defined by the skills (`plan` / `implement-task` / `implement-night` / `review` / `review-ci`) and the agent contracts. Cross-cutting rules + the pipeline map live in `skills/scaffold/AGENTS_TEMPLATE.md`, which `/scaffold` bakes into each project's `AGENTS.md` (there is no separate `docs/PROCESS.md`).
 - **Bumping versions** — when you ship changes that affect end users, bump `version` in `.claude-plugin/plugin.json`. Tag with `git tag v0.x.y && git push --tags`. Without a version bump Claude Code keeps the cached copy and `/plugin update` reports "already at the latest version".
 - **Don't add language-specific build systems for the plugin contract** (no `pyproject.toml`, no `Makefile`, no `tests/`). The contract layer remains markdown.
 
@@ -67,9 +70,9 @@ The directory layout is what Claude Code's plugin loader expects natively: `agen
 - **Local Claude Code install (uncommitted):** `claude --plugin-dir /path/to/squid` — the only path that loads the working tree directly.
 - **Local Claude Code install (committed):** in a scratch session, `/plugin marketplace add /path/to/squid && /plugin install squid@iusztinpaul`. Note this still fetches `source: github:iusztinpaul/squid` from GitHub — not the working tree — so push first.
 - **Validate manifest:** `claude plugin validate` from the repo root checks `plugin.json`, skill/agent/command frontmatter, and `hooks/hooks.json` for syntax/schema errors.
-- **Test `/scaffold`:** run it in an empty directory and confirm it produces a sensible `CLAUDE.md` and skeleton tree without writing any application source.
-- **Test `/day`:** run it against a `/scaffold`-generated project; confirm SWE + Tester gate and no commit happens without your action.
-- **Test `/night`:** run it against a project, passing a feature spec (free-form text or a path to a `docs/features/*.md` file) — `/night` is per-feature, end-to-end, and asks for human approval of the Tasks Plan before the inner loop runs.
+- **Test `/scaffold`:** run it in an empty directory and confirm it produces a sensible `AGENTS.md` (plus a `CLAUDE.md` pointer) and skeleton tree without writing any application source.
+- **Test `/implement-task`:** run it against a `/scaffold`-generated project with one or more groomed tasks; confirm the SWE↔Tester loop runs and each task is committed on PASS.
+- **Test `/plan` → `/implement-night`:** run `/plan` with a feature spec (free-form text or a path to a `docs/features/*.md` file) — it grills, the PA grooms a Tasks Plan, you approve, and it creates the worktree. Then `/implement-night` builds the plan end-to-end (implement-task → review → review-ci) to a validated PR.
 
 There is no `make test` or pytest suite — testing this plugin means running the skills against real scratch targets.
 
@@ -86,4 +89,5 @@ See `CONTRIBUTING.md` → "Releasing (maintainers)" for full usage, the manual f
 Two prior pivots brought the repo to its current shape:
 
 1. Originally a Copier template with a full `template/` Jinja tree that rendered real code. That architecture is gone — specs replaced templates and agents replaced rendered code.
-2. Briefly shipped an `npx squid` standalone installer (`bin/install.mjs` + `package.json`) that copied `.claude/agents/` and `.claude/skills/` into a target project. Removed in 0.2.3 in favour of being a pure Claude Code plugin: assets moved from `.claude/` to the plugin root (`agents/`, `skills/`), and the npm artifact + npx CLI were dropped. The `docs/PROCESS.md` lifecycle, the five agents (PM, SWE, Tester, PR Reviewer, On-Call), and the `/day` / `/night` pipelines all carry over unchanged.
+2. Briefly shipped an `npx squid` standalone installer (`bin/install.mjs` + `package.json`) that copied `.claude/agents/` and `.claude/skills/` into a target project. Removed in 0.2.3 in favour of being a pure Claude Code plugin: assets moved from `.claude/` to the plugin root (`agents/`, `skills/`), and the npm artifact + npx CLI were dropped. The agent-team lifecycle, the five agents, and the pipelines all carried over.
+3. Through 0.2.x the pipeline was two skills — `/day` (supervised single task) and `/night` (end-to-end). 0.3.0 decomposed it into composable skills (`/plan`, `/implement-task`, `/implement-night`, `/review`, `/review-ci`), merged the PM + architect into the **Product Architect (PA)**, and folded `docs/PROCESS.md` into `AGENTS.md` + the agent/skill contracts.
