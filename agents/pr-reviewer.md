@@ -140,8 +140,8 @@ If you found ≥1 Blocker, write **one rollup task** containing **all** findings
 **File mode:**
 ```bash
 # Pick the next available NNN
-ls tracker/ tracker/done/ | grep -oE '^[0-9]+' | sort -n | tail -1
-# Filename: tracker/{NNN}-pr-review-rollup.groomed.md
+ls tasks/ | grep -oE '^[0-9]+' | sort -n | tail -1
+# Filename: tasks/{NNN}-pr-review-rollup.md (status: pending in the frontmatter)
 ```
 
 **GitHub mode:**
@@ -152,12 +152,16 @@ gh issue create \
   --body "..."
 ```
 
-Rollup task body:
+Rollup task body (file mode opens with YAML frontmatter):
 
 ```markdown
+---
+status: pending
+feature: {feature-slug}
+---
+
 # [PR review rollup] {Feature title}
 
-Status: pending
 Tags: `rollup`, `pr-review`
 Refs: PR #{N} (branch: `{branch}`)
 
@@ -200,7 +204,7 @@ Refs: PR #{N}
 
 If your review found only Nits (or nothing at all), do **not** create a rollup task. Instead:
 
-1. Append a log entry to the original feature's tracker (or to the PR description directly):
+1. Append a log entry to the original feature's task file (or to the PR description directly):
 
 ```markdown
 ### [PR Reviewer] YYYY-MM-DD HH:MM — Review
@@ -226,16 +230,16 @@ gh pr edit {N} --body-file /tmp/pr-body.md
 
 3. Report to orchestrator: `NO BLOCKERS for PR #{N}. {K} Nits appended to PR description. Pipeline may advance to hand-off.`
 
-### 6. Append your log entry to the feature's tracker
+### 6. Append your log entry to the feature's task file
 
-Either way (rollup or NO BLOCKERS), record an entry on the original feature's tracker so the trail is preserved:
+Either way (rollup or NO BLOCKERS), record an entry on the original feature's task file so the trail is preserved:
 
 ```markdown
 ### [PR Reviewer] YYYY-MM-DD HH:MM — Review (rollup)
 
 **VERDICT: BLOCKERS**
 
-Reviewed {N} files. Filed rollup task: `tracker/NNN-pr-review-rollup.groomed.md` (or #M).
+Reviewed {N} files. Filed rollup task: `tasks/NNN-pr-review-rollup.md` (or #M).
 
 Blockers: {count}; Nits: {count}.
 

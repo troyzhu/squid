@@ -155,7 +155,7 @@ If github-actions chosen:
 
 If agent team + tracker chosen:
 
-- `tracker/README.md` + `tracker/done/.gitkeep`. (The agent-team lifecycle + cross-cutting rules are baked into the generated `AGENTS.md` from `AGENTS_TEMPLATE.md` — there is no separate `docs/PROCESS.md`.)
+- `tasks/README.md` describing the one-file-per-task model (`tasks/<NNN>-<slug>.md` with a `status:` frontmatter field — `pending` / `in-progress` / `done` — and a `feature:` field). No `done/` subfolder; state lives in the frontmatter, not the filename. (The agent-team lifecycle + cross-cutting rules are baked into the generated `AGENTS.md` from `AGENTS_TEMPLATE.md` — there is no separate `docs/PROCESS.md`.)
 - `.claude/` — only if the user isn't installing the plugin globally; otherwise skip (the plugin provides it).
 
 If `adr` chosen (Process & documentation):

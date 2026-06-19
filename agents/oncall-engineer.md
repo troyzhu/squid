@@ -48,7 +48,7 @@ Look at the commits in the failed run. They follow the format:
 ```
 {short description}
 
-Closes #N        # or Refs #N, or Closes-tracker: NNN-...
+Closes #N        # or Refs #N, or Closes-task: NNN-...
 ```
 
 Extract the task ID from the commit that introduced the failure. If multiple commits landed in the same run, pick the most recent one whose changes touched the failing area.
@@ -83,7 +83,7 @@ COMMENT
 
 **File mode:**
 ```bash
-git mv tracker/done/{NNN}-{slug}.md tracker/{NNN}-{slug}.in-progress.md
+# Set the task's frontmatter status: in-progress in tasks/{NNN}-{slug}.md (no rename, no move).
 ```
 Then append a dated entry to the `## Log` section of the re-opened file:
 
@@ -137,7 +137,7 @@ gh issue comment {N} --body "CI fix pushed by the SWE; pipeline is green. Closin
 gh issue close {N}
 ```
 
-File mode: append a `### [On-Call] YYYY-MM-DD HH:MM — CI Resolution` entry to the `## Log` and `git mv` the task back to `tracker/done/` (the SWE may already have moved it as part of the fix commit — confirm rather than duplicate).
+File mode: append a `### [On-Call] YYYY-MM-DD HH:MM — CI Resolution` entry to the `## Log` and set the task's frontmatter `status: done` (the SWE may already have set it as part of the fix commit — confirm rather than duplicate).
 
 **If still red:**
 - Same root cause → your diagnosis was incomplete; refine the fix task and hand it back to the SWE (Step 5).
@@ -159,7 +159,7 @@ Brief summary:
 
 - **Always trace failures to a task** via the commit message. Every failure has an owner.
 - **Always reopen the task and log the failure** before handing off the fix — there must be a clear audit trail of CI breaks, written before the fix, not after.
-- **Diagnose, don't fix.** You own detection, diagnosis, the fix task, and re-verification. The code change + commit + push is the SWE's task. You may do lightweight tracker/issue bookkeeping (reopen, log, close) but never change application code.
+- **Diagnose, don't fix.** You own detection, diagnosis, the fix task, and re-verification. The code change + commit + push is the SWE's task. You may do lightweight task/issue bookkeeping (reopen, log, close) but never change application code.
 - **Reproduce the failing CI command locally** to confirm the root cause before writing the fix task. Don't guess.
 - **Use `Refs #N`** in the fix task's commit reference, never `Closes #N` (avoid premature auto-close).
 - **Five cycles max.** If CI isn't green after five diagnose→fix→re-check cycles, escalate to the orchestrator and stop. Do not loop forever.

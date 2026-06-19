@@ -34,7 +34,7 @@ See [`tree.md`](tree.md) for the annotated tree. Headline:
 ├── docs/
 │   ├── adr/                     # Architecture Decision Records (if chosen)
 │   └── glossary.md              # ubiquitous-language glossary (if chosen)
-├── tracker/                     # file-based task state (see tracker-workflow)
+├── tasks/                       # file-based task state — one file per task (see tracker-workflow)
 └── packages/
     ├── backend/                 # Python service (API / pipelines / library)
     ├── frontend-web/            # TypeScript SPA (React / Vue / Svelte / vanilla)
@@ -87,7 +87,7 @@ Root-level files are infrastructure / coordination:
 - `.pre-commit-config.yaml` — git hooks.
 - `.env.example` — *cross-cutting* env vars (DB URL, LLM API keys). Component-local env vars live in `packages/<c>/.env.example`.
 - `CLAUDE.md`, `README.md` — docs.
-- `docs/`, `tracker/`, `.claude/` — agent-team assets.
+- `docs/`, `tasks/`, `.claude/` — agent-team assets.
 
 No source code at root. No `src/` at root. If code exists that doesn't belong to any component, it's either a script (root `scripts/`) or it's genuinely shared and becomes a new component.
 
@@ -158,11 +158,10 @@ Full canonical tree for a `backend` + `frontend-web` + `frontend-tui` + `shared`
 │   ├── adr/                              # Architecture Decision Records (if chosen).
 │   └── glossary.md                       # Ubiquitous-language glossary (if chosen).
 │
-├── tracker/                              # File-based task state. See tracker-workflow.
+├── tasks/                                # File-based task state. One file per task. See tracker-workflow.
 │   ├── README.md
-│   ├── 001-*.{todo,groomed,in-progress}.md
-│   └── done/
-│       └── 000-*.md
+│   ├── 000-*.md                          # status: done (state lives in frontmatter, not the filename)
+│   └── 001-*.md                          # status: pending | in-progress | done
 │
 ├── .claude/                              # Agent team + skills (installed by the plugin).
 │   ├── agents/

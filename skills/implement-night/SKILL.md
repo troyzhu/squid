@@ -28,24 +28,24 @@ Read `AGENTS.md` first (tracker mode, retry caps, the pipeline map, and the cros
 
 ---
 
-## Step 0 — Locate the plan + worktree
+## Step 0 — Locate the worktree + tasks
 
-`/plan` created the feature branch `feat/{slug}` in a worktree at `../{repo}-{slug}` and put the approved Tasks Plan there. Find it:
+`/plan` created the feature branch `feat/{slug}` in a worktree at `../{repo}-{slug}` and wrote the feature's task files (`tasks/<NNN>-*.md`, `status: pending`) there. Find it:
 
 ```bash
 git worktree list          # find the worktree whose branch is feat/{slug}
 ```
 
-Confirm the approved Tasks Plan exists in that worktree. If there's no matching worktree or plan, stop and tell the human to run `/plan` first. Pass `Working directory: {WORKTREE_PATH}` to every sub-skill / agent so all work happens in the worktree.
+Confirm the worktree exists and contains pending task files (`tasks/<NNN>-*.md` with `status: pending`). If there's no matching worktree or no pending tasks, stop and tell the human to run `/plan` first. Pass `Working directory: {WORKTREE_PATH}` to every sub-skill / agent so all work happens in the worktree.
 
 ---
 
 ## Step 1 — Build the whole plan
 
-Invoke `/implement-task` **once with the entire Tasks Plan**. It loops over every task — SWE → Tester (FAIL max 5/task) → commit on PASS → next — and commits each task locally. (Do NOT loop here yourself; the per-task iteration lives inside `/implement-task`.)
+Invoke `/implement-task` **once with the feature's pending tasks**. It loops over every task — SWE → Tester (FAIL max 5/task) → commit on PASS (flipping each task's `status` pending → in-progress → done) → next. (Do NOT loop here yourself; the per-task iteration lives inside `/implement-task`.)
 
 ```
-invoke /implement-task with: the approved plan (all tasks), Working directory: {WORKTREE_PATH}
+invoke /implement-task with: the feature's pending tasks (tasks/<NNN>-*.md, status: pending), Working directory: {WORKTREE_PATH}
 ```
 
 If `/implement-task` hits its Tester FAIL cap on a task, it stops with `USER ACTION REQUIRED` — propagate that and stop.
