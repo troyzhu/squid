@@ -7,7 +7,7 @@ argument-hint: [scope-path or component name; default = whole repo]
 
 # Architecture review — periodic structural audit
 
-The team's day-to-day pipeline (`/day`, `/night`) operates at task grain. Long-horizon codebase health — drift, unintended coupling, dead modules, layering violations — accumulates between tasks and never gets addressed unless someone deliberately looks. This skill is that deliberate look.
+The team's day-to-day pipeline (`/implement-task`, `/implement-night`) operates at task grain. Long-horizon codebase health — drift, unintended coupling, dead modules, layering violations — accumulates between tasks and never gets addressed unless someone deliberately looks. This skill is that deliberate look.
 
 The output is **not a single PR**. It's a prioritised backlog of refactor proposals, each shaped so [`/refactor`](../refactor/SKILL.md) can pick one up and turn it into a Tasks Plan.
 
@@ -34,7 +34,7 @@ Smaller scopes produce sharper findings; whole-repo audits produce broader maps 
 - During active feature delivery — review when the team has bandwidth to act on findings, not as theatre.
 - On a codebase < 6 months old. There isn't yet enough crystallised pattern to review against.
 - When the team has clear architectural anxieties already named — go straight to [`/refactor`](../refactor/SKILL.md) with the named target.
-- As a substitute for code review on a specific PR — that's [`/review`](../create-pr/SKILL.md) territory.
+- As a substitute for code review on a specific PR — open or update the PR with `gh` and review it there instead.
 - On infra-only repos (Terraform, CI tooling). The shape doesn't fit; this skill assumes application code with modules, layers, dependencies.
 
 ## Step 1 — Frame the scope
@@ -212,7 +212,7 @@ Single block:
 - **The ADR read is non-negotiable.** Half the findings in a poorly-scoped review are decisions the team already made and rejected. Reading ADRs first is the cheapest way to be useful.
 - **Cap findings at 10.** Past 10, the report becomes a wishlist; the team picks zero. Force prioritisation by enforcing the cap.
 - **Confidence affects priority.** A High-confidence S2 beats a Low-confidence S1 — don't recommend a refactor on a finding you haven't personally read.
-- **Propose, don't prescribe.** This skill outputs *findings with proposed refactors*. The team prioritises. `/refactor` then plans. `/night` then executes. Skipping ahead to "we should do X" pre-commits the team.
+- **Propose, don't prescribe.** This skill outputs *findings with proposed refactors*. The team prioritises. `/refactor` then plans. `/implement-night` then executes. Skipping ahead to "we should do X" pre-commits the team.
 - **Don't re-litigate.** The "Pre-existing decisions" section is a discipline — it prevents the next architecture review (or the next contributor) from undoing things that are intentional.
 - **Empty findings = signal.** If a dimension produced no finding, say so explicitly ("Layer violations: none observed"). It's information.
 - **Pair output with ADR proposals.** Every accepted refactor that lands deserves an ADR if its decision wasn't already governed. Otherwise the next review re-finds it.
