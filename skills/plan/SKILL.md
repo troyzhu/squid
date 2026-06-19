@@ -1,80 +1,82 @@
 ---
 name: plan
-description: Turn a raw feature spec into an approved, ordered Tasks Plan (+ an optional ADR), then create the feature branch + worktree that /implement-night runs in. Grills the human to sharpen the spec, has the Product Architect groom it (reading/writing docs/adr + docs/glossary, using context7), surfaces the plan for approval, and on approval sets up the worktree. Trigger when the user wants to plan a feature before building, or says "/plan".
+description: Turn a raw feature spec into an approved Tasks Plan — one markdown file per atomic task under `tasks/` — plus an optional ADR, then create the feature branch + worktree that /implement-night runs in. Grills the human to sharpen the spec, has the Product Architect groom it (reading/writing docs/adr + docs/glossary, using context7), proposes a new ADR for your approval, and writes one `tasks/<NNN>-<slug>.md` per task. Trigger when the user wants to plan a feature before building, or says "/plan".
 disable-model-invocation: true
 argument-hint: <feature-spec | path/to/spec.md | tracker-ref>
 ---
 
-# Plan — feature spec → approved Tasks Plan (+ worktree)
+# Plan — feature spec → per-task files (+ optional ADR, + worktree)
 
-Anchor a feature in shared understanding and prior decisions, then produce the artifact `/implement-night` consumes: an **approved Tasks Plan** (plus an optional ADR), with the feature branch + worktree created.
+Anchor a feature in shared understanding and prior decisions, then produce the artifact `/implement-night` consumes: an **approved Tasks Plan — one `tasks/<NNN>-<slug>.md` file per atomic task** — plus an optional ADR, with the feature branch + worktree created.
 
 `$ARGUMENTS` is the raw feature spec — free-form text, a path to a spec file, or a tracker reference. If empty, ask the human for one.
 
-You are the **orchestrator** — a MANAGER. You drive the grilling, launch the Product Architect (PA), enforce the human gate, and set up the worktree. You do NOT groom or write code yourself — the PA does the grooming.
+You are the **orchestrator** — a MANAGER. You drive the grilling, launch the Product Architect (PA), run the human gates (ADR + plan approval), and set up the worktree. You do NOT groom or write code yourself.
 
-Read `AGENTS.md` first to confirm the active **tracker mode** (`file` or `gh`).
+Read `AGENTS.md` first to confirm the active **tracker mode** (`file` → `tasks/<NNN>-<slug>.md` files; `gh` → one GitHub Issue per task).
 
 **Input:** raw feature spec.
-**Output:** an approved **Tasks Plan** at `tracker/feature-{slug}-plan.md` (file mode) or a pinned `feature-plan` issue (gh mode) — ordered groomed tasks, "Out of scope", documentation updates (ADRs/glossary), open questions — PLUS a created branch `feat/{slug}` and worktree at `../{repo}-{slug}`. This is the same artifact `/implement-night` (and the granular `/implement-task`) consume.
+**Output:** an approved **Tasks Plan** = one `tasks/<NNN>-<slug>.md` per atomic task (`status: pending`, `feature: <slug>`) in `tasks/` (file mode) or one issue per task (gh mode); **+ an optional new ADR** under `docs/adr/`; **+ the branch `feat/{slug}` and worktree**. This is exactly what `/implement-night` (and the granular `/implement-task`) consume.
 
 ---
 
 ## Step 0 — Resolve the feature spec
 
-If `$ARGUMENTS` is empty, ask the human for the feature (free-form, path, or tracker ref). Otherwise resolve it: `cat` a spec file, load a tracker record, or use free-form text as-is. Surface the resolved spec back in one paragraph.
+If `$ARGUMENTS` is empty, ask the human for the feature (free-form, path, or tracker ref). Otherwise resolve it: `cat` a spec file, load a tracker record, or use free-form text. Surface the resolved spec back in one paragraph.
 
 ---
 
 ## Step 1 — Grill the spec (Human ↔ /grilling)
 
-Before grooming, sharpen the raw spec with the human. **Invoke the `grilling` skill** — interview the human relentlessly, one question at a time with a recommended answer, until the feature is well understood: scope, edge cases, non-goals, constraints, and any decisions that warrant an ADR. Anything answerable by reading the codebase — explore instead of asking.
-
-The output of this step is a **grilled spec** (the raw spec plus the resolved answers). Carry it into Step 2.
+Before grooming, sharpen the raw spec with the human. **Invoke the `grilling` skill** — interview the human relentlessly, one question at a time with a recommended answer, until scope, edge cases, non-goals, constraints, and any decisions that warrant an ADR are clear. Anything answerable by reading the codebase — explore instead of asking. The output is a **grilled spec**; carry it into Step 2.
 
 ---
 
-## Step 2 — PA grooms → Tasks Plan
+## Step 2 — PA grooms → per-task files (+ proposes an ADR)
 
-Launch ONE Product Architect in feature-level grooming mode:
+Launch ONE Product Architect:
 
 ```
 Agent(
   subagent_type="squid:product-architect",
   prompt="""Feature-level grooming. Read AGENTS.md first. Follow your feature-grooming role.
   Feature (grilled): {grilled spec from Step 1}.
-  Decompose into 3–8 ordered, independently-shippable tasks, each with a full groomed spec (Scope, Acceptance Criteria, User Stories, Dependencies).
-  Maintain the docs: add any new domain terms to docs/glossary.md, and author an ADR under docs/adr/NNNN-*.md (Nygard template) for any non-obvious architectural decision. Use the context7 plugin to look up authoritative library/API usage wherever the feature touches an external framework.
-  Produce the Tasks Plan at tracker/feature-{slug}-plan.md (file mode) or a pinned `feature-plan` issue (gh mode).
-  Hand back: the plan path, a one-paragraph summary, and the list of any ADR/glossary files written."""
+  1. Decompose into atomic, independently-shippable tasks. Write ONE file per task: tasks/<NNN>-<slug>.md with
+     frontmatter `id`, `feature: {slug}`, `status: pending`, plus Scope, Acceptance Criteria, Out of scope, and a
+     `## Log` section. Number them (NNN) in dependency order. (gh mode: one issue per task instead.)
+  2. Add any new domain terms to docs/glossary.md.
+  3. If the feature warrants a non-obvious architectural decision, DRAFT a proposed ADR (Nygard template) and hand it
+     back as a PROPOSAL — do NOT write it to docs/adr/ yet; the human decides in the next step.
+  Use the context7 plugin to look up authoritative library/API usage wherever the feature touches an external framework.
+  Hand back: the list of task files created, the glossary updates, and the proposed ADR draft (if any)."""
 )
 ```
 
-**Verify before surfacing to the human:** the plan file/issue exists, every task has a groomed file/issue, and tasks are ordered (no later task is a prerequisite of an earlier one). Re-launch the PA with the gap as concrete feedback if verification fails.
+**Verify before the gate:** the task files exist, each is atomic with acceptance criteria, and they're ordered by `NNN` in dependency order. Re-launch the PA with the gap as feedback if not.
 
 ---
 
-## Step 3 — HUMAN GATE: approve the Tasks Plan
+## Step 3 — HUMAN GATE: ADR decision + plan approval
 
-Surface the plan:
+Surface:
 
 ```
 Feature: {title}
-Plan: {path or issue URL}
-Tasks ({N}):
-1. {ref} — {title}
+Tasks ({N}) — tasks/<NNN>-<slug>.md (status: pending):
+1. {NNN-slug} — {title}
 2. ...
-Docs: {new ADRs / glossary terms, or "none"}
-Open questions (if any): ...
+Glossary: {new terms, or "none"}
+Proposed ADR: {ADR-NNNN "title" — 2-line summary, or "none"}
 
-Approve to set up the branch + worktree? (y / edit / cancel)
+Create the proposed ADR? (y / n)    Approve the plan? (y / edit / cancel)
 ```
 
-Wait for the response.
+Wait for the human.
 
-- `y` → Step 4.
-- `edit` → ask what to add/remove/reorder; re-launch the PA; loop back to Step 3.
-- `cancel` → stop. Nothing has been branched yet — that's the point of creating the worktree last.
+- **ADR `y`** → the PA writes the ADR to `docs/adr/NNNN-<slug>.md` (Status: Accepted). **ADR `n`** → discard the draft.
+- **Plan `y`** → Step 4.
+- **`edit`** → ask what to add / remove / reorder / re-split; re-launch the PA; loop back to Step 3.
+- **`cancel`** → stop. Nothing has been branched yet — that's the point of creating the worktree last.
 
 ---
 
@@ -91,14 +93,13 @@ git worktree add -b feat/{slug} "$WORKTREE_PATH" main
 
 If the worktree already exists (re-running after an abort), tell the human and ask reuse (`r`) / recreate (`d`) — default reuse.
 
-The planning artifacts the PA wrote in Step 2 (the Tasks Plan + groomed task files under `tracker/`, any new `docs/adr/NNNN-*.md`, and `docs/glossary.md` edits) are currently uncommitted in the **main** working tree. **Relocate them into the worktree** so they live on `feat/{slug}` and travel with the PR: move the new files into `$WORKTREE_PATH` at the same relative paths, re-apply the glossary edit there, then restore the main working tree to clean (`git checkout -- docs/glossary.md`). After this, everything the pipeline needs is on the feature branch.
+The artifacts the PA wrote in Steps 2–3 (the `tasks/<NNN>-*.md` files, any new `docs/adr/NNNN-*.md`, and `docs/glossary.md` edits) are uncommitted in the **main** working tree. **Relocate them into the worktree** so they live on `feat/{slug}` and travel with the PR: move the new task + ADR files into `$WORKTREE_PATH` at the same relative paths, re-apply the glossary edit there, then restore the main working tree to clean (`git checkout -- docs/glossary.md`).
 
 Hand off:
 
 ```
-Plan approved. Branch `feat/{slug}` + worktree at {WORKTREE_PATH}.
-Next: run `/implement-night` to build the whole plan end-to-end (it runs in this worktree),
-or `/implement-task {ref}` to build individual tasks.
+Plan approved. {N} tasks in tasks/ (status: pending). Branch `feat/{slug}` + worktree at {WORKTREE_PATH}.
+Next: run `/implement-night` (builds every pending task in this worktree), or `/implement-task {ref}` for individual tasks.
 ```
 
 `/plan` ends here.
@@ -107,6 +108,7 @@ or `/implement-task {ref}` to build individual tasks.
 
 ## Notes
 
-- **Grilling first, grooming second.** The grilling sharpens the human's intent; the PA's grooming turns the sharpened spec into commit-grain tasks. Don't skip the grilling — a wrong-shaped plan costs the whole pipeline downstream.
-- **Branch/worktree is the LAST thing `/plan` does** — so nothing is branched if the human cancels, and the plan + any ADR/glossary fork onto the feature branch rather than landing on `main` directly.
-- **The PA owns `docs/adr/` and `docs/glossary.md`.** New domain concepts and architectural decisions are captured here, at planning time — not retrofitted during implementation.
+- **Grill first, groom second.** The grilling sharpens the human's intent; the PA's grooming turns it into atomic, commit-grain task files. Don't skip the grilling — a wrong-shaped plan costs the whole pipeline downstream.
+- **The tasks ARE the plan.** One `tasks/<NNN>-<slug>.md` per atomic task (`status: pending`) — there is no separate plan document. See the [`tracker-workflow`](../scaffold/specs/tracker-workflow.md) spec for the file shape.
+- **ADRs are human-gated.** The PA *proposes*; you decide; only approved ADRs land in `docs/adr/`. The PA also owns `docs/glossary.md`.
+- **Branch/worktree is the LAST thing `/plan` does** — nothing is branched if you cancel, and the tasks + ADR fork onto the feature branch rather than landing on `main` directly.

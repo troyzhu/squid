@@ -137,7 +137,7 @@ The skill asks what you want to build (components, frameworks, infra, license) a
 - `AGENTS.md` — project brief distilled from the relevant specs (plus a one-line `CLAUDE.md` that points to it)
 - Skeleton `packages/<component>/` directories with placeholder Makefiles and component-level `AGENTS.md`s
 - Root `Makefile`, `.env.example`, `.gitignore`
-- Optional: `docker-compose.yml`, `.github/workflows/`, `tracker/`
+- Optional: `docker-compose.yml`, `.github/workflows/`, `tasks/`
 
 It does **not** write application source. That's the next step:
 

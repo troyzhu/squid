@@ -9,7 +9,7 @@ argument-hint: <task-ref | "task description" | plan-ref | list of task-refs>
 
 Take a task (or a list of tasks / an approved Tasks Plan) and drive each one through the inner **SWE → Tester** loop, committing each task once it passes. This is the implementation core that `/implement-night` runs; you can also run it standalone, on demand.
 
-`$ARGUMENTS` is one of: a single tracker ref (`NNN-slug` / `#N`), a free-form task description, a path to an approved Tasks Plan (`tracker/feature-{slug}-plan.md`), or several refs. If empty, ask the human what to implement.
+`$ARGUMENTS` is one of: a single task ref (`NNN-slug` / `#N`), a free-form task description, the feature's pending task files (`tasks/<NNN>-*.md`, `status: pending`), or several refs. If empty, ask the human what to implement.
 
 You are the **orchestrator** — a MANAGER, not an implementer. You launch agents, enforce the Tester gate, and commit on green. You do NOT write code, run tests, or review the diff yourself.
 
@@ -30,9 +30,9 @@ Read `AGENTS.md` first to confirm the active **tracker mode** (`file` or `gh`) a
 
 Build an ordered list of tasks from `$ARGUMENTS`:
 
-- **Tracker ref(s)** (`NNN-slug` / `#N`) → load each. In file mode, `git mv` a `.todo.md` / `.groomed.md` to `.in-progress.md`.
-- **Approved Tasks Plan** (`tracker/feature-{slug}-plan.md`) → use its ordered task list verbatim.
-- **Free-form description** → a single ephemeral task; don't create a tracker file unless the human asks.
+- **Tracker ref(s)** (`NNN-slug` / `#N`) → load each task's `tasks/<NNN>-<slug>.md`.
+- **Approved Tasks Plan** → the feature's `tasks/<NNN>-*.md` files with `status: pending`, in `NNN` order (gh mode: the feature's open issues).
+- **Free-form description** → a single ephemeral task; don't create a task file unless the human asks.
 - **Empty** → ask the human what to implement.
 
 Surface the resolved task list back in one short block before starting.
@@ -50,6 +50,7 @@ Agent(
   subagent_type="squid:software-engineer",
   prompt="""Implement task {ID}. Read AGENTS.md first. Follow your role definition.
   {Working directory: {path}  — include this line only when orchestrated by /implement-night.}
+  In file mode, set this task's `tasks/<NNN>-<slug>.md` frontmatter `status: in-progress` before you start.
   Write code AND tests. Run the project's format-fix + lint-fix + pre-commit + unit-tests until clean.
   DO NOT commit yet — the Tester goes first. Append a SWE log entry (or include it in your final message for ephemeral tasks)."""
 )
@@ -90,12 +91,12 @@ Agent(
   subagent_type="squid:software-engineer",
   prompt="""Tester PASSED task {ID}. {Working directory: {path}.} Commit JUST this task per your role definition —
   `commit-commands` plugin required, specific files only (never `git add -A`). Conventional Commits subject
-  (`feat:` / `fix:` / `refactor:` / …). Message ends with `Closes #N` (gh mode) or `Closes-tracker: NNN-slug` (file mode).
+  (`feat:` / `fix:` / `refactor:` / …). Message ends with `Closes #N` (gh mode) or `Closes-task: NNN-slug` (file mode).
   DO NOT push."""
 )
 ```
 
-In file mode, the SWE also moves the task file to `tracker/done/` as part of that commit.
+In file mode, the SWE also sets the task's `tasks/<NNN>-<slug>.md` frontmatter `status: done` (the file stays in `tasks/`) as part of that commit.
 
 ### 2e. `Finished tasks?`
 

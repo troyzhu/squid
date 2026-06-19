@@ -38,7 +38,7 @@ Follow the canonical three-section shape — `The Why` / `The What` / `The How`.
 
 ## Project Structure
 
-{ASCII tree pulled from `monorepo-layout.md`, trimmed to the chosen components. Include tracker/ when agent team is chosen.}
+{ASCII tree pulled from `monorepo-layout.md`, trimmed to the chosen components. Include tasks/ when agent team is chosen.}
 
 ## Key Python Design Choices
 
@@ -176,7 +176,7 @@ This project ships with an opinionated **agent team** (the `squid` plugin). This
 - **No false confidence.** Never report "it works" without firsthand evidence; an agent's "PASS" is not evidence — test output / logs / artifacts are. Verify every agent report before forwarding.
 - **Responsibility model.** PA owns the feature (UX + scope); SWE owns code correctness + tests; Tester owns verification; PR-Reviewer owns diff quality; On-Call owns pipeline health; the orchestrator verifies each report.
 
-**Tracker:** `TRACKER_MODE: file` *(change to `gh` for GitHub Issues)*. Format + state machine: [`tracker/README.md`](tracker/README.md).
+**Tracker:** `TRACKER_MODE: file` *(change to `gh` for GitHub Issues)*. In `file` mode, tasks live as one markdown file per atomic task at `tasks/<NNN>-<slug>.md`; state is a `status:` frontmatter field (`pending` → `in-progress` → `done`) edited in place — no filename suffixes, no `done/` subfolder. Format + state machine: [`tasks/README.md`](tasks/README.md).
 
 **When to use which**
 

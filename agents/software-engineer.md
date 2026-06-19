@@ -21,7 +21,7 @@ If a `testing-python` skill is available, follow its conventions when writing te
 
 ## Input
 
-A task identifier — either a GitHub issue number (`#42`) or a tracker filename (`tracker/042-add-user-auth.groomed.md`).
+A task identifier — either a GitHub issue number (`#42`) or a task filename (`tasks/042-add-user-auth.md`).
 
 ## Workflow
 
@@ -34,8 +34,8 @@ gh issue view {NUMBER}
 
 **File mode:**
 ```bash
-cat tracker/{NNN}-{slug}.groomed.md
-git mv tracker/{NNN}-{slug}.groomed.md tracker/{NNN}-{slug}.in-progress.md
+cat tasks/{NNN}-{slug}.md
+# Set the task's frontmatter status: in-progress (the file stays in tasks/ — no rename, no move).
 ```
 
 The task body has:
@@ -140,7 +140,7 @@ gh issue view {NUMBER}            # read current body
 gh issue edit {NUMBER} --body "..."  # write back with checkboxes updated
 ```
 
-**File mode:** edit the in-progress file directly.
+**File mode:** edit the task file (`tasks/{NNN}-{slug}.md`) directly.
 
 ### 9. Append your log entry
 
@@ -181,7 +181,7 @@ COMMENT
 )"
 ```
 
-**File mode:** append the entry to the `## Log` section of `tracker/{NNN}-{slug}.in-progress.md`. Create the `## Log` section if it doesn't exist yet.
+**File mode:** append the entry to the `## Log` section of `tasks/{NNN}-{slug}.md`. Create the `## Log` section if it doesn't exist yet.
 
 ### 10. Hand off to Tester — DO NOT COMMIT
 
@@ -257,17 +257,17 @@ Commit message rules:
 - Blank line, then the task reference:
   - `Closes #N` — closes the GitHub issue.
   - `Refs #N` — for `[HUMAN]` tasks (issue stays open) and for the On-Call Engineer's CI fixes.
-  - **File mode:** use `Closes-tracker: NNN-{slug}` (the tracker file is moved to `tracker/done/` in the same commit).
+  - **File mode:** use `Closes-task: NNN-{slug}` (the task file's `status:` is set to `done` in the same commit; the file stays in `tasks/`).
 - Every commit MUST reference a task ID — this is how the On-Call Engineer traces CI failures back to the responsible task.
 - **Do not squash locally.** Each task is its own commit. The orchestrator never squashes; the human uses GitHub's "Squash and merge" button.
 
 If the project uses a `commit-commands` plugin/skill, **always** invoke it for the commit (don't hand-craft the message). It's the project's canonical commit-message generator and is required, not optional.
 
-**File mode** — also move the file:
+**File mode** — also mark the task done:
 ```bash
-git mv tracker/{NNN}-{slug}.in-progress.md tracker/done/{NNN}-{slug}.md
-git add tracker/done/{NNN}-{slug}.md
-# include this rename in the same commit as the code
+# Set the task's frontmatter status: done in tasks/{NNN}-{slug}.md (no rename, no move — it stays in tasks/).
+git add tasks/{NNN}-{slug}.md
+# include this status change in the same commit as the code
 ```
 
 ### Push / open PR
@@ -301,7 +301,7 @@ When a reviewer leaves comments:
 - Follow existing patterns. If there's a convention in the codebase, follow it.
 - Always `git pull` before starting work.
 - Never use `git add -A` / `git add .`. Always commit specific files.
-- Every commit must reference a task ID (`Closes #N`, `Refs #N`, or `Closes-tracker: NNN-...`).
+- Every commit must reference a task ID (`Closes #N`, `Refs #N`, or `Closes-task: NNN-...`).
 - Run `make format-fix && make lint-fix` before handing off — never make the Tester deal with lint errors.
 - If the project uses PRs, create and update the PR with `gh` directly (`gh pr create` to open, `gh pr edit` to update).
 - **CLI-only tooling.** Always access git, datastores, cloud services, and CI through their CLI (`git`, `gh`, `psql`, `aws`, `docker`, etc.). No web UIs. No ad-hoc REST wrappers when a CLI exists. The orchestrator must be able to spot-check what you did by re-running the same command.

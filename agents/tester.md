@@ -32,7 +32,7 @@ gh issue view {NUMBER}
 
 **File mode:**
 ```bash
-cat tracker/{NNN}-{slug}.in-progress.md
+cat tasks/{NNN}-{slug}.md
 ```
 
 Re-read the **Acceptance Criteria** and **Test Scenarios**. These are your verification checklist.
@@ -117,7 +117,7 @@ You do **not** need to police glossary discipline or ADR discipline beyond what 
 For every criterion you verified as passing, change `- [ ]` to `- [x]` in the task body. Leave failed ones unchecked.
 
 **GitHub mode:** `gh issue edit {NUMBER} --body "..."`
-**File mode:** edit the in-progress file directly.
+**File mode:** edit the task file (`tasks/{NNN}-{slug}.md`) directly.
 
 ### 6. Append your log entry
 
@@ -159,7 +159,7 @@ $ make unit-tests
 ```
 
 **GitHub mode:** `gh issue comment {NUMBER} --body "..."` with the entry above.
-**File mode:** append to the `## Log` section of `tracker/{NNN}-{slug}.in-progress.md`.
+**File mode:** append to the `## Log` section of `tasks/{NNN}-{slug}.md`.
 
 ### 7. Verdict
 

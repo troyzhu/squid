@@ -1,76 +1,81 @@
 ---
 name: tracker-workflow
-description: File-based task tracker format and state machine — `tracker/NNN-slug.{todo,groomed,in-progress}.md` with a `done/` archive, acceptance criteria, `## Log` sections, and `Depends on:` links. Used by the `/plan`, `/implement-task`, and `/implement-night` pipelines. TRIGGER when creating, updating, or moving task files under `tracker/`, or when the user asks how this project tracks work. SKIP for projects using GitHub Issues as the primary tracker (`TRACKER_MODE: gh` in `AGENTS.md`).
+description: File-based task tracker format — one markdown file per task under `tasks/`, with a `status:` frontmatter tag (pending → in-progress → done) and a `## Log` section. The Tasks Plan IS the set of `tasks/<NNN>-<slug>.md` files. Used by the `/plan`, `/implement-task`, and `/implement-night` pipelines. TRIGGER when creating, updating, or completing task files under `tasks/`, or when the user asks how this project tracks work. SKIP for projects using GitHub Issues as the primary tracker (`TRACKER_MODE: gh` in `AGENTS.md`).
 ---
 
-# File-based tracker workflow
+# File-based task tracker
 
-The default tracker is plain files under `tracker/`. The **filename encodes the task's state**, and the `## Log` section is the single source of truth for what each agent did. GitHub Issues is the opt-in alternative (`TRACKER_MODE: gh`).
+The default tracker is plain markdown files under `tasks/`, committed to the repo. **One file per atomic task**, with its state carried in a `status:` frontmatter tag. The **Tasks Plan is the set of these files** — there is no separate plan document. GitHub Issues is the opt-in alternative (`TRACKER_MODE: gh`).
 
 ## When to use
 
 - The project chose the file-based tracker at scaffold time (`TRACKER_MODE: file`, the default — declared in `AGENTS.md`'s "Agent Team & Pipeline" section).
-- You are creating, grooming, picking up, or completing a task and need to move it through its states.
+- You are creating, picking up, or completing a task.
 
 ## When NOT to use
 
-- The project set `TRACKER_MODE: gh` — use `gh issue ...` for everything instead (create, label, comment, close). State lives in issue state + labels, not filenames.
+- `TRACKER_MODE: gh` — use `gh issue ...` instead; issue state + labels carry status, one issue per task.
 
 ## Decision tree
 
 ```
 Need to track a unit of work?
-├── TRACKER_MODE: gh   → gh issue create / comment / close   (labels carry state)
-└── TRACKER_MODE: file → a tracker/ file whose name encodes state (below)
+├── TRACKER_MODE: gh   → gh issue create / comment / close   (labels carry status)
+└── TRACKER_MODE: file → a tasks/<NNN>-<slug>.md file with a status: tag (below)
 ```
 
-## State machine (file mode)
+## One file per task
 
-The filename suffix is the state; transitions are `git mv`:
+`/plan` splits a feature into atomic tasks and writes one file per task under `tasks/`:
 
 ```
-tracker/
-├── 001-add-feature.todo.md         # raw, awaiting grooming
-├── 002-pagination.groomed.md       # PA-groomed, in a Tasks Plan, ready to build
-├── 003-search.in-progress.md       # SWE/Tester actively working
-└── done/
-    └── 000-bootstrap.md            # accepted + committed
+tasks/
+├── 001-add-pagination.md       # status: done
+├── 002-search-endpoint.md      # status: in-progress
+├── 003-search-ui.md            # status: pending
+└── README.md                   # what this directory is
 ```
 
-- New task → `NNN-slug.todo.md`
-- After PA grooming → `NNN-slug.groomed.md`
-- When the SWE picks it up → `NNN-slug.in-progress.md`
-- After it passes and the commit lands → `git mv` to `done/NNN-slug.md`
+`NNN` is a zero-padded, monotonic counter. There is **no `done/` subfolder and no filename-state suffix** — the file stays put; its `status:` field changes.
 
-`NNN` is a zero-padded, monotonic counter. A feature's plan lives at `tracker/feature-{slug}-plan.md` — its ordered list of groomed tasks.
-
-## The `## Log` (single source of truth)
-
-Every agent appends timestamped, append-only entries to the task's `## Log` section as it works. Format: `### [ROLE] YYYY-MM-DD HH:MM — Short subject`.
+## Task file shape
 
 ```markdown
+---
+id: 003-search-ui
+feature: search          # the feature slug this task belongs to
+status: pending          # pending | in-progress | done
+---
+
+# Search UI
+
+## Scope
+{1–2 sentences — one atomic, independently-shippable unit of work.}
+
+## Acceptance criteria
+- [ ] ...
+
+## Out of scope
+- ...
+
 ## Log
-
 ### [PA] 2026-04-27 12:30 — Grooming
-...
-
-### [SWE] 2026-04-27 14:00 — Implementation
-...
-
-### [Tester] 2026-04-27 14:45 — QA
-...
-
-### [PA] 2026-04-27 15:40 — Acceptance
-...
-
-### [PR Reviewer] 2026-04-27 16:00 — Review (rollup)
-...
-
-### [On-Call] 2026-04-27 16:30 — CI
 ...
 ```
 
-Roles: `PA` (Product Architect), `SWE`, `Tester`, `PR Reviewer`, `On-Call`. Entries are never rewritten — only appended.
+## Status lifecycle
+
+`status:` is the single source of truth for state; transitions are edits to that field (no renames, no moves):
+
+- **PA grooming** writes the file with `status: pending`.
+- **SWE** starts the task → set `status: in-progress`.
+- After the **Tester** PASSES and the task is committed → set `status: done`.
+
+The **Tasks Plan** for a feature = its `tasks/<NNN>-*.md` files with `status: pending`, processed in `NNN` order. `/implement-night` builds every pending task in the feature's worktree; `/implement-task` can target one or several by ref.
+
+## The `## Log`
+
+Every agent appends timestamped, append-only entries to the task's `## Log`: `### [ROLE] YYYY-MM-DD HH:MM — subject`. Roles: `PA`, `SWE`, `Tester`, `PR Reviewer`, `On-Call`. Never rewrite — only append.
 
 ## Index of supporting files
 
@@ -78,7 +83,8 @@ _(None — this spec is self-contained.)_
 
 ## Canonical principles
 
-- **The filename is the state.** Don't track state inside the file when the suffix can carry it; `git mv` on every transition.
-- **Append, never rewrite, the Log.** It's the audit trail across the whole pipeline.
-- **One task = one file.** Rollup tasks (from a PA REJECT or PR-Reviewer Blockers) are their own files, appended to the end of the plan queue.
-- **Switch trackers in one place.** `TRACKER_MODE` in `AGENTS.md` selects file vs gh; nothing else hard-codes the choice.
+- **The `status:` tag is the state.** pending → in-progress → done, edited in place. No filename suffixes, no `done/` folder, no `git mv` dance.
+- **One task = one file.** Rollup tasks (from a PA REJECT or PR-Reviewer Blockers) are new `tasks/<NNN>-<slug>.md` files, `status: pending`.
+- **The tasks ARE the plan.** No separate plan document — the per-task files, ordered by `NNN`, are the Tasks Plan.
+- **Append, never rewrite, the Log.** It's the cross-pipeline audit trail.
+- **Switch trackers in one place.** `TRACKER_MODE` in `AGENTS.md` selects file vs gh.
