@@ -41,10 +41,7 @@ Branch + worktree, grooming, the per-task implement/verify loop, push, diff revi
 
 ## [Learn How to Build Agentic Coding Frameworks From Scratch](https://decodingai.com)
 
-Join 40k+ engineers to [the Decoding AI Magazine](https://decodingai.com) to learn how to build agentic coding frameworks such as Squid from scratch.
-
-  ▎ Join 40k+ engineers subscribed to [the Decoding AI Magazine](https://decodingai.com) — and learn to
-  ▎ build agentic coding frameworks like Squid from scratch.
+  ▎ Join 40k+ engineers subscribed to [the Decoding AI Magazine](https://decodingai.com) — and learn to build agentic coding frameworks like Squid from scratch.
 
 ![Decoding AI Magazine](./assets/decodingai.jpg)
 
