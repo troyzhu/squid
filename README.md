@@ -56,6 +56,8 @@ If you want to learn how to build agentic coding frameworks such as Squid from s
 
 That's it. Open any repo in Claude Code; the agents and skills appear in `/agents` and `/help`. Run `/plugin marketplace update iusztinpaul` later to pull fresh changes.
 
+Installing Squid also pulls in three plugins the agent team relies on, all from Anthropic's official `claude-plugins-official` marketplace — `context7` (live library docs via MCP), `code-review`, and `commit-commands`. The official marketplace ships with Claude Code and is available automatically, so these resolve and enable on their own when you install Squid. (Requires Claude Code v2.1.143+ for auto-enable; v2.1.110+ for the dependency mechanism. If a dependency ever fails to resolve, run `/plugin marketplace update claude-plugins-official`.)
+
 <details>
 <summary><b>Per-project install</b> — auto-prompt for everyone who clones a specific repo</summary>
 

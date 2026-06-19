@@ -7,6 +7,7 @@
     "description": "Opinionated engineering agent team plus /day, /night, /scaffold, and a library of language/framework/infra specs.",
     "version": "0.2.8"
   },
+  "allowCrossMarketplaceDependenciesOn": ["claude-plugins-official"],
   "plugins": [
     {
       "name": "squid",
