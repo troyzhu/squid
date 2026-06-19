@@ -1,6 +1,6 @@
 ---
 name: scaffold
-description: Bootstrap a new polyglot monorepo (or a new component in an existing one) from an opinionated spec library. Asks what to build, picks the relevant specs from specs/, writes a tailored AGENTS.md (plus a CLAUDE.md pointer), and lays down an empty folder skeleton. TRIGGER when the user says "/scaffold", asks to bootstrap a project, create a new codebase, start a fresh repo, or add a new component. SKIP for work inside an already-scaffolded project — pick /day or /night instead.
+description: Bootstrap a new polyglot monorepo (or a new component in an existing one) from an opinionated spec library. Asks what to build, picks the relevant specs from specs/, writes a tailored AGENTS.md (plus a CLAUDE.md pointer), and lays down an empty folder skeleton. TRIGGER when the user says "/scaffold", asks to bootstrap a project, create a new codebase, start a fresh repo, or add a new component. SKIP for work inside an already-scaffolded project — pick /implement-task or /plan instead.
 disable-model-invocation: false
 argument-hint: [optional one-line project description]
 ---
@@ -13,7 +13,7 @@ Interactive bootstrap for a new repo (or a new component in an existing one).
 - Read only the specs under [`specs/`](specs/) that apply.
 - Write a tailored `AGENTS.md` (plus a one-line `CLAUDE.md` pointer) at the target project root that **distils** those specs (doesn't copy-paste them).
 - Lay down an empty folder skeleton (no source code).
-- Hand control back — the user runs `/day` next to have the SWE agent write the first code against the generated AGENTS.md.
+- Hand control back — the user runs `/implement-task` next to have the SWE agent write the first code against the generated AGENTS.md.
 
 ## When to use
 
@@ -23,7 +23,7 @@ Interactive bootstrap for a new repo (or a new component in an existing one).
 
 ## When NOT to use
 
-- Writing application source code (that's the SWE agent's job under `/day` or `/night`).
+- Writing application source code (that's the SWE agent's job under `/implement-task` or `/implement-night`).
 - Filling in business logic, API handlers, components, etc.
 - Adjusting opinions inside an existing project — edit the generated `AGENTS.md` directly.
 - Non-polyglot single-package projects where the full machinery is overkill. (You can still use a single spec as reference, but skip the scaffold flow.)
@@ -138,7 +138,7 @@ If monorepo:
 - Each `packages/<c>/` also gets:
   - `AGENTS.md` — one-paragraph component brief + "see root AGENTS.md for conventions"; plus a one-line `CLAUDE.md` (`@AGENTS.md`) so Claude Code auto-loads it.
   - `.env.example` — component-local placeholder.
-  - *No source files.* (Those are SWE agent's job on first `/day` run.)
+  - *No source files.* (Those are SWE agent's job on first `/implement-task` run.)
 
 - If shared OpenAPI chosen: `packages/shared/openapi/api.yaml` with a minimal `/health` endpoint seed.
 
@@ -155,17 +155,16 @@ If github-actions chosen:
 
 If agent team + tracker chosen:
 
-- `docs/PROCESS.md` — copy from the plugin (same file).
-- `tracker/README.md` + `tracker/done/.gitkeep`.
+- `tasks/README.md` describing the one-file-per-task model (`tasks/<NNN>-<slug>.md` with a `status:` frontmatter field — `pending` / `in-progress` / `done` — and a `feature:` field). No `done/` subfolder; state lives in the frontmatter, not the filename. (The agent-team lifecycle + cross-cutting rules are baked into the generated `AGENTS.md` from `AGENTS_TEMPLATE.md` — there is no separate `docs/PROCESS.md`.)
 - `.claude/` — only if the user isn't installing the plugin globally; otherwise skip (the plugin provides it).
 
 If `adr` chosen (Process & documentation):
 
-- `docs/adr/0001-record-architecture-decisions.md` — drop the canonical ADR-0001 boilerplate verbatim from [`adr.md`'s Bootstrap section](specs/adr.md), with `{YYYY-MM-DD}` replaced by today's date. This is the only ADR scaffold writes — subsequent ADRs are authored by the SWE / PR Reviewer / `/architecture-review` flow as decisions arise. Do **not** emit a `docs/adr/.gitkeep` (ADR-0001 already keeps the directory non-empty).
+- `docs/adr/0001-record-architecture-decisions.md` — drop the canonical ADR-0001 boilerplate verbatim from [`adr.md`'s Bootstrap section](specs/adr.md), with `{YYYY-MM-DD}` replaced by today's date. This is the only ADR scaffold writes — subsequent ADRs are authored by the PA during `/plan` grooming as decisions arise. Do **not** emit a `docs/adr/.gitkeep` (ADR-0001 already keeps the directory non-empty).
 
 If `ubiquitous-language` chosen (Process & documentation):
 
-- `docs/glossary.md` — minimal seed: a one-paragraph header declaring the discipline ("The canonical vocabulary for {project}. When code, docs, specs, or conversation use a domain concept, use the term as it appears here.") + an empty 3-column table (`| Term | Definition | Notes |`) with a single commented-out example row so the format is unambiguous. Do **not** invent domain terms — the SWE / PM agent populate it as the first feature lands. Recommended seed body:
+- `docs/glossary.md` — minimal seed: a one-paragraph header declaring the discipline ("The canonical vocabulary for {project}. When code, docs, specs, or conversation use a domain concept, use the term as it appears here.") + an empty 3-column table (`| Term | Definition | Notes |`) with a single commented-out example row so the format is unambiguous. Do **not** invent domain terms — the SWE / PA populate it as the first feature lands. Recommended seed body:
 
   ```markdown
   # Glossary
@@ -183,7 +182,7 @@ Summarise for the user:
 
 - File tree created (full list, relative paths).
 - Which specs informed the AGENTS.md (named).
-- **Exact next step** — e.g. `/day "bootstrap packages/backend with a minimal FastAPI app and a /health endpoint"`. The SWE agent will read AGENTS.md and the spec references, and write the first real code.
+- **Exact next step** — e.g. `/implement-task "bootstrap packages/backend with a minimal FastAPI app and a /health endpoint"`. The SWE agent will read AGENTS.md and the spec references, and write the first real code.
 
 ## Rules
 

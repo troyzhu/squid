@@ -89,7 +89,7 @@ Never edit an Accepted ADR's substance. Either supersede it (new ADR) or correct
 - ADR-0001 → no parent.
 - Every other ADR → cite the prior decisions it depends on or contradicts.
 - CLAUDE.md → may link to ADRs to explain *why* a rule exists ("All new endpoints must be async — see [ADR-0003](docs/adr/0003-...)").
-- The [`/architecture-review`](../../architecture-review/SKILL.md) skill reads ADRs first to avoid re-proposing things the team already considered.
+- The PA reads prior ADRs during `/plan` grooming to avoid re-litigating settled decisions.
 
 ### How long should an ADR be?
 
@@ -128,6 +128,6 @@ We will use Architecture Decision Records, as described by Michael Nygard, store
 
 - Every non-obvious architectural choice gets a one-page record.
 - New contributors can read `docs/adr/` to understand why the codebase is shaped the way it is.
-- The `/architecture-review` skill can read prior ADRs and avoid re-proposing settled questions.
+- Prior ADRs are read during planning to avoid re-proposing settled questions.
 - Cost: ~30 minutes per ADR. We accept this cost because the alternative — re-deriving past reasoning — is more expensive.
 ```
