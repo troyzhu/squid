@@ -32,7 +32,9 @@
         "pr-reviewer",
         "oncall",
         "claude-code",
-        "tdd"
+        "tdd",
+        "refactor",
+        "architecture-review"
       ]
     }
   ]

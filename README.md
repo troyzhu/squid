@@ -151,7 +151,7 @@ The SWE agent reads `AGENTS.md`, picks up the specs it references, writes real c
 
 - **Specs over templates.** Opinions live as markdown the agent reads; no Jinja, no render step, no drift between a template and what the agent produces.
 - **Progressive disclosure.** A session loads only the skills whose descriptions match the task. The spec library under `scaffold/specs/` is gated behind `/scaffold` — it doesn't pollute every session's index.
-- **One skill per concern.** Nine skills, twenty specs. Adding a new stack is one markdown file, not a new scaffolding engine.
+- **One skill per concern.** Twelve skills, twenty specs. Adding a new stack is one markdown file, not a new scaffolding engine.
 - **The AGENTS.md is the brief.** After `/scaffold`, the generated `AGENTS.md` is the single source of truth for how that project builds. Specs are referenced, not transcluded.
 - **Agents are gates.** The PA catches scope drift (and signs off from the user's perspective). Tester catches false-confidence "tests pass" claims (and runs an e2e adversarial QA pass). PR Reviewer catches dead/duplicate/untested code, over-engineering, and narrow performance regressions in the diff. On-Call catches CI breakage. No agent writes code and also decides whether the code is correct.
 
@@ -163,7 +163,7 @@ The SWE agent reads `AGENTS.md`, picks up the specs it references, writes real c
 │   ├── plugin.json                # manifest
 │   └── marketplace.json           # one-plugin marketplace catalog
 ├── agents/                        # 5 sub-agents
-├── skills/                        # 9 skills
+├── skills/                        # 12 skills (9 in the pipeline + 3 standalone)
 │   └── scaffold/specs/            # reference specs
 ├── AGENTS.md                      # plugin-dev brief (CLAUDE.md is a symlink to it)
 ├── README.md                      # this file

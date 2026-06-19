@@ -40,7 +40,10 @@ Either way they get an opinionated agent team plus a `/scaffold` flow that boots
 │   ├── review-ci/                     # /review-ci — On-Call drives CI green
 │   ├── grilling/                      # /grilling — stress-test a plan (used inside /plan)
 │   ├── testing-python/                # test-writing conventions
-│   └── self-improve/                  # end-of-session corrections capture (human-gated by /implement-night)
+│   ├── self-improve/                  # end-of-session corrections capture (human-gated by /implement-night)
+│   ├── refactor/                      # /refactor — standalone refactor planner (not wired into the pipeline)
+│   ├── triage-issue/                  # /triage-issue — standalone bug intake (not wired into the pipeline)
+│   └── architecture-review/           # /architecture-review — standalone audit (not wired into the pipeline)
 ├── LICENSE
 ├── README.md                          # user-facing (install + what's inside)
 ├── AGENTS.md                          # (this file; CLAUDE.md symlinks to it)
