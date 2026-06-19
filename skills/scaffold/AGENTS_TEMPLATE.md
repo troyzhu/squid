@@ -57,6 +57,10 @@ Multi-language — each component brings its own toolchain:
 {- **Go 1.22+** (frontend-tui) — `go mod`, `gofmt`, `go test`.}
 {- **OpenAPI 3.1 + codegen** (shared) — `openapi-spec-validator`, `openapi-python-client`, `@openapitools/openapi-generator-cli`, `oapi-codegen`.}
 
+## Access Documentation
+
+Use the `context7` MCP server (when connected) to look up authoritative usage for any tech-stack item or external service above; falls back to web search otherwise.
+
 ## Running commands
 
 All core verbs run at the repo root via the [`Makefile`](Makefile), which **delegates** to each component (`$(MAKE) -C packages/<c> <verb>`) — never reimplementing per-component logic:
@@ -96,10 +100,6 @@ For each external-service slug the user selected, emit one bullet below wrapped 
 - **MongoDB** — async ODM (Beanie / PyMongo); `mongosh "$MONGODB_URL"` for local queries. Spec: [`datastore-mongodb`](skills/scaffold/specs/datastore-mongodb.md).
 <!-- /stack:mongodb -->
 ```
-
-## Access Documentation
-
-Use the `context7` MCP server (when connected) to look up authoritative usage for any tech-stack item or external service above; falls back to web search otherwise.
 
 # Key Principles You Will Respect All Over Your Work
 
