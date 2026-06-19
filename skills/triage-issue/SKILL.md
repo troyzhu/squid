@@ -1,13 +1,13 @@
 ---
 name: triage-issue
-description: Bug intake — takes a free-form bug report (or a tracker / GitHub issue reference), localises the suspected code, captures a deterministic reproducer, and emits a groomed bug task with a regression-test acceptance criterion. Hands off cleanly to /day for supervised single-bug fixes or to /night when the fix needs the full PM/Tester/PR-Reviewer pipeline. Trigger when the user reports a bug, says "/triage-issue", asks "investigate this bug", "diagnose X", or pastes a stack trace / customer report.
+description: Bug intake — takes a free-form bug report (or a tracker / GitHub issue reference), localises the suspected code, captures a deterministic reproducer, and emits a groomed bug task with a regression-test acceptance criterion. Hands off cleanly to /implement-task for supervised single-bug fixes or to /implement-night when the fix needs the full PM/Tester/PR-Reviewer pipeline. Trigger when the user reports a bug, says "/triage-issue", asks "investigate this bug", "diagnose X", or pastes a stack trace / customer report.
 disable-model-invocation: false
 argument-hint: <bug-description | path/to/report.md | #issue-or-NNN-slug>
 ---
 
 # Triage — turn a bug report into a groomed, fixable task
 
-`/day` and `/night` both assume the spec is already shaped right. Bug reports rarely are: they read "X is broken" and need a reproducer, expected-vs-actual, code localisation, and a regression-test acceptance criterion before SWE / Tester can do anything useful with them. This skill produces that groomed bug task, then hands off.
+`/implement-task` and `/implement-night` both assume the spec is already shaped right. Bug reports rarely are: they read "X is broken" and need a reproducer, expected-vs-actual, code localisation, and a regression-test acceptance criterion before SWE / Tester can do anything useful with them. This skill produces that groomed bug task, then hands off.
 
 You are the **triage orchestrator** — you may delegate exploration to sub-agents (Explore, general-purpose), but you do NOT write production code, do NOT write the regression test, and do NOT start the fix. Your output is the spec.
 
@@ -29,7 +29,7 @@ Read [`docs/PROCESS.md`](../../../docs/PROCESS.md) to confirm the active **track
 
 ## When NOT to use
 
-- A feature request — use the `/night` PM grooming flow directly.
+- A feature request — use the `/implement-night` PM grooming flow directly.
 - A refactor with no observable user impact — use [`/refactor`](../refactor/SKILL.md).
 - A trivial typo or one-line bug you can fix right now in chat — just fix it.
 - An incident still in progress — stabilise first, triage after.
@@ -85,7 +85,7 @@ The reproducer must be **deterministic**. If it's only intermittent, mark it exp
 
 ## Step 4 — Write the groomed bug task
 
-Use this exact template. It mirrors the PM agent's groom output so `/day` and `/night` accept it without re-grooming.
+Use this exact template. It mirrors the PM agent's groom output so `/implement-task` and `/implement-night` accept it without re-grooming.
 
 ```markdown
 # Bug: {one-line title — observable user-visible symptom}
@@ -152,7 +152,7 @@ Pick the next sequential ID (`ls tracker/ | grep -oE '^[0-9]+' | sort -n | tail 
 tracker/NNN-bug-<slug>.groomed.md
 ```
 
-`.groomed.md` (not `.todo.md`) signals "PM-ready, can enter the inner loop". Both `/day` and `/night` accept this directly.
+`.groomed.md` (not `.todo.md`) signals "PM-ready, can enter the inner loop". Both `/implement-task` and `/implement-night` accept this directly.
 
 ### gh mode
 
@@ -183,8 +183,8 @@ Surface a single decision block to the user:
 
 {Pick ONE based on severity + scope:}
 
-- **Severity S1 / S2, narrow scope (≤2 files), reproducer is deterministic** → `/day {ref}` — supervise the fix in real time. Fastest path; you watch the diff.
-- **Severity S3 / S4, OR scope spans multiple files / tasks, OR a regression test will need its own design conversation** → `/night {ref}` — full pipeline. PM will decompose into tasks; you only gate the plan and the merge.
+- **Severity S1 / S2, narrow scope (≤2 files), reproducer is deterministic** → `/implement-task {ref}` — supervise the fix in real time. Fastest path; you watch the diff.
+- **Severity S3 / S4, OR scope spans multiple files / tasks, OR a regression test will need its own design conversation** → `/implement-night {ref}` — full pipeline. PM will decompose into tasks; you only gate the plan and the merge.
 - **Severity S1 production-down** → fix live yourself; this groomed task becomes the postmortem record, not the entry point.
 
 ### Open questions for the human
@@ -192,7 +192,7 @@ Surface a single decision block to the user:
 - {if any — list them. Otherwise omit this section.}
 ```
 
-Hand control back. Do NOT auto-invoke `/day` or `/night` — the user picks.
+Hand control back. Do NOT auto-invoke `/implement-task` or `/implement-night` — the user picks.
 
 ## Notes on shape
 
