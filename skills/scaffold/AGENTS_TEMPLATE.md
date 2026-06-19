@@ -12,7 +12,7 @@ Follow the canonical three-section shape — `The Why` / `The What` / `The How`.
 
 **Gate sections on component presence.** If `backend` isn't chosen, drop "Key Python Design Choices", "Writing Scripts", "Writing Tests" (unless another language's tests apply), and every Python bullet under the tables. Same for TypeScript and Go. Drop "Shared contracts" bullets when `include_shared_contracts` is false. Drop the whole "Agent Team & Pipeline" section if the user opted out of the agent team. Drop the whole "Documentation Conventions" section if neither `adr` nor `ubiquitous-language` was chosen; otherwise emit only the bullets matching the chosen options. Do not leave empty sections.
 
-**Fill placeholders inline.** The `{...}` braces in the template are *instructions to you* — replace with concrete content from the user's answers and the specs. The `AGENT: fill in` markers inside the rendered AGENTS.md are for the SWE agent to address on the first `/day` run (datastore CLI specifics, orchestrator CLI specifics, etc.) — leave those literal in the output.
+**Fill placeholders inline.** The `{...}` braces in the template are *instructions to you* — replace with concrete content from the user's answers and the specs. The `AGENT: fill in` markers inside the rendered AGENTS.md are for the SWE agent to address on the first `/implement-task` run (datastore CLI specifics, orchestrator CLI specifics, etc.) — leave those literal in the output.
 
 ## Template
 
@@ -38,7 +38,7 @@ Follow the canonical three-section shape — `The Why` / `The What` / `The How`.
 
 ## Project Structure
 
-{ASCII tree pulled from `monorepo-layout.md`, trimmed to the chosen components. Include tracker/ and docs/PROCESS.md when agent team is chosen.}
+{ASCII tree pulled from `monorepo-layout.md`, trimmed to the chosen components. Include tracker/ when agent team is chosen.}
 
 ## Key Python Design Choices
 
@@ -128,9 +128,9 @@ Per-component dependency managers:
 
 ## Required MCP Servers, Skills & Plugins
 
-What this project expects connected/enabled in the Claude Code session before `/day` or `/night`. Derive the gated bullets from the step-1 answers; leave the project-specific MCP line as an `AGENT: fill in` placeholder.
+What this project expects connected/enabled in the Claude Code session before `/plan` or `/implement-night`. Derive the gated bullets from the step-1 answers; leave the project-specific MCP line as an `AGENT: fill in` placeholder.
 
-{- **`squid` plugin** — supplies the agent team and the `/day` / `/night` / `/scaffold` pipelines, and bundles the `self-improve` skill used below. Install: `/plugin marketplace add iusztinpaul/squid && /plugin install squid@iusztinpaul`. *Only if agent team chosen.*}
+{- **`squid` plugin** — supplies the agent team and the `/plan` / `/implement-task` / `/implement-night` / `/scaffold` pipelines, and bundles the `self-improve` skill used below. Install: `/plugin marketplace add iusztinpaul/squid && /plugin install squid@iusztinpaul`. *Only if agent team chosen.*}
 {- **`context7` MCP server** — authoritative library/API docs for the tech stack (see [Access Documentation](#access-documentation)). Doc lookups fall back to web search when it isn't connected. *Only if any framework or external service is in the stack.*}
 - **Project MCP servers** — *AGENT: fill in any MCP server this project's code talks to (datastore, browser, internal tooling) and the config each needs on first use.*
 
@@ -138,33 +138,57 @@ What this project expects connected/enabled in the Claude Code session before `/
 
 *Only emit if agent team + tracker chosen.*
 
-This project ships with an opinionated **agent team workflow** in two modes. The canonical lifecycle and rules live in [`docs/PROCESS.md`](docs/PROCESS.md); read it before invoking either pipeline.
+This project ships with an opinionated **agent team** (the `squid` plugin). This section is the canonical lifecycle — there is no separate process doc. Per-role rules live in the agent contracts under `agents/`; per-phase rules live in the skills.
+
+**Roles**
 
 | Role | File | Responsibility |
 |---|---|---|
-| Product Manager | [`agents/product-manager.md`](agents/product-manager.md) | Grooms tasks; final user-POV acceptance (night mode). |
-| Software Engineer | [`agents/software-engineer.md`](agents/software-engineer.md) | Implements code + tests; no commit until Tester PASS. |
-| Tester | [`agents/tester.md`](agents/tester.md) | Runs full suite; verifies every AC with evidence. |
-| On-Call Engineer | [`agents/oncall-engineer.md`](agents/oncall-engineer.md) | Watches CI after push (night mode). |
+| Product Architect (PA) | [`agents/product-architect.md`](agents/product-architect.md) | Grooms a feature into a Tasks Plan; authors ADRs + glossary; final user-POV acceptance review. |
+| Software Engineer | [`agents/software-engineer.md`](agents/software-engineer.md) | Implements code + tests; commits each task after the Tester passes. |
+| Tester | [`agents/tester.md`](agents/tester.md) | Runs the full suite; verifies every AC with evidence; **headline duty: e2e adversarial QA**. |
+| PR Reviewer | [`agents/pr-reviewer.md`](agents/pr-reviewer.md) | Reads the diff after push; flags Blockers/Nits across correctness, simplicity, tests, standards, docs. |
+| On-Call Engineer | [`agents/oncall-engineer.md`](agents/oncall-engineer.md) | Watches CI after push; on red, diagnoses and hands a fix task to the SWE, then re-verifies green. |
 
-**Entry points:**
+**Pipeline** (each skill states its own input → output):
 
-- **`/night [batch-size]`** — unattended batch pipeline (default 2). Full PM groom → SWE → Tester → PM accept → Commit → On-Call CI.
-- **`/day [task]`** — supervised single-task pipeline. SWE → Tester → you commit.
+```
+/plan             raw feature spec → grill → PA grooms (ADR/glossary/context7) → approved Tasks Plan → branch + worktree
+/implement-night  the end-to-end pipeline, run in that worktree:
+   /implement-task    each task: SWE ↔ Tester (FAIL max 5) → commit on PASS → next   (out: code + tests)
+   /review            push → PA acceptance (max 3) → PR-Reviewer (max 3)             (out: clean PR | rollup task)
+   /review-ci         On-Call watches CI → diagnoses → SWE fixes (max 5)             (out: validated PR)
+   → human squash-merges; optional self-improve → AGENTS.md
+```
 
-**Tracker:** file-based by default — see [`tracker/README.md`](tracker/README.md). Switch to GitHub Issues via `TRACKER_MODE` at the top of [`docs/PROCESS.md`](docs/PROCESS.md).
+**Entry points**
 
-**When to use which workflow:**
+- **`/plan <feature>`** — plan a feature into an approved Tasks Plan (+ worktree). Start here.
+- **`/implement-night <plan>`** — build the approved plan end-to-end to a validated PR.
+- Granular, run standalone: **`/implement-task`** (build one or more tasks), **`/review`** (push + acceptance + review), **`/review-ci`** (CI).
+
+**Retry caps** — when one is hit, the pipeline stops with `USER ACTION REQUIRED`: Tester FAIL **5**/task · PA REJECT **3** · PR-Reviewer **3** · On-Call **5**.
+
+**Cross-cutting rules**
+
+- **CLI-only tooling.** All git / `gh` / datastore / cloud / CI access goes through the CLI — no web UIs — so the orchestrator can spot-check by re-running the command.
+- **One agent per task. The orchestrator never writes code, never merges, never squashes.** Per-task commits stay on the branch; the human uses GitHub's "Squash and merge" (Conventional Commits subjects → clean changelog body).
+- **No false confidence.** Never report "it works" without firsthand evidence; an agent's "PASS" is not evidence — test output / logs / artifacts are. Verify every agent report before forwarding.
+- **Responsibility model.** PA owns the feature (UX + scope); SWE owns code correctness + tests; Tester owns verification; PR-Reviewer owns diff quality; On-Call owns pipeline health; the orchestrator verifies each report.
+
+**Tracker:** `TRACKER_MODE: file` *(change to `gh` for GitHub Issues)*. Format + state machine: [`tracker/README.md`](tracker/README.md).
+
+**When to use which**
 
 - **Direct chat** — trivial edits, one-shot questions, typos.
-- **`/day`** — a single feature, bug fix, or refactor you want to ship under active supervision with a Tester gate.
-- **`/night`** — multi-task batches, unattended runs, anything where you want both PM gates plus On-Call enforced.
+- **`/implement-task`** — one or a few groomed tasks under a Tester gate.
+- **`/plan` → `/implement-night`** — a whole feature, end-to-end, with all gates and the two human touch-points (plan approval + squash-merge).
 
 ## Developing New Features and Bug Fixes Workflow
 
-Direct chat is for trivial edits and one-shot questions. For anything that needs a test gate, use `/day`; for unattended batches, use `/night`.
+Direct chat is for trivial edits and one-shot questions. For one or a few groomed tasks under a test gate, use `/implement-task`; for a whole feature end-to-end, use `/plan` then `/implement-night`.
 
-**Engineering discipline lives in the agent contracts — not here.** TDD-first ordering, branching off the current active branch, running the feature end-to-end before hand-off, regression-test-first for bugs, the PR / review-response loop, and the format/lint/unit-tests/integration-tests cadence are all defined in [`agents/software-engineer.md`](agents/software-engineer.md) and [`agents/tester.md`](agents/tester.md). Read those for the general rules; `/day` and `/night` enforce them automatically.
+**Engineering discipline lives in the agent contracts — not here.** TDD-first ordering, branching off the current active branch, running the feature end-to-end before hand-off, regression-test-first for bugs, the PR / review-response loop, and the format/lint/unit-tests/integration-tests cadence are all defined in [`agents/software-engineer.md`](agents/software-engineer.md) and [`agents/tester.md`](agents/tester.md). Read those for the general rules; `/implement-task` and `/implement-night` enforce them automatically.
 
 Project-specific invariants the agents can't fully own:
 
@@ -174,7 +198,7 @@ Project-specific invariants the agents can't fully own:
 
 ## Step-by-Step Verification Steps
 
-Standard per-atomic-change verification (format/lint, pre-commit, unit tests, running the feature end-to-end, integration tests pre-PR) is defined in the SWE and Tester agent contracts and runs automatically under `/day` and `/night`.
+Standard per-atomic-change verification (format/lint, pre-commit, unit tests, running the feature end-to-end, integration tests pre-PR) is defined in the SWE and Tester agent contracts and runs automatically under `/implement-task` and `/implement-night`.
 
 Project-specific additions:
 
@@ -251,7 +275,7 @@ External-service CLIs (datastore, orchestrator, observability, LLM, embedding, s
 - **ADRs.** Architecture Decision Records live at [`docs/adr/`](docs/adr/) as `NNNN-kebab-title.md`. Every non-obvious architectural choice (datastore, async/sync default, auth boundary, dependency lock-in) ships with one. Use the four-section Nygard template — Status / Context / Decision / Consequences. ADR-0001 ([`docs/adr/0001-record-architecture-decisions.md`](docs/adr/0001-record-architecture-decisions.md)) is already in the repo and explains the convention. Spec depth: [`adr.md`](skills/scaffold/specs/adr.md).
 
 {If `ubiquitous-language` chosen, emit:}
-- **Glossary.** The canonical domain vocabulary lives at [`docs/glossary.md`](docs/glossary.md). One canonical name per concept; code identifiers, OpenAPI schemas, database columns, and customer-facing UI all use the term as it appears there. Update the glossary in the same PR that introduces or renames a domain concept — never after. PM grooming and [`/grill-me`](skills/grill-me/SKILL.md) read it as the tie-breaker when specs and code disagree. Spec depth: [`ubiquitous-language.md`](skills/scaffold/specs/ubiquitous-language.md).
+- **Glossary.** The canonical domain vocabulary lives at [`docs/glossary.md`](docs/glossary.md). One canonical name per concept; code identifiers, OpenAPI schemas, database columns, and customer-facing UI all use the term as it appears there. Update the glossary in the same PR that introduces or renames a domain concept — never after. PA grooming and [`/grilling`](skills/grilling/SKILL.md) read it as the tie-breaker when specs and code disagree. Spec depth: [`ubiquitous-language.md`](skills/scaffold/specs/ubiquitous-language.md).
 
 ## Self Improve
 
