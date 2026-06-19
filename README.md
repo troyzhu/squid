@@ -94,6 +94,44 @@ Launches Claude Code with the plugin loaded for the session. No marketplace, no 
 
 </details>
 
+<details>
+<summary><b>Install just the skills (any agent)</b> — via <code>npx skills</code></summary>
+
+Not on Claude Code, or only want Squid's skills without the full plugin? Use the cross-agent [`skills`](https://github.com/vercel-labs/skills) CLI:
+
+```
+npx skills add iusztinpaul/squid
+```
+
+It scans the repo for `SKILL.md` files and installs them into whichever agents it detects (Claude Code, Cursor, Codex, and 70+ more). Add `-g` to install into your user directory instead of the current project, or `--skill <name>` to grab specific ones:
+
+```
+npx skills add iusztinpaul/squid --skill plan --skill implement-task -g
+```
+
+Manage them with `npx skills list`, `npx skills update`, and `npx skills remove <name>`.
+
+> **Skills only.** This installs the `/plan`, `/implement-task`, … skills but **not** Squid's five sub-agents (PA, SWE, Tester, PR-Reviewer, On-Call) or the bundled MCP plugins. The pipeline skills invoke those agents, so the full flow only works through the `/plugin install` path above — reach for `npx skills` when you want individual skills inside another agent.
+
+</details>
+
+<details>
+<summary><b>Uninstall</b></summary>
+
+```
+/plugin uninstall squid@iusztinpaul
+```
+
+To also forget the marketplace (stops it checking for updates):
+
+```
+/plugin marketplace remove iusztinpaul
+```
+
+Installed via `npx skills` instead? Remove those with `npx skills remove <name>` (add `--global` if you used `-g`, or `--all` to clear everything).
+
+</details>
+
 ## Skills & commands
 
 | Surface | What it does |
