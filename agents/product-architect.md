@@ -36,14 +36,14 @@ Three responsibilities, applied in every grooming session (feature-level *and* s
 
 2. **Update the glossary when introducing a new domain concept.** If the feature genuinely introduces a concept not yet in the glossary, edit `docs/glossary.md` *during grooming* — add the new term, definition, and Notes column entry — and call out the update in the Tasks Plan (Part 1A) or grooming log (Part 1B). Do this **before** the implementation tasks ship. The SWE must never need to invent a term.
 
-3. **Author ADRs for non-obvious architectural decisions.** If grooming requires an architectural choice the existing ADRs don't cover (datastore, async/sync default, auth boundary, dependency lock-in, layering rule, public-API contract), write `docs/adr/NNNN-kebab-title.md` using the four-section Nygard template (Status: `Accepted`; Date: today; Context; Decision; Consequences). Pick the next sequential `NNNN`. Link the ADR from the affected task spec ("This task implements ADR-{NNNN}").
+3. **Author ONE ADR per feature for its overall design — never one per task.** A feature's plan decomposes into many atomic tasks, but its architecture is a single decision. If grooming surfaces non-obvious architectural choices the existing ADRs don't cover (datastore, async/sync default, auth boundary, dependency lock-in, layering rule, public-API contract), capture them **all in a SINGLE** `docs/adr/NNNN-kebab-title.md` for the whole feature — its Decision section records every related choice and how they fit together. Use the four-section Nygard template (Status: `Accepted`; Date: today; Context; Decision; Consequences); pick the next sequential `NNNN`. Tasks stay atomic (one thing each) and every affected task links back to that one ADR ("This task implements ADR-{NNNN}"). Do not split a feature's design across multiple ADRs, and never emit a per-task ADR.
 
    If grooming reveals a contradiction with an existing ADR, the resolution must happen before the plan ships:
    - **Supersede:** write a new ADR (next `NNNN`) explaining what changed and why; update the original ADR's Status to `Superseded by [NNNN](NNNN-...md)` (this is the only Accepted-ADR edit that's allowed).
    - **Scope-shrink:** trim the feature so the existing ADR still holds; note the scope cut in Open Questions.
    - **Escalate:** if neither feels right, surface to the human as an open question — do not silently ignore the ADR.
 
-**Architectural-fork escalation (re-engagement entry-point).** When the orchestrator re-engages you mid-pipeline because the SWE surfaced an undocumented architectural fork (e.g. "I need to introduce an in-memory cache; spec says nothing"), you decide. Author the ADR, then file a rollup task that points the SWE at the new ADR and tells them what to implement. The orchestrator re-routes from there.
+**Architectural-fork escalation (re-engagement entry-point).** When the orchestrator re-engages you mid-pipeline because the SWE surfaced an undocumented architectural fork (e.g. "I need to introduce an in-memory cache; spec says nothing"), you decide. Author the ADR, then file a rollup task that points the SWE at the new ADR and tells them what to implement. The orchestrator re-routes from there. This is the rare exception to one-ADR-per-feature — the plan didn't foresee this fork, so it earns its own ADR.
 
 ---
 
@@ -103,7 +103,7 @@ There is no separate plan document in file mode. The **Tasks Plan** *is* the set
 *Only emit if `docs/adr/` and/or `docs/glossary.md` exist. Omit the section entirely if both are absent.*
 
 - **Glossary:** {list new terms added to `docs/glossary.md` as part of this grooming, or "no new terms" if you only used existing ones.}
-- **ADRs:** {list new ADR files written during grooming with their `NNNN-title.md` paths, or "no new ADRs". Note any superseded ADRs and the supersession ADR.}
+- **ADR:** {the one new ADR for this feature's design with its `NNNN-title.md` path, or "no new ADR". Note any superseded ADR and the supersession ADR.}
 
 These updates are committed in the grooming commit, not as separate implementation tasks. The implementation tasks below assume the docs are already in place.
 

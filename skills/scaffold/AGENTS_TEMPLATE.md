@@ -145,7 +145,7 @@ Project-specific invariants the agents can't infer:
 *Only emit if `adr` and/or `ubiquitous-language` were chosen.*
 
 {If `adr`:}
-- **ADRs** at [`docs/adr/`](docs/adr/) — `NNNN-kebab-title.md`, Nygard template (Status / Context / Decision / Consequences). Every non-obvious architectural choice ships with one. Spec: [`adr.md`](skills/scaffold/specs/adr.md).
+- **ADRs** at [`docs/adr/`](docs/adr/) — `NNNN-kebab-title.md`, Nygard template (Status / Context / Decision / Consequences). One ADR per feature, capturing its whole design (a feature's related architectural choices go in a single ADR — not one per task or per choice). Spec: [`adr.md`](skills/scaffold/specs/adr.md).
 
 {If `ubiquitous-language`:}
 - **Glossary** at [`docs/glossary.md`](docs/glossary.md) — one canonical name per concept, used identically in code / OpenAPI schemas / DB columns / UI; update it in the same PR that introduces or renames a concept. PA grooming and [`/grilling`](skills/grilling/SKILL.md) read it as the tie-breaker. Spec: [`ubiquitous-language.md`](skills/scaffold/specs/ubiquitous-language.md).
