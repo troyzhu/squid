@@ -4,15 +4,13 @@
 [![Claude Code](https://img.shields.io/badge/Claude%20Code-2.1%2B-blue)](https://claude.com/claude-code)
 [![Plugin version](https://img.shields.io/github/v/tag/iusztinpaul/squid?label=version)](https://github.com/iusztinpaul/squid/tags)
 
-Claude Code writes code fast. It's worse at writing the code *your team* would actually ship — the kind that follows your conventions, has tests you trust, and survives review.
+Claude Code writes code fast. It's worse at writing the code *your team* would actually ship — code that follows your conventions, has tests you trust, and survives review.
 
-**Squid is a [Claude Code](https://claude.com/claude-code) plugin that turns a feature spec into a reviewed PR using a 5-agent pipeline — PA → SWE → Tester → PR Reviewer → On-Call — with exactly two human gates: plan approval and final merge.**
-
-No file templates. No render step. Markdown specs + agent contracts only; every file in your project gets written by an agent that reads those specs and follows them.
+**Squid is a [Claude Code](https://claude.com/claude-code) plugin that turns a feature spec into a reviewed PR through a 5-agent pipeline — PA → SWE → Tester → PR Reviewer → On-Call — with exactly two human gates: plan approval and final merge.** No file templates, no render step: just markdown specs and agent contracts, and every file in your project gets written by an agent that reads them.
 
 ## How it works
 
-Run `/plan <feature-spec>` then `/implement-night`, and Squid drives this pipeline end-to-end:
+Run `/plan <feature-spec>` then `/implement-night`, and Squid drives this end-to-end:
 
 ```
   feature spec
@@ -34,19 +32,19 @@ Run `/plan <feature-spec>` then `/implement-night`, and Squid drives this pipeli
                                                    HUMAN squash-merges (2/2)
 ```
 
-Branch + worktree, grooming, the per-task implement/verify loop, push, diff review, CI — all automated. You only show up for the two gates: approving the plan, and squash-merging the PR.
-
-For active iteration on a few tasks, use `/implement-task <task>` instead — the same SWE ↔ Tester loop, no planning, no review pipeline. Use `/scaffold` first if you're starting from an empty directory; it interviews you about the stack, picks the right specs, and writes a tailored `AGENTS.md` plus a folder skeleton (no application source).
+Branch + worktree, grooming, the per-task implement/verify loop, push, diff review, and CI are all automated — you only show up for the two gates. For a quick single change, run `/implement-task <task>` (the same SWE ↔ Tester loop, no planning or review pipeline). Starting from an empty repo? Run `/scaffold` first — it interviews you about the stack and writes a tailored `AGENTS.md` plus a folder skeleton (no application source).
 
 ## Who this is for
 
 - **Yes:** solo devs and small teams shipping Python backends, TypeScript frontends, or Go TUIs who want Claude Code to *consistently* hit your team's bar without re-explaining conventions every session.
 - **Maybe not:** teams with an established in-house agent pipeline they don't want to displace, or stacks Squid doesn't cover yet (Rust, Java, mobile — [PRs welcome](#contributing)).
 
-
 ## [Learn How to Build Agentic Coding Frameworks From Scratch](https://decodingai.com)
 
-If you want to learn how to build agentic coding frameworks such as Squid from scratch, consider joining 40k+ engineers by subscribing to [the Decoding AI Magazine](https://decodingai.com).
+Join 40k+ engineers to [the Decoding AI Magazine](https://decodingai.com) to learn how to build agentic coding frameworks such as Squid from scratch.
+
+  ▎ Join 40k+ engineers subscribed to [the Decoding AI Magazine](https://decodingai.com) — and learn to
+  ▎ build agentic coding frameworks like Squid from scratch.
 
 ![Decoding AI Magazine](./assets/decodingai.jpg)
 
@@ -59,7 +57,7 @@ If you want to learn how to build agentic coding frameworks such as Squid from s
 
 That's it. Open any repo in Claude Code; the agents and skills appear in `/agents` and `/help`. Run `/plugin marketplace update iusztinpaul` later to pull fresh changes.
 
-Installing Squid also pulls in three plugins the agent team relies on, all from Anthropic's official `claude-plugins-official` marketplace — `context7` (live library docs via MCP), `code-review`, and `commit-commands`. The official marketplace ships with Claude Code and is available automatically, so these resolve and enable on their own when you install Squid. (Requires Claude Code v2.1.143+ for auto-enable; v2.1.110+ for the dependency mechanism. If a dependency ever fails to resolve, run `/plugin marketplace update claude-plugins-official`.)
+Installing Squid also pulls in three plugins the agent team relies on, all from Anthropic's official `claude-plugins-official` marketplace — `context7` (live library docs via MCP), `code-review`, and `commit-commands`. That marketplace ships with Claude Code, so these resolve and enable on their own. (Requires Claude Code v2.1.143+ for auto-enable; v2.1.110+ for the dependency mechanism. If a dependency fails to resolve, run `/plugin marketplace update claude-plugins-official`.)
 
 <details>
 <summary><b>Per-project install</b> — auto-prompt for everyone who clones a specific repo</summary>
@@ -99,16 +97,17 @@ Launches Claude Code with the plugin loaded for the session. No marketplace, no 
 
 </details>
 
-## What you get
+## Skills & commands
 
 | Surface | What it does |
 |---|---|
 | `/scaffold` | Interactive bootstrap. Asks what you're building (backend / frontend / TUI / mix), reads the relevant specs, writes a tailored `AGENTS.md`, and lays down an empty folder skeleton. Run `/plan` next to start building. |
 | `/plan <feature-spec>` | Plan a feature: grill the spec, PA grooms an approved Tasks Plan (+ optional ADR), create the branch + worktree. Start here. |
 | `/implement-night <plan>` | End-to-end single-feature pipeline (the diagram above) — builds the approved plan to a validated PR. |
-| `/implement-task`, `/review`, `/review-ci` | Granular pipeline stages, runnable standalone: build tasks · push + acceptance + diff review · CI validation. |
-| `product-architect`, `software-engineer`, `tester`, `pr-reviewer`, `oncall-engineer` | Sub-agents invoked by the pipelines. Also available for direct use via the `Agent` tool. |
-| `testing-python`, `grilling`, `self-improve` | Support skills referenced by the pipelines and agents. |
+| `/implement-task` · `/review` · `/review-ci` | Granular pipeline stages, runnable standalone: build tasks · push + acceptance + diff review · CI validation. |
+| `/refactor` · `/triage-issue` · `/architecture-review` | Standalone planning/intake helpers (not wired into the main pipeline). |
+| `product-architect`, `software-engineer`, `tester`, `pr-reviewer`, `oncall-engineer` | Sub-agents invoked by the pipelines; also usable directly via the `Agent` tool. |
+| `testing-python`, `grilling`, `self-improve` | Support skills the pipelines and agents lean on. |
 
 The `/scaffold` spec library (under `skills/scaffold/specs/`) covers:
 
@@ -118,11 +117,11 @@ The `/scaffold` spec library (under `skills/scaffold/specs/`) covers:
 - **Infra:** Docker, docker-compose, GitHub Actions monorepo CI, OpenAPI contracts
 - **Process:** monorepo layout, Makefile delegator, tracker workflow
 
-Several specs are still stubs — foundations are filled in (`python-backend`, `typescript-frontend`, `go-tui`, `uv-python`, `pyproject`, `makefile-delegator`, `monorepo-layout`); the rest are good first contributions.
+Several specs are still stubs — the foundations are filled in (`python-backend`, `typescript-frontend`, `go-tui`, `uv-python`, `pyproject`, `makefile-delegator`, `monorepo-layout`); the rest are good first contributions.
 
 ## Contributing
 
-Issues and PRs welcome — especially for new specs (Rust, Java, mobile, additional Python/TS frameworks) and stub fill-ins. See [`CONTRIBUTING.md`](CONTRIBUTING.md) to get started, and [`CLAUDE.md`](CLAUDE.md) for the underlying plugin-dev conventions.
+Issues and PRs welcome — especially new specs (Rust, Java, mobile, additional Python/TS frameworks) and stub fill-ins. See [`CONTRIBUTING.md`](CONTRIBUTING.md) to get started, and [`CLAUDE.md`](CLAUDE.md) for the underlying plugin-dev conventions.
 
 ## Quick start
 
@@ -149,28 +148,11 @@ The SWE agent reads `AGENTS.md`, picks up the specs it references, writes real c
 
 ## Philosophy
 
-- **Specs over templates.** Opinions live as markdown the agent reads; no Jinja, no render step, no drift between a template and what the agent produces.
-- **Progressive disclosure.** A session loads only the skills whose descriptions match the task. The spec library under `scaffold/specs/` is gated behind `/scaffold` — it doesn't pollute every session's index.
-- **One skill per concern.** Twelve skills, twenty specs. Adding a new stack is one markdown file, not a new scaffolding engine.
-- **The AGENTS.md is the brief.** After `/scaffold`, the generated `AGENTS.md` is the single source of truth for how that project builds. Specs are referenced, not transcluded.
-- **Agents are gates.** The PA catches scope drift (and signs off from the user's perspective). Tester catches false-confidence "tests pass" claims (and runs an e2e adversarial QA pass). PR Reviewer catches dead/duplicate/untested code, over-engineering, and narrow performance regressions in the diff. On-Call catches CI breakage. No agent writes code and also decides whether the code is correct.
-
-## Repo layout (plugin internals)
-
-```
-.
-├── .claude-plugin/
-│   ├── plugin.json                # manifest
-│   └── marketplace.json           # one-plugin marketplace catalog
-├── agents/                        # 5 sub-agents
-├── skills/                        # 12 skills (9 in the pipeline + 3 standalone)
-│   └── scaffold/specs/            # reference specs
-├── AGENTS.md                      # plugin-dev brief (CLAUDE.md is a symlink to it)
-├── README.md                      # this file
-└── LICENSE
-```
-
-For plugin development details, see [`CLAUDE.md`](CLAUDE.md).
+- **Specs over templates.** Opinions live as markdown the agent reads — no Jinja, no render step, no drift between a template and what the agent produces.
+- **Progressive disclosure.** A session loads only the skills whose descriptions match the task; the spec library is gated behind `/scaffold` so it doesn't pollute every session's index.
+- **One skill per concern.** Adding a new stack is one markdown file, not a new scaffolding engine.
+- **`AGENTS.md` is the brief.** After `/scaffold`, the generated `AGENTS.md` is the single source of truth for how that project builds. Specs are referenced, not transcluded.
+- **Agents are gates.** The PA catches scope drift and signs off from the user's perspective; the Tester catches false-confidence "tests pass" claims and runs an e2e adversarial pass; the PR Reviewer catches dead/duplicate/untested code, over-engineering, and hot-path regressions; On-Call catches CI breakage. No agent both writes code and decides whether it's correct.
 
 ## License
 
