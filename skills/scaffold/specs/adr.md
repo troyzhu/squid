@@ -99,7 +99,7 @@ Typical word counts: Context 80–200 words; Decision 30–80 words; Consequence
 
 ## Anti-patterns
 
-- **One ADR per ticket.** ADRs are for architecture, not feature delivery. Most tickets don't need one.
+- **An ADR for every ticket.** ADRs are for architecture, not feature delivery — most tickets don't need one. But the inverse also holds: when a feature *does* warrant architectural decisions, capture its whole design in a **single** ADR for that feature — never one per task, and never split one feature's design across several ADRs. One plan → at most one new ADR.
 - **Editing accepted ADRs.** Use supersession. The audit trail is the whole point.
 - **Aspirational ADRs.** Don't write ADRs for decisions you might make. Wait until the team has actually committed.
 - **ADRs as design docs.** Design docs explore options; ADRs record decisions. If you're still listing alternatives, you're writing a design doc — finish it, then write the ADR with the resulting decision.

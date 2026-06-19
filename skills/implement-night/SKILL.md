@@ -28,15 +28,15 @@ Read `AGENTS.md` first (tracker mode, retry caps, the pipeline map, and the cros
 
 ---
 
-## Step 0 — Locate the worktree + tasks
+## Step 0 — Locate the branch worktree + tasks
 
-`/plan` created the feature branch `feat/{slug}` in a worktree at `../{repo}-{slug}` and wrote the feature's task files (`tasks/<NNN>-*.md`, `status: pending`) there. Find it:
+`/plan` created the feature branch `feat/{slug}` — either in a dedicated worktree at `../{repo}-{slug}` or in the current working tree — and wrote the feature's task files (`tasks/<NNN>-*.md`, `status: pending`) on it. Find where that branch is checked out:
 
 ```bash
-git worktree list          # find the worktree whose branch is feat/{slug}
+git worktree list          # find the working tree whose branch is feat/{slug}
 ```
 
-Confirm the worktree exists and contains pending task files (`tasks/<NNN>-*.md` with `status: pending`). If there's no matching worktree or no pending tasks, stop and tell the human to run `/plan` first. Pass `Working directory: {WORKTREE_PATH}` to every sub-skill / agent so all work happens in the worktree.
+Confirm that working tree exists and contains pending task files (`tasks/<NNN>-*.md` with `status: pending`); `WORKTREE_PATH` is its path (the dedicated worktree, or the repo root if the branch lives in the current tree). If there's no matching branch or no pending tasks, stop and tell the human to run `/plan` first. Pass `Working directory: {WORKTREE_PATH}` to every sub-skill / agent so all work happens there.
 
 ---
 
