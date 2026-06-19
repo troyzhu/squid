@@ -2,5 +2,10 @@
   "name": "squid",
   "version": "0.2.8",
   "description": "Opinionated engineering agent team with progressive-disclosure specs for Python / TypeScript / Go monorepos. Ships PM / SWE / Tester / On-Call sub-agents, /day and /night pipelines, and a library of language/framework/infra specs that agents load on-demand.",
-  "homepage": "https://github.com/iusztinpaul/squid"
+  "homepage": "https://github.com/iusztinpaul/squid",
+  "dependencies": [
+    { "name": "context7", "marketplace": "claude-plugins-official" },
+    { "name": "code-review", "marketplace": "claude-plugins-official" },
+    { "name": "commit-commands", "marketplace": "claude-plugins-official" }
+  ]
 }
