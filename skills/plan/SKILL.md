@@ -45,8 +45,9 @@ Agent(
   FULL tasks/<NNN>-<slug>.md content: frontmatter `id`, `feature: {slug}`, `status: pending`, then Scope, Acceptance
   Criteria, Out of scope, and an empty `## Log` section.
   Also draft: (a) any new docs/glossary.md terms, and (b) IF the feature warrants non-obvious architectural decisions, a
-  SINGLE proposed ADR for the WHOLE feature (Nygard template: Status / Context / Decision / Consequences) — ONE ADR that
-  captures the entire design, never one ADR per task; its Decision section records every related choice.
+  SINGLE proposed ADR for the WHOLE feature (Nygard template: Status / Context / Decision / Diagram / Consequences,
+  the Diagram a coloured Mermaid system diagram of the design) — ONE ADR that captures the entire design, never one ADR
+  per task; its Decision section records every related choice.
   DO NOT WRITE ANYTHING TO DISK — hand everything back as drafts; the human approves and the orchestrator writes them.
   Use the context7 plugin for authoritative library/API usage wherever the feature touches an external framework.
   Return: (1) the ordered task files with their full content, (2) the glossary additions (or 'none'), (3) the proposed

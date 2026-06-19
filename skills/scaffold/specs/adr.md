@@ -1,11 +1,11 @@
 ---
 name: adr
-description: Architecture Decision Records — `docs/adr/NNNN-title.md` files capturing one decision each (Status / Context / Decision / Consequences). When to write one, when not to, the canonical Nygard template, and the lifecycle (proposed → accepted → superseded). TRIGGER when scaffolding a project that will accumulate non-obvious architectural choices, or when an existing project keeps re-litigating the same decisions. SKIP for solo prototypes or repos where every decision is self-evident from the code.
+description: Architecture Decision Records — `docs/adr/NNNN-title.md` files capturing one decision each (Status / Context / Decision / Diagram / Consequences, with a coloured Mermaid system diagram). When to write one, when not to, the canonical Nygard template, and the lifecycle (proposed → accepted → superseded). TRIGGER when scaffolding a project that will accumulate non-obvious architectural choices, or when an existing project keeps re-litigating the same decisions. SKIP for solo prototypes or repos where every decision is self-evident from the code.
 ---
 
 # Architecture Decision Records (ADRs)
 
-An ADR is a short markdown doc capturing **one** architectural decision with enough context that a reader six months from now (including future-you) can understand *why* the codebase looks the way it does. Originated in Michael Nygard's [2011 post](https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions); the canonical four-section template (Status / Context / Decision / Consequences) is what most teams converge on.
+An ADR is a short markdown doc capturing **one** architectural decision with enough context that a reader six months from now (including future-you) can understand *why* the codebase looks the way it does. Originated in Michael Nygard's [2011 post](https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions); the canonical four-section template (Status / Context / Decision / Consequences) is what most teams converge on. We extend it with one section — a **Diagram** (coloured Mermaid) that makes the change visible at a glance (see the template below).
 
 ## When to use
 
@@ -54,7 +54,7 @@ docs/adr/0003-async-by-default-for-new-endpoints.md
 
 ### Template (Nygard)
 
-```markdown
+````markdown
 # {NNNN}. {Title}
 
 **Status:** Proposed | Accepted | Superseded by [{NNNN}](NNNN-...md) | Deprecated
@@ -68,12 +68,30 @@ docs/adr/0003-async-by-default-for-new-endpoints.md
 
 {What did we decide to do? One paragraph max. State the decision in active voice ("We will use PostgreSQL...") not passive voice ("PostgreSQL has been chosen...").}
 
+## Diagram
+
+{Make the change visually graspable. At minimum a **system/architecture diagram** showing the components and how they interact *after* this decision; add more (sequence, data-flow, state) — as many as it takes to see the change at a glance. **Use Mermaid** fenced blocks (```mermaid) so the diagram renders on GitHub, lives in version control, and diffs as text. **Colour the diagram** — use `classDef` / `style` to group or highlight nodes (new components vs existing, or by layer) so the change reads at a glance; never ship a monochrome diagram. If a before→after contrast clarifies the change, show both. For a purely procedural decision with no system structure to draw, write "No diagram — this decision changes no system structure."}
+
+```mermaid
+graph TD
+  Client -->|HTTP| API[API service]
+  API -->|enqueue| Queue[[Task queue]]
+  API --> DB[(PostgreSQL)]
+  Worker --> Queue
+  Worker --> DB
+
+  classDef existing fill:#dbeafe,stroke:#1e40af,color:#1e3a8a;
+  classDef added fill:#dcfce7,stroke:#166534,color:#14532d;
+  class Client,API,DB existing
+  class Queue,Worker added
+```
+
 ## Consequences
 
 {What becomes easier? What becomes harder? What did we deliberately give up? Name the trade-offs explicitly so a future reader knows we considered them.}
-```
+````
 
-That's it. Don't add more sections. The discipline of "one decision, four sections" is the whole point.
+That's it — Status, Context, Decision, Diagram, Consequences. Don't add sections beyond these; the discipline of "one decision, drawn and reasoned" is the whole point.
 
 ### Status lifecycle
 
@@ -95,7 +113,7 @@ Never edit an Accepted ADR's substance. Either supersede it (new ADR) or correct
 
 One page. If it doesn't fit on a page, the decision is too big — split it. If it fits in three sentences, you don't need an ADR; a code comment will do.
 
-Typical word counts: Context 80–200 words; Decision 30–80 words; Consequences 60–150 words.
+Typical word counts: Context 80–200 words; Decision 30–80 words; Consequences 60–150 words. The Diagram section is mostly the diagram(s) themselves — keep surrounding prose to a one-line caption.
 
 ## Anti-patterns
 
@@ -122,7 +140,11 @@ We expect to make architectural decisions over the lifetime of this project — 
 
 ## Decision
 
-We will use Architecture Decision Records, as described by Michael Nygard, stored in `docs/adr/` as `NNNN-kebab-title.md`. Each ADR has four sections: Status, Context, Decision, Consequences. The convention and template are documented in [`pre-commit-hooks.md`'s sibling spec `adr.md`](adr.md).
+We will use Architecture Decision Records, as described by Michael Nygard, stored in `docs/adr/` as `NNNN-kebab-title.md`. Each ADR has five sections: Status, Context, Decision, Diagram (a coloured Mermaid system diagram of the change), Consequences. The convention and template are documented in [`pre-commit-hooks.md`'s sibling spec `adr.md`](adr.md).
+
+## Diagram
+
+No diagram — this decision changes no system structure.
 
 ## Consequences
 
