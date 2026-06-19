@@ -1,6 +1,6 @@
 ---
 name: ubiquitous-language
-description: Glossary discipline borrowed from Domain-Driven Design — one canonical name per domain concept, used identically in code, tests, docs, specs, and conversation. Lives at `docs/glossary.md`. Updated by the team, referenced by PM grooming and `/grill-me`. TRIGGER when scaffolding a project with non-trivial domain vocabulary (e.g., backend services with named business entities). SKIP for libraries, infra-only projects, or anything where the public surface IS the vocabulary.
+description: Glossary discipline borrowed from Domain-Driven Design — one canonical name per domain concept, used identically in code, tests, docs, specs, and conversation. Lives at `docs/glossary.md`. Updated by the team, referenced by PA grooming and `/grilling`. TRIGGER when scaffolding a project with non-trivial domain vocabulary (e.g., backend services with named business entities). SKIP for libraries, infra-only projects, or anything where the public surface IS the vocabulary.
 ---
 
 # Ubiquitous language
@@ -10,7 +10,7 @@ A glossary file at `docs/glossary.md` listing every domain concept the team has 
 ## When to use
 
 - Backend services with named business entities ("Order", "Settlement", "Subscriber") that already drift between code names, customer-facing names, and database column names.
-- Projects with a non-technical stakeholder (PM, customer) who uses different vocabulary than the engineers — the glossary is the bridge.
+- Projects with a non-technical stakeholder (product owner, customer) who uses different vocabulary than the engineers — the glossary is the bridge.
 - Multi-package monorepos where the same concept appears in several components and you want consistency across them.
 
 ## When NOT to use
@@ -64,10 +64,10 @@ Three columns:
 
 The glossary going stale is the failure mode. Treat it as a code artefact: it lives in the repo, it ships in PRs, it gets reviewed.
 
-### How PM grooming and `/grill-me` use it
+### How PA grooming and `/grilling` use it
 
-- **PM grooming** (in `/night`) — the PM agent reads the glossary before decomposing a feature, and uses canonical terms in every task spec. A task whose AC says "the Item enters the cart" when the glossary says "OrderLine" is wrong-shaped on its face.
-- [`/grill-me`](../../grill-me/SKILL.md) — when a spec uses a non-canonical term, the grill flags it as a question: "Spec says 'Purchase'; glossary says 'Order' — same thing? If yes, we'll use 'Order' in the resolved spec."
+- **PA grooming** (in `/plan`) — the PA reads the glossary before decomposing a feature, and uses canonical terms in every task spec. A task whose AC says "the Item enters the cart" when the glossary says "OrderLine" is wrong-shaped on its face.
+- [`/grilling`](../../grilling/SKILL.md) — when a spec uses a non-canonical term, grilling flags it as a question: "Spec says 'Purchase'; glossary says 'Order' — same thing? If yes, we'll use 'Order' in the resolved spec."
 
 The glossary is the tie-breaker when specs and code disagree.
 

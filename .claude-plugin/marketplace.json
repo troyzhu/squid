@@ -4,16 +4,16 @@
     "name": "iusztinpaul"
   },
   "metadata": {
-    "description": "Opinionated engineering agent team plus /day, /night, /scaffold, and a library of language/framework/infra specs.",
-    "version": "0.2.8"
+    "description": "Opinionated engineering agent team plus /plan, /implement-night, /scaffold, and a library of language/framework/infra specs.",
+    "version": "0.3.0"
   },
   "allowCrossMarketplaceDependenciesOn": ["claude-plugins-official"],
   "plugins": [
     {
       "name": "squid",
       "source": "./",
-      "description": "PM / SWE / Tester / PR Reviewer / On-Call sub-agents plus /day, /night, /scaffold, /triage-issue, /refactor, /grill-me, /architecture-review, and supporting workflow skills.",
-      "version": "0.2.8",
+      "description": "PA / SWE / Tester / PR Reviewer / On-Call sub-agents plus /plan, /implement-task, /implement-night, /review, /review-ci, /scaffold, and supporting workflow skills.",
+      "version": "0.3.0",
       "author": {
         "name": "iusztinpaul",
         "url": "https://github.com/iusztinpaul"
@@ -26,7 +26,7 @@
         "agent-team",
         "scaffold",
         "pipeline",
-        "pm",
+        "pa",
         "swe",
         "tester",
         "pr-reviewer",
