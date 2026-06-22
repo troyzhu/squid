@@ -29,9 +29,10 @@ Either way they get an opinionated agent team plus a `/scaffold` flow that boots
 │   ├── pr-reviewer.md
 │   └── oncall-engineer.md
 ├── skills/
-│   ├── scaffold/                      # /scaffold — bootstrap a new repo
+│   ├── scaffold/                      # /scaffold — bootstrap a new repo (create) or audit drift (evaluate)
 │   │   ├── SKILL.md
-│   │   ├── AGENTS_TEMPLATE.md         # template /scaffold distils into each project's AGENTS.md
+│   │   ├── rules.md                   # single source of truth for scaffold rules (create + evaluate)
+│   │   ├── AGENTS_TEMPLATE.md         # template body /scaffold distils into each project's AGENTS.md
 │   │   └── specs/                     # reference specs read by scaffold
 │   ├── plan/                          # /plan — feature spec → approved Tasks Plan (+ worktree)
 │   ├── implement-task/                # /implement-task — autonomous task loop (SWE↔Tester, commit each)
@@ -57,6 +58,7 @@ The directory layout is what Claude Code's plugin loader expects natively: `agen
 - **Editing an agent** — edit the `.md` under `agents/`. No mirror to keep in sync.
 - **Editing a skill** — edit `skills/<name>/SKILL.md`. Co-locate supporting docs in the same dir if depth warrants it (but prefer single-file skills).
 - **Adding a spec** — write `skills/scaffold/specs/<name>.md`. Update the "Index of specs" table in `skills/scaffold/SKILL.md` and the spec-selection table (Step 2 of the flow) so `/scaffold` knows when to pull it in.
+- **Editing scaffold rules** — edit `skills/scaffold/rules.md`, the single source of truth that both `/scaffold` modes (`create` + `evaluate`) consume. `SKILL.md` and `AGENTS_TEMPLATE.md` only reference rule IDs — never re-inline a rule into them.
 - **Editing the lifecycle** — the pipeline is defined by the skills (`plan` / `implement-task` / `implement-night` / `review` / `review-ci`) and the agent contracts. Cross-cutting rules + the pipeline map live in `skills/scaffold/AGENTS_TEMPLATE.md`, which `/scaffold` bakes into each project's `AGENTS.md` (there is no separate `docs/PROCESS.md`).
 - **Bumping versions** — when you ship changes that affect end users, bump `version` in `.claude-plugin/plugin.json`. Tag with `git tag v0.x.y && git push --tags`. Without a version bump Claude Code keeps the cached copy and `/plugin update` reports "already at the latest version".
 - **Don't add language-specific build systems for the plugin contract** (no `pyproject.toml`, no `Makefile`, no `tests/`). The contract layer remains markdown.
