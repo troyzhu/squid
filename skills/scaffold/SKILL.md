@@ -1,8 +1,8 @@
 ---
 name: scaffold
-description: Bootstrap a new polyglot monorepo (or a new component in an existing one) from an opinionated spec library. Asks what to build, picks the relevant specs from specs/, writes a tailored AGENTS.md (plus a CLAUDE.md pointer), and lays down an empty folder skeleton. TRIGGER when the user says "/scaffold", asks to bootstrap a project, create a new codebase, start a fresh repo, or add a new component. SKIP for work inside an already-scaffolded project — pick /implement-task or /plan instead.
+description: Bootstrap a new polyglot monorepo (or a new component in an existing one) from an opinionated spec library, OR audit an existing scaffolded repo for drift. mode=create (default) asks what to build, picks the relevant specs from specs/, writes a tailored AGENTS.md (plus a CLAUDE.md pointer), and lays down an empty folder skeleton. mode=evaluate checks whether an existing repo's AGENTS.md + scaffold output still follow the scaffold rules and reports the drift (no fixes). TRIGGER when the user says "/scaffold", asks to bootstrap a project, create a new codebase, start a fresh repo, add a new component, or asks to check/audit whether an existing AGENTS.md still follows the scaffold conventions. SKIP for writing application source inside an already-scaffolded project — pick /implement-task or /plan instead.
 disable-model-invocation: false
-argument-hint: [optional one-line project description]
+argument-hint: [mode=create|evaluate] [project description | target repo path]
 ---
 
 # Scaffold
@@ -14,6 +14,15 @@ Interactive bootstrap for a new repo (or a new component in an existing one).
 - Write a tailored `AGENTS.md` (plus a one-line `CLAUDE.md` pointer) at the target project root that **distils** those specs (doesn't copy-paste them).
 - Lay down an empty folder skeleton (no source code).
 - Hand control back — the user runs `/implement-task` next to have the SWE agent write the first code against the generated AGENTS.md.
+
+## Modes
+
+`$ARGUMENTS` may lead with `mode=create` (default) or `mode=evaluate`:
+
+- **`mode=create`** (default) — bootstrap a repo / component. The flow in "## Flow" below.
+- **`mode=evaluate`** — audit an *existing* scaffolded repo against the artifact invariants in [`rules.md`](rules.md) and report drift (no fixes). See "## Evaluate mode".
+
+Every rule both modes honour lives in [`rules.md`](rules.md) — the single source of truth. Do **not** restate any rule in this file.
 
 ## When to use
 
@@ -98,7 +107,7 @@ Skip any row where the user picked `none` / `other`. `other` is handled at compo
 
 ### 3. Compose `AGENTS.md`
 
-Write the project's root memory file from the canonical template in [`AGENTS_TEMPLATE.md`](AGENTS_TEMPLATE.md). That file holds the full `The Why` / `The What` / `The How` structure **and** the rules for composing it — size target, distil-don't-copy, gate-sections-on-component-presence, fill-placeholders-inline. Read it end-to-end, then emit a tailored `AGENTS.md` at the target project root (or wherever `/scaffold` was invoked).
+Write the project's root memory file from the canonical template in [`AGENTS_TEMPLATE.md`](AGENTS_TEMPLATE.md) (the template body and section structure). Compose it following the `I#` artifact invariants in [`rules.md`](rules.md) — size, distil-don't-copy, gate-sections-on-presence, group-per-app, fill-placeholders-inline. Read both end-to-end, then emit a tailored `AGENTS.md` at the target project root (or wherever `/scaffold` was invoked).
 
 `AGENTS.md` is the canonical, agent-agnostic memory file. Alongside it, write a one-line `CLAUDE.md` whose only content is `@AGENTS.md` — that import makes Claude Code auto-load the same file without duplicating the body.
 
@@ -186,12 +195,57 @@ Summarise for the user:
 
 ## Rules
 
-- **Never write application source.** Not `main.py`, not `App.tsx`, not `cmd/<slug>/main.go`. Only structural / configuration files with AGENT-fill-in placeholders.
-- **Distil, don't transclude.** AGENTS.md cites specs; it doesn't reproduce them.
-- **Stop and ask on conflicts.** If the user picks `cli-tool-python` and `fastapi-service` for the same backend, ask which one (they can always run `/scaffold` again to add the other).
-- **Don't overwrite without confirmation.** If the target dir already has an `AGENTS.md`/`CLAUDE.md` or a `packages/<c>/` for a chosen component, ask before clobbering.
-- **Don't mutate the spec library.** `specs/` is read-only at scaffold time. Edits happen on the plugin repo, not in a consumer project.
-- **Stack stubs are optional and deletable.** The `datastore-*`, `orchestrator-*`, `observability-*`, `llm-*`, `embeddings-*`, `model-serving-*`, `scraping-*` files are all stubs pending real-project use. If a category turns out not to be worth maintaining, delete the stub(s) in plugin-repo edits and drop the matching row in Step 2's decision table — nothing else references them.
+All scaffold rules — create-time process rules (`P#`) and artifact invariants (`I#`) — live in [`rules.md`](rules.md), the single source of truth. While composing in `mode=create`, follow **every** `P#` and `I#`. Do not restate them here.
+
+## Evaluate mode
+
+`mode=evaluate` audits an *existing* scaffolded repo against the artifact invariants in [`rules.md`](rules.md) and reports drift. **You are the auditor — you do NOT apply fixes, you report.** The flow is read-only on the target repo; the report is printed to chat (no file is written).
+
+### E1 — Resolve target
+
+`$ARGUMENTS` after `mode=evaluate` is the target repo root (default: the current working directory). Echo it back in one line. If there is no `AGENTS.md` there, stop with a clear message: *"Nothing scaffolded to evaluate at `{path}` — run `mode=create` first."*
+
+### E2 — Spawn the audit sub-agent
+
+Launch a single `Explore` sub-agent. It reads the rules from the **plugin's** scaffold skill dir and audits the artifacts in the **target** repo — keep those two locations distinct in the prompt:
+
+```
+Agent(
+  subagent_type="Explore",
+  prompt="""Scaffold-conformance audit of the repo at {target path}.
+
+  AUTHORITATIVE RULES (read from the squid plugin's scaffold skill dir, NOT the target repo):
+  read `skills/scaffold/rules.md` end to end, and `skills/scaffold/AGENTS_TEMPLATE.md` for
+  structure questions. Audit ONLY the `I#` artifact invariants — skip every `P#` (those are
+  create-time and not checkable from a checkout).
+
+  ARTIFACTS UNDER AUDIT (in the target repo at {target path}): read `AGENTS.md`, the root
+  `CLAUDE.md` and every `packages/*/CLAUDE.md`, the root `Makefile`, and the skeleton tree
+  (`ls -R`, not file bodies).
+
+  For EACH `I#` rule, run its `Check:` procedure and return one row:
+    `rule id | PASS | VIOLATED | N/A | evidence (file:line or command output) | one-line remediation`.
+  Mark a rule N/A (not VIOLATED) when it doesn't apply — e.g. monorepo-only rules (I7, I10) on a
+  standalone single-package repo. Quote rules by ID only — do NOT paste rule text into your output.
+  Do NOT propose code changes beyond the one-line remediation. Return the table plus a 2–3 sentence
+  health summary."""
+)
+```
+
+### E3 — Compose the report (to chat)
+
+Read the target's `AGENTS.md` yourself first — the judgment-call invariants (`I2` size, `I3` distil, `I5` structure) need a firsthand read, not just the sub-agent's grep. Then print:
+
+- A 2–3 sentence headline summary (the main drift, or "no drift").
+- **Violations** — one block per VIOLATED rule: reference the rule by ID (e.g. `see rules.md#I2` — do **not** restate the rule text), the evidence (`file:line`), and a one-paragraph remediation describing the *shape* of the fix (not a patch).
+- **Passing** — a terse one-line list of the PASS rule IDs.
+- **N/A** — an explicit list of N/A rules with the one-line reason (e.g. "I7, I10 — standalone repo, no monorepo Makefile/per-app grouping").
+
+Findings are naturally bounded by the fixed rule set — no arbitrary cap.
+
+### E4 — Hand off
+
+Single block: result counts, the violated IDs, and the recommended next step — either *"Edit AGENTS.md to resolve {IDs} — see remediations above, then re-run `/scaffold mode=evaluate` to confirm"* or *"No drift — AGENTS.md still conforms."*
 
 ## Index of specs
 

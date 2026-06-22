@@ -2,19 +2,7 @@
 
 `/scaffold` distils this into the project's root `AGENTS.md` — the agent-agnostic memory file every coding agent reads. Scaffold also writes a one-line `CLAUDE.md` (containing only `@AGENTS.md`) so Claude Code auto-loads the same content.
 
-Every generated `AGENTS.md` follows the same flat, scope-based order: a one-sentence purpose under the project title, then **`#` (H1) sections** running from most-fundamental (components) to operational (workflow, testing) — H1 per major section for easy navigation; subsections are `##`. Only the *content* changes per project; sections gated on absent components/choices are omitted entirely, not left empty.
-
-## Composing from this template
-
-**Size target: ≤ 250 lines.** If AGENTS.md balloons past that, you're copy-pasting specs verbatim instead of distilling. Cut and link out — the agent contracts (`agents/`) and the skills carry the lifecycle detail; AGENTS.md only orients.
-
-**Distil, don't copy.** Each component's design-conventions note under "Key Components" is 1–2 phrases distilled from that component's spec ("Canonical principles"). The rationale and canonical examples stay in the spec; AGENTS.md states the headline and links to the spec for depth.
-
-**Group Key Components per app.** If the project has more than one distinct app/product, group `# Key Components` with a `## <app-name>` subheading per app, then that app's component bullets. A single-product monorepo lists components flat.
-
-**Gate sections on presence.** Drop a component's bullet (and its design note) when that component isn't chosen. Drop `## Component dependencies` for a single-component project. Drop a language's runner bullet under "Running commands" when that language is absent. Drop `# Developing New Features & Bug Fixes` if the user opted out of the agent team. Drop `# Documentation Conventions` if neither `adr` nor `ubiquitous-language` was chosen; otherwise emit only the matching bullets. Do not leave empty sections.
-
-**Fill placeholders inline.** The `{...}` braces are *instructions to you* — replace with concrete content from the user's answers and the specs. The `AGENT: fill in` markers (notably in "Testing E2E" and infrastructure access) are for the SWE agent to address on the first `/implement-task` run — leave those literal in the output.
+This file is the **template body only**. The constraints on composing it — flat scope-based section order (`I5`), size ≤ 250 lines (`I2`), distil-don't-copy (`I3`), gate-sections-on-presence (`I6`), group-Key-Components-per-app (`I7`), fill-placeholders-inline (`I8`) — live in [`rules.md`](rules.md), the single source of truth. Read those `I#` invariants, then fill in the template below. (The generated `AGENTS.md` keeps a flat `#` (H1) order, most-fundamental → operational, `##` subsections; sections for absent components are omitted, not left empty — per `I5`/`I6`.)
 
 ## Template
 
@@ -22,6 +10,12 @@ Every generated `AGENTS.md` follows the same flat, scope-based order: a one-sent
 # {Project name}
 
 {One sentence: what this project is, what it produces, who it's for — from the user's /scaffold description.} {One short clause naming the shape/stack, e.g. "A Python backend + TypeScript web monorepo." Per-component conventions are noted under Key Components.}
+
+# Key Principles You Will Respect All Over Your Work
+
+- Always prioritize removing instructions over adding more.
+- Whenever you add a new rule to the memory (such as `AGENTS.md`), support it with a clear, concise explanation plus a set of good and bad examples. Good examples: "a 200-token chunk size", "sub-100ms latency". Bad examples: "a powerful architecture", "a robust pipeline".
+{- 0–3 more project-specific principles, distilled and terse. Omit if none.}
 
 # Key Components
 
@@ -100,12 +94,6 @@ For each external-service slug the user selected, emit one bullet below wrapped 
 - **MongoDB** — async ODM (Beanie / PyMongo); `mongosh "$MONGODB_URL"` for local queries. Spec: [`datastore-mongodb`](skills/scaffold/specs/datastore-mongodb.md).
 <!-- /stack:mongodb -->
 ```
-
-# Key Principles You Will Respect All Over Your Work
-
-- Always prioritize removing instructions over adding more.
-- Whenever you add a new rule to the memory (such as `AGENTS.md`), support it with a clear, concise explanation plus a set of good and bad examples. Good examples: "a 200-token chunk size", "sub-100ms latency". Bad examples: "a powerful architecture", "a robust pipeline".
-{- 0–3 more project-specific principles, distilled and terse. Omit if none.}
 
 # Developing New Features & Bug Fixes
 
