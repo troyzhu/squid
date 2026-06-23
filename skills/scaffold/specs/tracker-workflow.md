@@ -87,4 +87,4 @@ _(None — this spec is self-contained.)_
 - **One task = one file.** Rollup tasks (from a PA REJECT or PR-Reviewer Blockers) are new `tasks/<NNN>-<slug>.md` files, `status: pending`.
 - **The tasks ARE the plan.** No separate plan document — the per-task files, ordered by `NNN`, are the Tasks Plan.
 - **Append, never rewrite, the Log.** It's the cross-pipeline audit trail.
-- **Switch trackers in one place.** `TRACKER_MODE` in `AGENTS.md` selects file vs gh.
+- **`TRACKER_MODE` is the default.** `AGENTS.md` sets the project-wide default (file vs gh); `/plan`'s gate confirms it per feature and can override for a one-off plan without rewriting `AGENTS.md`.
