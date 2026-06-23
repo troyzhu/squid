@@ -15,13 +15,14 @@ This file is the **template body only**. The constraints on composing it — fla
 
 - Always prioritize removing instructions over adding more.
 - Whenever you add a new rule to the memory (such as `AGENTS.md`), support it with a clear, concise explanation plus a set of good and bad examples. Good examples: "a 200-token chunk size", "sub-100ms latency". Bad examples: "a powerful architecture", "a robust pipeline".
+- **Loose clean architecture.** Keep infrastructure, serving, app, and domain logic decoupled — but pragmatically: flat structure named by *actionability*, not dogmatic layering. Shared data structures live centrally (`entities/`); types used by a single module stay local to it (`<module>/types.py`). Import infrastructure you won't swap (DB, orchestrator, observability) directly — no interfaces "for swappability" you'll never use. *Good:* a `users/` module holding `users/api.py` + `users/store.py` + `users/types.py`. *Bad:* a 4-layer `services/`+`repositories/`+`adapters/`+`use_cases/` tree for CRUD.
 {- 0–3 more project-specific principles, distilled and terse. Omit if none.}
 
 # Key Components
 
 {One bullet per enabled component. If the project has multiple apps, group them under a `## <app-name>` subheading per app. Each bullet: directory link, one-line role, language, and a SHORT design-conventions note (1–2 phrases distilled from the component's spec — link the spec for depth).}
 
-- **Backend** — [`packages/backend/`](packages/backend/): {role}. Python ({fastapi-service / fastmcp-server / cli-tool / library}); {2–3 headline conventions, e.g. async I/O, infra imported directly, `entities/` for shared models}. Depth: [`python-backend`](skills/scaffold/specs/python-backend.md).
+- **Backend** — [`packages/backend/`](packages/backend/): {role}. Python ({fastapi-service / fastmcp-server / cli-tool / library}); {2–3 headline conventions, e.g. Pydantic models (not dataclasses/TypedDicts), async I/O, infra imported directly, `entities/` for shared models}. Depth: [`python-backend`](skills/scaffold/specs/python-backend.md).
 - **Web frontend** — [`packages/frontend-web/`](packages/frontend-web/): {role}. TypeScript ({framework}); {Vite + strict tsconfig, one exported component per file}. Depth: [`typescript-frontend`](skills/scaffold/specs/typescript-frontend.md).
 - **TUI frontend** — [`packages/frontend-tui/`](packages/frontend-tui/): {role}. Go ({bubbletea / tview}); {thin `cmd/<slug>/main.go`, logic in `internal/`}. Depth: [`go-tui`](skills/scaffold/specs/go-tui.md).
 - **Shared contracts** — [`packages/shared/`](packages/shared/): OpenAPI 3.1 spec + per-language codegen. *Only if shared chosen.*
@@ -54,6 +55,14 @@ Multi-language — each component brings its own toolchain:
 ## Access Documentation
 
 Use the `context7` MCP server (when connected) to look up authoritative usage for any tech-stack item or external service above; falls back to web search otherwise.
+
+{Emit the block below only if the user named one or more `llms.txt`-publishing tools at scaffold time (rules.md P5); otherwise omit it entirely and rely on `context7` alone.}
+
+**Reference docs (`llms.txt` — fetch on demand).** Each link below is an *index* of doc pages. Fetch the index first, then fetch only the specific page(s) you need. Do **not** pull whole `llms-full.txt` files into context unless a task truly requires the full reference.
+
+{One bullet per tool the user named, as `**<Tool>:** <index llms.txt URL> — <optional note>`. Use the user's URLs verbatim — never invent one. The notes below show the format:}
+{- **Pydantic AI:** https://pydantic.dev/docs/ai/llms.txt — append `.md` to any doc page for raw markdown.}
+{- **Modal:** https://modal.com/llms.txt — full reference at https://modal.com/llms-full.txt (large; only if needed).}
 
 ## Running commands
 

@@ -67,6 +67,8 @@ Use `AskUserQuestion` to collect answers. Consolidate where possible — one or 
 
    Ask this as ONE consolidated question: "Which external services will you use? (deselect anything you don't need)." `none` skips the category entirely — no stub read, no bullet emitted. `other` keeps an `AGENT: fill in` placeholder so the SWE can document the real choice on first use.
 
+12. **Reference docs (`llms.txt`)** — ask which tools / frameworks / services this project uses that publish an `llms.txt`, and collect each one's index URL (e.g. Pydantic AI → `https://pydantic.dev/docs/ai/llms.txt`). They become direct links in the generated AGENTS.md "Access Documentation" section; anything the user doesn't name falls back to `context7`. Fully skippable — name none and only the `context7` paragraph is emitted. Governed by [`rules.md`](rules.md) `P5`.
+
 Before proceeding to step 2, echo the picked configuration back to the user in a two-line summary and confirm.
 
 ### 2. Select specs

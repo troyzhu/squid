@@ -42,7 +42,7 @@ Every rule here is enforceable by the `tester` agent — when the code violates 
 
 ### Layout
 
-See [`layout.md`](layout.md) for the full tree, rationale, and anti-patterns. Headlines:
+These realise a **loose clean architecture**: infrastructure / serving / app / domain logic stay decoupled, but pragmatically — actionability over layer dogma. See [`layout.md`](layout.md) for the full tree, rationale, and anti-patterns. Headlines:
 
 - Source under `src/<package_name>/`; **never** at the project root.
 - Tests under `tests/{unit,integration}/` mirroring `src/` 1:1.
@@ -58,6 +58,7 @@ See [`discipline.md`](discipline.md) for rationale and concrete examples. Rules:
 
 - **Datetimes are timezone-aware, UTC by default.** Reject naive `datetime` objects at every system boundary. Type them explicitly.
 - **Type-annotate everything** — parameters, return types (including `-> None`), class attributes, module-level variables where inference is non-obvious.
+- **Model data with Pydantic.** Every data structure that carries domain meaning — entities, DTOs, API/event payloads, config — is a `pydantic.BaseModel` (v2), or a Pydantic-based ODM `Document` for persisted entities. Not a `@dataclass`, `TypedDict`, or `NamedTuple` — reach for those only when a protocol or library contract forces it. Pydantic validates and coerces at every boundary; the alternatives silently accept garbage.
 - **Logging first.** Any entry-point module (CLI, script, server main) calls `init_logger()` at module level before any logic. `print()` is banned in library code — always the project logger.
 - **Pipelines are idempotent, retryable, and checkpointed.** If a run is killed halfway, re-running it is either a no-op or resumes from the last checkpoint.
 - **Async for I/O, sync for CPU.** Mix only where a profile justifies it.
@@ -167,7 +168,7 @@ Annotations are cheap and they're the first line of defence the Tester reads. `r
 - Annotate **every** parameter and return type, including `-> None`.
 - Use PEP 585 built-ins (`list[int]`, `dict[str, Foo]`). Don't import `typing.List` / `typing.Dict`.
 - Class attributes that aren't inferred from `__init__` get annotated at class level.
-- Avoid `Any` unless you're at an external boundary you don't own. If you reach for `Any`, ask whether a `Protocol` or a `TypedDict` would work.
+- Avoid `Any` unless you're at an external boundary you don't own. If you reach for `Any`, ask whether a `Protocol` (structural typing) or a narrow `TypedDict` (an external dict shape you don't own) would work — but model your *own* domain data with Pydantic (below), never `TypedDict`.
 
 **Bad**
 
@@ -181,6 +182,36 @@ def load(path, *, strict=True):
 ```python
 def load(path: Path, *, strict: bool = True) -> Config:
     ...
+```
+
+### Model data with Pydantic (not dataclasses / TypedDicts)
+
+Domain data is modelled with `pydantic.BaseModel` (v2) — entities in `entities/`, request/response and event payloads, anything that crosses a process or I/O boundary. A `BaseModel` validates and coerces at construction, (de)serialises to/from JSON, and emits a JSON schema; a `@dataclass` or `TypedDict` does none of that and lets malformed data flow downstream until it crashes somewhere unrelated.
+
+Escape hatch — use `@dataclass` / `TypedDict` / `NamedTuple` **only** when a protocol or library contract forces it: a `TypedDict` shape a third-party SDK's signature requires, a frozen `@dataclass` an external framework instantiates for you, or a hot-loop value object where you've *profiled* Pydantic's overhead and it actually matters. Leave a one-line comment naming the constraint.
+
+**Bad**
+
+```python
+from dataclasses import dataclass
+
+@dataclass
+class Order:                        # no validation: total can be negative, currency can be ""
+    id: str
+    total: float
+    currency: str
+```
+
+**Good**
+
+```python
+from decimal import Decimal
+from pydantic import BaseModel, Field
+
+class Order(BaseModel):
+    id: str
+    total: Decimal = Field(ge=0)    # rejected at construction if negative
+    currency: str = Field(min_length=3, max_length=3)
 ```
 
 ### Logging first (`init_logger()` at module level)
