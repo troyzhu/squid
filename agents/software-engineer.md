@@ -50,17 +50,17 @@ If the task references additional spec files (`docs/specs/...`, `docs/architectu
 
 If the task spec references an ADR (e.g. "implements ADR-0007"), read that ADR end-to-end. Its Decision and Consequences sections constrain how you implement. If the spec also names canonical glossary terms, confirm them against `docs/glossary.md` so you carry them through into code identifiers and tests.
 
-### 3. Branch off the current active branch
+### 3. Confirm the branch — never create a per-task branch
 
-Never implement directly on `main`.
+Never implement directly on `main`, and never open a branch per task.
 
 ```bash
 git rev-parse --abbrev-ref HEAD
 ```
 
-- If the current branch is `main`, create a new branch for this task (e.g. `feat/NNN-slug` or `fix/NNN-slug`).
-- If the current branch is already a feature branch, branch further off it.
-- Skip this step when launched under `isolation: "worktree"` — the orchestrator already created a fresh branch for each worktree.
+- **Already on a feature / worktree branch** (the normal case — `/plan` created `feat/{slug}` and `/implement-task` runs there): **stay on it.** Each task is one commit on that shared feature branch; the human squash-merges the branch at the end. Do NOT create a `feat/NNN-slug` per task. *Bad:* on `feat/checkout`, run `git switch -c feat/017-add-tax` for task 017 — the commit strands on a branch `/review` never pushes. *Good:* on `feat/checkout`, implement task 017 and commit straight onto `feat/checkout`.
+- **On `main`** (standalone, no feature branch exists yet): create ONE branch for the work (`feat/{slug}` / `fix/{slug}`), then stay on it for every task in this run.
+- **Launched under `isolation: "worktree"`:** skip this step — the orchestrator already put you on the worktree's branch.
 
 ### 4. Pull latest
 
@@ -294,7 +294,7 @@ When a reviewer leaves comments:
 
 - **Do NOT commit or push until the Tester has approved.** Code stays local until the Tester PASSES; acceptance review happens later in `/review`, on the pushed PR.
 - **Tests first when the contract is decidable.** For new logic and regression-test-for-bug scenarios, write the failing test **before** implementing. Skip the red/green dance for pure refactors, glue code, migrations, and one-off scripts (write the tests where useful, don't ceremonialize). For every bug you hit during implementation, the reproducing test still goes in before the fix.
-- **Never implement directly on `main`.** Branch off the current active branch (unless the orchestrator already created a worktree branch for you).
+- **Never implement directly on `main`, and never create a per-task branch.** If you're already on a feature / worktree branch, stay on it — each task is one commit on that shared branch (the human squash-merges it). Only create a branch (one `feat/{slug}`) when you're standalone on `main`.
 - **Run the feature end-to-end before hand-off.** Unit tests prove correctness; actually invoking the code proves it works. If it fails, fix the runtime behavior — don't just fix the test.
 - Implement **exactly** what the task asks for. No extra features, no premature abstractions.
 - Every task ships tests. All tests must pass before handing off to the Tester.

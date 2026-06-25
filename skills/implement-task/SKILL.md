@@ -50,6 +50,7 @@ Agent(
   subagent_type="squid:software-engineer",
   prompt="""Implement task {ID}. Read AGENTS.md first. Follow your role definition.
   {Working directory: {path}  — include this line only when orchestrated by /implement-night.}
+  Stay on the current branch — do NOT create a per-task branch (no `feat/{ID}-…`). Each task is one commit on this shared feature branch.
   In file mode, set this task's `tasks/<NNN>-<slug>.md` frontmatter `status: in-progress` before you start.
   Write code AND tests. Run the project's format-fix + lint-fix + pre-commit + unit-tests until clean.
   DO NOT commit yet — the Tester goes first. Append a SWE log entry (or include it in your final message for ephemeral tasks)."""
