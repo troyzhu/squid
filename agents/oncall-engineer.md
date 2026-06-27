@@ -83,7 +83,9 @@ COMMENT
 
 **File mode:**
 ```bash
-# Set the task's frontmatter status: in-progress in tasks/{NNN}-{slug}.md (no rename, no move).
+# Re-open the task: it was completed, so its file is at tasks/done/{NNN}-{slug}.md.
+# Set its frontmatter status: in-progress and move it back to the top level (it's open work again):
+git mv tasks/done/{NNN}-{slug}.md tasks/{NNN}-{slug}.md
 ```
 Then append a dated entry to the `## Log` section of the re-opened file:
 
@@ -137,7 +139,7 @@ gh issue comment {N} --body "CI fix pushed by the SWE; pipeline is green. Closin
 gh issue close {N}
 ```
 
-File mode: append a `### [On-Call] YYYY-MM-DD HH:MM — CI Resolution` entry to the `## Log` and set the task's frontmatter `status: done` (the SWE may already have set it as part of the fix commit — confirm rather than duplicate).
+File mode: append a `### [On-Call] YYYY-MM-DD HH:MM — CI Resolution` entry to the `## Log`, set the task's frontmatter `status: done`, and `git mv` the file into `tasks/done/` (the SWE may already have done both as part of the fix commit — if the file is already under `tasks/done/` with `status: done`, confirm rather than duplicate). The Log entry goes in whichever path the file currently lives at.
 
 **If still red:**
 - Same root cause → your diagnosis was incomplete; refine the fix task and hand it back to the SWE (Step 5).

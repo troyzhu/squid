@@ -1,6 +1,6 @@
 ---
 name: tracker-workflow
-description: File-based task tracker format — one markdown file per task under `tasks/`, with a `status:` frontmatter tag (pending → in-progress → done) and a `## Log` section. The Tasks Plan IS the set of `tasks/<NNN>-<slug>.md` files. Used by the `/plan`, `/implement-task`, and `/implement-night` pipelines. TRIGGER when creating, updating, or completing task files under `tasks/`, or when the user asks how this project tracks work. SKIP for projects using GitHub Issues as the primary tracker (`TRACKER_MODE: gh` in `AGENTS.md`).
+description: File-based task tracker format — one markdown file per task under `tasks/`, with a `status:` frontmatter tag (pending → in-progress → done; done files are moved into `tasks/done/`) and a `## Log` section. The Tasks Plan IS the set of `tasks/<NNN>-<slug>.md` files. Used by the `/plan`, `/implement-task`, and `/implement-night` pipelines. TRIGGER when creating, updating, or completing task files under `tasks/`, or when the user asks how this project tracks work. SKIP for projects using GitHub Issues as the primary tracker (`TRACKER_MODE: gh` in `AGENTS.md`).
 ---
 
 # File-based task tracker
@@ -30,13 +30,20 @@ Need to track a unit of work?
 
 ```
 tasks/
-├── 001-add-pagination.md       # status: done
 ├── 002-search-endpoint.md      # status: in-progress
 ├── 003-search-ui.md            # status: pending
+├── done/
+│   └── 001-add-pagination.md   # status: done — moved here on completion
 └── README.md                   # what this directory is
 ```
 
-`NNN` is a zero-padded, monotonic counter. There is **no `done/` subfolder and no filename-state suffix** — the file stays put; its `status:` field changes.
+Only **open** tasks (pending + in-progress) live at the top level of `tasks/`; **completed** tasks are moved into `tasks/done/`. The filename never carries state — the `status:` field does — but `tasks/done/` keeps the active list to just what's still open.
+
+`NNN` is a zero-padded, monotonic counter that is **never reused**. Allocate the next number by scanning **both** locations so a moved-out done task doesn't free its number for reuse:
+
+```bash
+ls tasks/ tasks/done/ 2>/dev/null | grep -oE '^[0-9]+' | sort -n | tail -1   # next = this + 1
+```
 
 ## Task file shape
 
@@ -65,11 +72,11 @@ status: pending          # pending | in-progress | done
 
 ## Status lifecycle
 
-`status:` is the single source of truth for state; transitions are edits to that field (no renames, no moves):
+`status:` is the single source of truth for state; transitions are edits to that field. Pending and in-progress files stay at the top level of `tasks/`; completing a task additionally moves the file into `tasks/done/`:
 
-- **PA grooming** writes the file with `status: pending`.
-- **SWE** starts the task → set `status: in-progress`.
-- After the **Tester** PASSES and the task is committed → set `status: done`.
+- **PA grooming** writes the file with `status: pending` (at the top level of `tasks/`).
+- **SWE** starts the task → set `status: in-progress` (file stays put — no move yet).
+- After the **Tester** PASSES and the task is committed → set `status: done` **and `git mv` the file into `tasks/done/` in that same commit**.
 
 The **Tasks Plan** for a feature = its `tasks/<NNN>-*.md` files with `status: pending`, processed in `NNN` order. `/implement-night` builds every pending task in the feature's worktree; `/implement-task` can target one or several by ref.
 
@@ -83,7 +90,8 @@ _(None — this spec is self-contained.)_
 
 ## Canonical principles
 
-- **The `status:` tag is the state.** pending → in-progress → done, edited in place. No filename suffixes, no `done/` folder, no `git mv` dance.
+- **The `status:` tag is the state.** pending → in-progress → done, edited in place. The filename never carries state. On completion the file also moves to `tasks/done/` — so the top level of `tasks/` lists only open work — but `status: done` in the frontmatter, not the folder, is what marks it done.
+- **`NNN` is never reused.** Allocate the next number by scanning both `tasks/` and `tasks/done/` (`ls tasks/ tasks/done/`), so archiving a done task doesn't free its number.
 - **One task = one file.** Rollup tasks (from a PA REJECT or PR-Reviewer Blockers) are new `tasks/<NNN>-<slug>.md` files, `status: pending`.
 - **The tasks ARE the plan.** No separate plan document — the per-task files, ordered by `NNN`, are the Tasks Plan.
 - **Append, never rewrite, the Log.** It's the cross-pipeline audit trail.

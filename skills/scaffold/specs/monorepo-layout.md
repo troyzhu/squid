@@ -34,7 +34,7 @@ See [`tree.md`](tree.md) for the annotated tree. Headline:
 ├── docs/
 │   ├── adr/                     # Architecture Decision Records (if chosen)
 │   └── glossary.md              # ubiquitous-language glossary (if chosen)
-├── tasks/                       # file-based task state — one file per task (see tracker-workflow)
+├── tasks/                       # file-based task state — one file per task; done/ archives completed (see tracker-workflow)
 └── packages/
     ├── backend/                 # Python service (API / pipelines / library)
     ├── frontend-web/            # TypeScript SPA (React / Vue / Svelte / vanilla)
@@ -160,8 +160,9 @@ Full canonical tree for a `backend` + `frontend-web` + `frontend-tui` + `shared`
 │
 ├── tasks/                                # File-based task state. One file per task. See tracker-workflow.
 │   ├── README.md
-│   ├── 000-*.md                          # status: done (state lives in frontmatter, not the filename)
-│   └── 001-*.md                          # status: pending | in-progress | done
+│   ├── 001-*.md                          # status: pending | in-progress (open tasks live at the top level)
+│   └── done/                             # completed tasks moved here on completion
+│       └── 000-*.md                      # status: done
 │
 ├── .claude/                              # Agent team + skills (installed by the plugin).
 │   ├── agents/
