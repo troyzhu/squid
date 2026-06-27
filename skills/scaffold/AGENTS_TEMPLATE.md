@@ -125,7 +125,7 @@ This project uses the **squid** agent team (`/plugin marketplace add iusztinpaul
 
 Engineering discipline — TDD-first, branch off the active branch, run the feature end-to-end before hand-off, regression-test-first for bugs, the format/lint/unit/integration cadence — lives in [`agents/software-engineer.md`](agents/software-engineer.md) + [`agents/tester.md`](agents/tester.md) and is enforced automatically by the pipelines.
 
-**Tracker:** `TRACKER_MODE: file` *(or `gh` for GitHub Issues)*. File mode: one `tasks/<NNN>-<slug>.md` per task with a `status:` frontmatter field (`pending` → `in-progress` → `done`). See [`tasks/README.md`](tasks/README.md).
+**Tracker:** `TRACKER_MODE: file` *(or `gh` for GitHub Issues)*. File mode: one `tasks/<NNN>-<slug>.md` per task with a `status:` frontmatter field (`pending` → `in-progress` → `done`); completing a task moves the file into `tasks/done/`, leaving only open tasks at the top level. See [`tasks/README.md`](tasks/README.md).
 
 Project-specific invariants the agents can't infer:
 

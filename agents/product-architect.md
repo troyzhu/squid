@@ -147,7 +147,7 @@ Before writing the spec, understand the existing code so the spec leverages real
 
 - Find related modules: `Glob` and `Grep` for the area the task touches.
 - Read `CLAUDE.md` to recall project conventions.
-- Read related specs / done tasks for context (`tasks/*.md` with `status: done`, or `gh issue list --state closed`).
+- Read related specs / done tasks for context (`tasks/done/*.md`, all `status: done`, or `gh issue list --state closed`).
 - Look at neighboring tests in `tests/` to understand the project's test patterns.
 - Re-skim `docs/adr/` and `docs/glossary.md` (if they exist). Pull canonical terms for the spec; identify any ADR that constrains how this task may be implemented.
 
@@ -159,8 +159,8 @@ A task depends on another only if it needs models, APIs, or infrastructure from 
 # GitHub mode
 gh issue list --state all --limit 100 --json number,title,state --jq '.[] | "#\(.number) [\(.state)] \(.title)"'
 
-# File mode
-ls tasks/
+# File mode — include tasks/done/ so completed tasks are visible and NNN isn't reused
+ls tasks/ tasks/done/ 2>/dev/null
 ```
 
 #### 4. Write the groomed spec
@@ -421,7 +421,7 @@ For each acceptance criterion, ask:
 
    **File mode:**
    ```bash
-   # Pick the next available number (highest existing NNN + 1)
+   # Pick the next available number (highest existing NNN + 1; scan tasks/ AND tasks/done/)
    # Write tasks/{NNN}-pa-rejection-{slug-of-original}.md with status: pending in the frontmatter.
    # It's already groomed — you wrote the issue list — so it's ready for the SWE to pick up.
    ```

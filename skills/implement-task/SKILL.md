@@ -97,7 +97,7 @@ Agent(
 )
 ```
 
-In file mode, the SWE also sets the task's `tasks/<NNN>-<slug>.md` frontmatter `status: done` (the file stays in `tasks/`) as part of that commit.
+In file mode, the SWE also sets the task's frontmatter `status: done` and `git mv`s the file from `tasks/` into `tasks/done/` as part of that commit.
 
 ### 2e. `Finished tasks?`
 

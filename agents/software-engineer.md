@@ -257,17 +257,19 @@ Commit message rules:
 - Blank line, then the task reference:
   - `Closes #N` — closes the GitHub issue.
   - `Refs #N` — for `[HUMAN]` tasks (issue stays open) and for the On-Call Engineer's CI fixes.
-  - **File mode:** use `Closes-task: NNN-{slug}` (the task file's `status:` is set to `done` in the same commit; the file stays in `tasks/`).
+  - **File mode:** use `Closes-task: NNN-{slug}` (in the same commit the task file's `status:` is set to `done` and the file is `git mv`'d from `tasks/` into `tasks/done/`).
 - Every commit MUST reference a task ID — this is how the On-Call Engineer traces CI failures back to the responsible task.
 - **Do not squash locally.** Each task is its own commit. The orchestrator never squashes; the human uses GitHub's "Squash and merge" button.
 
 If the project uses a `commit-commands` plugin/skill, **always** invoke it for the commit (don't hand-craft the message). It's the project's canonical commit-message generator and is required, not optional.
 
-**File mode** — also mark the task done:
+**File mode** — also mark the task done and archive it:
 ```bash
-# Set the task's frontmatter status: done in tasks/{NNN}-{slug}.md (no rename, no move — it stays in tasks/).
-git add tasks/{NNN}-{slug}.md
-# include this status change in the same commit as the code
+# 1. Set the task's frontmatter status: done in tasks/{NNN}-{slug}.md
+# 2. Move it into tasks/done/ so the top level of tasks/ lists only open work:
+git mv tasks/{NNN}-{slug}.md tasks/done/{NNN}-{slug}.md
+git add tasks/done/{NNN}-{slug}.md
+# include both the status change and the move in the same commit as the code
 ```
 
 ### Push / open PR

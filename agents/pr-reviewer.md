@@ -139,8 +139,8 @@ If you found ≥1 Blocker, write **one rollup task** containing **all** findings
 
 **File mode:**
 ```bash
-# Pick the next available NNN
-ls tasks/ | grep -oE '^[0-9]+' | sort -n | tail -1
+# Pick the next available NNN — scan tasks/ AND tasks/done/ so a moved-out done task's number isn't reused
+ls tasks/ tasks/done/ 2>/dev/null | grep -oE '^[0-9]+' | sort -n | tail -1
 # Filename: tasks/{NNN}-pr-review-rollup.md (status: pending in the frontmatter)
 ```
 
