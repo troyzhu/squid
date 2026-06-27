@@ -1,4 +1,4 @@
-# Squid: An Opinionated Agentic Engineering Team for Claude Code
+# Squid: An Opinionated Software Factory for Claude Code
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Claude Code](https://img.shields.io/badge/Claude%20Code-2.1%2B-blue)](https://claude.com/claude-code)
