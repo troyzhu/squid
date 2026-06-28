@@ -7,7 +7,7 @@ argument-hint: <refactor-goal | path/to/refactor-spec.md | tracker-ref>
 
 # Refactor — plan a no-behaviour-change structural improvement
 
-A refactor is **not** a feature and **not** a bug. Its acceptance criteria are structural ("module X no longer imports module Y", "the public API of `foo()` is unchanged but the implementation is now split across N files") and its safety net is "the test suite is green at every commit." The PM agent's normal feature-grooming flow doesn't fit because there's no user-visible behaviour to acceptance-test.
+A refactor is **not** a feature and **not** a bug. Its acceptance criteria are structural ("module X no longer imports module Y", "the public API of `foo()` is unchanged but the implementation is now split across N files") and its safety net is "the test suite is green at every commit." The product-architect's normal feature-grooming flow doesn't fit because there's no user-visible behaviour to acceptance-test.
 
 This skill produces a Tasks Plan whose tasks are **commit-grain** (each one keeps `main` shippable) and whose AC speak the refactor's actual concerns: imports, types, signatures, dependency direction, public surface, test coverage. The output feeds `/implement-night` directly.
 
@@ -21,7 +21,7 @@ You are the **planner** — you may delegate exploration but do NOT write code, 
 
 If empty, ask the user for one.
 
-Read [`docs/PROCESS.md`](../../../docs/PROCESS.md) to confirm tracker mode and the canonical lifecycle this plan plugs into.
+Read [`AGENTS.md`](../../AGENTS.md) to confirm the tracker mode (`TRACKER_MODE`) and the canonical lifecycle this plan plugs into.
 
 ## When to use
 
@@ -90,7 +90,7 @@ Common refactor shapes and their canonical decomposition:
 
 ## Step 4 — Write the Tasks Plan
 
-Use this template. It mirrors the PM agent's feature-plan output so `/implement-night`'s Step 4 inner loop accepts it without re-grooming.
+Use this template. It mirrors the product-architect's task output so the `/implement-night` inner loop accepts the tasks without re-grooming.
 
 ```markdown
 # Refactor: {one-line goal}
@@ -140,15 +140,15 @@ If task N goes sideways and the team needs to ship before it's resolved, revert 
 
 ## Step 5 — File the plan
 
-Where it lands depends on tracker mode (per `docs/PROCESS.md`).
+Where it lands depends on `TRACKER_MODE` (per `AGENTS.md`; see [`tracker-workflow.md`](../scaffold/specs/tracker-workflow.md)).
 
 ### File mode
 
 ```
-tracker/feature-refactor-<slug>-plan.md
+tasks/<NNN>-<slug>.md       # one file per task — the tasks ARE the plan
 ```
 
-Plus one `tracker/NNN-<refactor-slug>-task-K.groomed.md` per task (matches what `/implement-night`'s Step 4 expects to find). Use sequential numbering for the per-task IDs.
+Write **one file per task** from Step 4, each with `status: pending` and a shared `feature: refactor-<slug>` (per [`tracker-workflow.md`](../scaffold/specs/tracker-workflow.md)). Allocate each `NNN` by scanning both locations so a moved-out done task never frees its number: `ls tasks/ tasks/done/ 2>/dev/null | grep -oE '^[0-9]+' | sort -n | tail -1` (+1). `/implement-night` builds them in `NNN` order.
 
 ### gh mode
 
