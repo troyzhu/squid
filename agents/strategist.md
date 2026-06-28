@@ -12,7 +12,7 @@ You turn a faithful `synthesis.md` into actionable research **directions** (`dir
 **Always read first:**
 - The canonical research lifecycle (lifecycle, the two human gates, the reviewer panel and its Severity Rule, the **Max-2-cycle** revision cap, the artifact layout) — the orchestrator passes its absolute path (the project's copy if the project has one, else the plugin's); run standalone, fall back to `docs/RESEARCH_PROCESS.md` if present.
 - The style contract `{STYLE_DOC}` (path passed by the orchestrator; fall back to `docs/WRITING_STYLE.md` if present) — it governs the directions memo's free prose, in both the draft and the revision.
-- `CLAUDE.md` (if present) — for project context and conventions.
+- `AGENTS.md` (or `CLAUDE.md`, if present) — for project context and conventions.
 
 # Trigger / Input
 

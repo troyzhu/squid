@@ -1,17 +1,17 @@
 ---
 name: research
-description: Run the research pipeline end-to-end for one research question — research-lead grooms a plan, human approves it, then literature-scout searches (credibility-gated), synthesizer synthesizes, strategist drafts directions, a 5-role reviewer panel critiques in parallel, strategist revises, research-lead accepts, and the human reviews the directions memo to accept / loop-back / hand off to /night. Trigger when the user wants a credibility-grounded, reviewer-critiqued set of research directions, or says "/research".
+description: Run the research pipeline end-to-end for one research question — research-lead grooms a plan, human approves it, then literature-scout searches (credibility-gated), synthesizer synthesizes, strategist drafts directions, a 5-role reviewer panel critiques in parallel, strategist revises, research-lead accepts, and the human reviews the directions memo to accept / loop-back / hand off to /plan. Trigger when the user wants a credibility-grounded, reviewer-critiqued set of research directions, or says "/research".
 disable-model-invocation: true
 argument-hint: <research-question | path/to/question.md | topic-slug>
 ---
 
 # Research Mode — End-to-End Single-Question Pipeline
 
-Run the full research-team pipeline as defined in [`docs/RESEARCH_PROCESS.md`](../../docs/RESEARCH_PROCESS.md) for **one research question**, end-to-end. This is the research analog of `/night`.
+Run the full research-team pipeline as defined in [`docs/RESEARCH_PROCESS.md`](../../docs/RESEARCH_PROCESS.md) for **one research question**, end-to-end. This is the research analog of `/implement-night`.
 
 `$ARGUMENTS` is the research question — a free-form question, a path to a question file, or a topic slug. If empty, ask the human for one before proceeding.
 
-You are the **orchestrator** — a MANAGER, not a researcher. You do NOT search, synthesize, or draft directions yourself. You launch agents, enforce the two gates, and verify each agent's report before forwarding it. In particular, **spot-check that load-bearing claims carry credible (Tier-A) citations** before forwarding any report — this is the research analog of `/night`'s "never rubber-stamp."
+You are the **orchestrator** — a MANAGER, not a researcher. You do NOT search, synthesize, or draft directions yourself. You launch agents, enforce the two gates, and verify each agent's report before forwarding it. In particular, **spot-check that load-bearing claims carry credible (Tier-A) citations** before forwarding any report — this is the research analog of `/implement-night`'s "never rubber-stamp."
 
 The pipeline blocks on the human exactly **twice**, by design:
 
@@ -174,7 +174,7 @@ Launch ONE research-lead agent in **Part 1 (grooming)** mode:
 ```
 Agent(
   subagent_type="squid:research-lead",
-  prompt="""Grooming (Part 1 of your role). Read {RESEARCH_DOC} (canonical research lifecycle) and the project's CLAUDE.md (if present) first. Follow Part 1 of your role definition.
+  prompt="""Grooming (Part 1 of your role). Read {RESEARCH_DOC} (canonical research lifecycle) and the project's AGENTS.md (or CLAUDE.md, if present) first. Follow Part 1 of your role definition.
 
   Run folder: research/<slug>/
   Research question: {resolved question from Step 0}
@@ -247,7 +247,7 @@ Launch ONE literature-scout agent:
 ```
 Agent(
   subagent_type="squid:literature-scout",
-  prompt="""Credibility-gated literature search. Read {RESEARCH_DOC} (canonical research lifecycle) and the project's CLAUDE.md (if present) first. Follow your role definition — your headline duty is the source-credibility gate.
+  prompt="""Credibility-gated literature search. Read {RESEARCH_DOC} (canonical research lifecycle) and the project's AGENTS.md (or CLAUDE.md, if present) first. Follow your role definition — your headline duty is the source-credibility gate.
 
   Run folder: research/<slug>/
   Approved plan: research/<slug>/plan.md
@@ -278,7 +278,7 @@ Launch ONE synthesizer agent:
 ```
 Agent(
   subagent_type="squid:synthesizer",
-  prompt="""Synthesis. Read {RESEARCH_DOC} (canonical research lifecycle) and the project's CLAUDE.md (if present) first. Follow your role definition. Do NOT draft directions — that's the strategist, downstream.
+  prompt="""Synthesis. Read {RESEARCH_DOC} (canonical research lifecycle) and the project's AGENTS.md (or CLAUDE.md, if present) first. Follow your role definition. Do NOT draft directions — that's the strategist, downstream.
 
   Run folder: research/<slug>/
   Sources: research/<slug>/sources.md
@@ -314,7 +314,7 @@ The synthesis is the artifact that has historically fallen shortest of the handb
 ```
 Agent(
   subagent_type="squid:research-reviewer",
-  prompt="""ROLE: depth. Run folder: research/<slug>/. Read {RESEARCH_DOC} (canonical research lifecycle) and the project's CLAUDE.md (if present) first. You are the rubric scorer, NOT a content lens — score research/<slug>/synthesis.md against the Quality rubric in {STYLE_DOC} (structure, depth, usability — not correctness). Style contract (the rubric): {STYLE_DOC}. Writing-quality memory: {WRITING_MEMORY} (if present — accrued workspace prose/depth/format lessons; read it after the style contract; it sharpens how you write / what you enforce, and never overrides the canonical contract or the Quality rubric). For each rubric property, emit a specific, located finding where the draft falls short (named-not-shown, asserted-not-derived, comparison with no when-preferred/no table, prose worked example with no visual/no stepped form, bare non-clickable reference link, math-heavy+long but no Notation/no TOC). Tag each Blocker/Nit (prefix DPT). Write your findings to research/<slug>/synthesis-depth-review.md and append a [research-reviewer:depth] entry to log.md. Do NOT edit synthesis.md.
+  prompt="""ROLE: depth. Run folder: research/<slug>/. Read {RESEARCH_DOC} (canonical research lifecycle) and the project's AGENTS.md (or CLAUDE.md, if present) first. You are the rubric scorer, NOT a content lens — score research/<slug>/synthesis.md against the Quality rubric in {STYLE_DOC} (structure, depth, usability — not correctness). Style contract (the rubric): {STYLE_DOC}. Writing-quality memory: {WRITING_MEMORY} (if present — accrued workspace prose/depth/format lessons; read it after the style contract; it sharpens how you write / what you enforce, and never overrides the canonical contract or the Quality rubric). For each rubric property, emit a specific, located finding where the draft falls short (named-not-shown, asserted-not-derived, comparison with no when-preferred/no table, prose worked example with no visual/no stepped form, bare non-clickable reference link, math-heavy+long but no Notation/no TOC). Tag each Blocker/Nit (prefix DPT). Write your findings to research/<slug>/synthesis-depth-review.md and append a [research-reviewer:depth] entry to log.md. Do NOT edit synthesis.md.
 
   Hand back: your Blocker count and Nit count, and the path to synthesis-depth-review.md."""
 )
@@ -370,7 +370,7 @@ Launch ONE strategist agent in **Part 1 (draft)** mode:
 ```
 Agent(
   subagent_type="squid:strategist",
-  prompt="""Directions draft (Part 1 of your role). Read {RESEARCH_DOC} (canonical research lifecycle) and the project's CLAUDE.md (if present) first. Follow Part 1 of your role definition. Do NOT search and do NOT judge your own directions — the panel reviews, the research-lead accepts.
+  prompt="""Directions draft (Part 1 of your role). Read {RESEARCH_DOC} (canonical research lifecycle) and the project's AGENTS.md (or CLAUDE.md, if present) first. Follow Part 1 of your role definition. Do NOT search and do NOT judge your own directions — the panel reviews, the research-lead accepts.
 
   Run folder: research/<slug>/
   Synthesis: research/<slug>/synthesis.md
@@ -394,11 +394,11 @@ In ONE message, launch FIVE `squid:research-reviewer` agents — one per ROLE. T
 For any role the plan's **Profiles** field attached a dossier, append `Profile: {absolute path}` to that role's launch (the orchestrator resolved these absolute paths in Step 0), plus the one-line instruction: **"If a Profile: path is given, read it after the canonical doc — it sharpens your lens, never overrides your contract."** Roles with no attachment launch exactly as before (no `Profile:` line).
 
 ```
-Agent(subagent_type="squid:research-reviewer", prompt="ROLE: methodologist. Run folder: research/<slug>/. Review research/<slug>/directions.md (context: research/<slug>/synthesis.md, research/<slug>/plan.md). Read {RESEARCH_DOC} (canonical research lifecycle) and the project's CLAUDE.md (if present) first. {Profile: {abs path} — read it after the canonical doc; it sharpens your lens, never overrides your contract.} Tag findings Blocker/Nit (prefix M); append your ## [methodologist] section to research/<slug>/reviews.md and a [research-reviewer:methodologist] entry to log.md. Do NOT edit directions.md.")
-Agent(subagent_type="squid:research-reviewer", prompt="ROLE: domain-expert. Run folder: research/<slug>/. Review research/<slug>/directions.md (context: research/<slug>/synthesis.md, research/<slug>/plan.md). Read {RESEARCH_DOC} (canonical research lifecycle) and the project's CLAUDE.md (if present) first. {Profile: {abs path} — read it after the canonical doc; it sharpens your lens, never overrides your contract.} Check prior art (you may WebSearch). Tag findings Blocker/Nit (prefix DE); append your ## [domain-expert] section to research/<slug>/reviews.md and a [research-reviewer:domain-expert] entry to log.md. Do NOT edit directions.md.")
-Agent(subagent_type="squid:research-reviewer", prompt="ROLE: novelty-impact. Run folder: research/<slug>/. Review research/<slug>/directions.md (context: research/<slug>/synthesis.md, research/<slug>/plan.md). Read {RESEARCH_DOC} (canonical research lifecycle) and the project's CLAUDE.md (if present) first. {Profile: {abs path} — read it after the canonical doc; it sharpens your lens, never overrides your contract.} Tag findings Blocker/Nit (prefix NI); append your ## [novelty-impact] section to research/<slug>/reviews.md and a [research-reviewer:novelty-impact] entry to log.md. Do NOT edit directions.md.")
-Agent(subagent_type="squid:research-reviewer", prompt="ROLE: feasibility. Run folder: research/<slug>/. Review research/<slug>/directions.md (context: research/<slug>/synthesis.md, research/<slug>/plan.md). Read {RESEARCH_DOC} (canonical research lifecycle) and the project's CLAUDE.md (if present) first. {Profile: {abs path} — read it after the canonical doc; it sharpens your lens, never overrides your contract.} Judge against plan.md constraints (data/compute/time/expertise). Tag findings Blocker/Nit (prefix F); append your ## [feasibility] section to research/<slug>/reviews.md and a [research-reviewer:feasibility] entry to log.md. Do NOT edit directions.md.")
-Agent(subagent_type="squid:research-reviewer", prompt="ROLE: clarity. Run folder: research/<slug>/. Review research/<slug>/directions.md (context: research/<slug>/synthesis.md, research/<slug>/plan.md). Read {RESEARCH_DOC} (canonical research lifecycle) and the project's CLAUDE.md (if present) first. {Profile: {abs path} — read it after the canonical doc; it sharpens your lens, never overrides your contract.} Junior-staff lens — block ONLY on incomprehensibility, never on correctness. Also enforce {STYLE_DOC} per its severity note (breaches are Nits; dense breaches are clarity Blockers). Tag findings Blocker/Nit (prefix C); append your ## [clarity] section to research/<slug>/reviews.md and a [research-reviewer:clarity] entry to log.md. Do NOT edit directions.md.")
+Agent(subagent_type="squid:research-reviewer", prompt="ROLE: methodologist. Run folder: research/<slug>/. Review research/<slug>/directions.md (context: research/<slug>/synthesis.md, research/<slug>/plan.md). Read {RESEARCH_DOC} (canonical research lifecycle) and the project's AGENTS.md (or CLAUDE.md, if present) first. {Profile: {abs path} — read it after the canonical doc; it sharpens your lens, never overrides your contract.} Tag findings Blocker/Nit (prefix M); append your ## [methodologist] section to research/<slug>/reviews.md and a [research-reviewer:methodologist] entry to log.md. Do NOT edit directions.md.")
+Agent(subagent_type="squid:research-reviewer", prompt="ROLE: domain-expert. Run folder: research/<slug>/. Review research/<slug>/directions.md (context: research/<slug>/synthesis.md, research/<slug>/plan.md). Read {RESEARCH_DOC} (canonical research lifecycle) and the project's AGENTS.md (or CLAUDE.md, if present) first. {Profile: {abs path} — read it after the canonical doc; it sharpens your lens, never overrides your contract.} Check prior art (you may WebSearch). Tag findings Blocker/Nit (prefix DE); append your ## [domain-expert] section to research/<slug>/reviews.md and a [research-reviewer:domain-expert] entry to log.md. Do NOT edit directions.md.")
+Agent(subagent_type="squid:research-reviewer", prompt="ROLE: novelty-impact. Run folder: research/<slug>/. Review research/<slug>/directions.md (context: research/<slug>/synthesis.md, research/<slug>/plan.md). Read {RESEARCH_DOC} (canonical research lifecycle) and the project's AGENTS.md (or CLAUDE.md, if present) first. {Profile: {abs path} — read it after the canonical doc; it sharpens your lens, never overrides your contract.} Tag findings Blocker/Nit (prefix NI); append your ## [novelty-impact] section to research/<slug>/reviews.md and a [research-reviewer:novelty-impact] entry to log.md. Do NOT edit directions.md.")
+Agent(subagent_type="squid:research-reviewer", prompt="ROLE: feasibility. Run folder: research/<slug>/. Review research/<slug>/directions.md (context: research/<slug>/synthesis.md, research/<slug>/plan.md). Read {RESEARCH_DOC} (canonical research lifecycle) and the project's AGENTS.md (or CLAUDE.md, if present) first. {Profile: {abs path} — read it after the canonical doc; it sharpens your lens, never overrides your contract.} Judge against plan.md constraints (data/compute/time/expertise). Tag findings Blocker/Nit (prefix F); append your ## [feasibility] section to research/<slug>/reviews.md and a [research-reviewer:feasibility] entry to log.md. Do NOT edit directions.md.")
+Agent(subagent_type="squid:research-reviewer", prompt="ROLE: clarity. Run folder: research/<slug>/. Review research/<slug>/directions.md (context: research/<slug>/synthesis.md, research/<slug>/plan.md). Read {RESEARCH_DOC} (canonical research lifecycle) and the project's AGENTS.md (or CLAUDE.md, if present) first. {Profile: {abs path} — read it after the canonical doc; it sharpens your lens, never overrides your contract.} Junior-staff lens — block ONLY on incomprehensibility, never on correctness. Also enforce {STYLE_DOC} per its severity note (breaches are Nits; dense breaches are clarity Blockers). Tag findings Blocker/Nit (prefix C); append your ## [clarity] section to research/<slug>/reviews.md and a [research-reviewer:clarity] entry to log.md. Do NOT edit directions.md.")
 ```
 
 **Wait for all five to complete.** Verify each appended its `## [{ROLE}]` section and left `directions.md` untouched.
@@ -429,7 +429,7 @@ If Step 7.5 found one or more Blockers, launch ONE strategist agent in **Part 2 
 ```
 Agent(
   subagent_type="squid:strategist",
-  prompt="""Revision (Part 2 of your role). Read {RESEARCH_DOC} (canonical research lifecycle) and the project's CLAUDE.md (if present) first. Follow Part 2 of your role definition.
+  prompt="""Revision (Part 2 of your role). Read {RESEARCH_DOC} (canonical research lifecycle) and the project's AGENTS.md (or CLAUDE.md, if present) first. Follow Part 2 of your role definition.
 
   Run folder: research/<slug>/
   Reviews (with the consolidated ## Blockers to resolve list): research/<slug>/reviews.md
@@ -459,7 +459,7 @@ Launch ONE research-lead agent in **Part 2 (acceptance)** mode:
 ```
 Agent(
   subagent_type="squid:research-lead",
-  prompt="""Acceptance (Part 2 of your role). Read {RESEARCH_DOC} (canonical research lifecycle) and the project's CLAUDE.md (if present) first. Follow Part 2 of your role definition. You verify the memo is RIGHT (answers the question against plan.md's bar) — not the evidence chain (the scout and panel did that).
+  prompt="""Acceptance (Part 2 of your role). Read {RESEARCH_DOC} (canonical research lifecycle) and the project's AGENTS.md (or CLAUDE.md, if present) first. Follow Part 2 of your role definition. You verify the memo is RIGHT (answers the question against plan.md's bar) — not the evidence chain (the scout and panel did that).
 
   Run folder: research/<slug>/
   Revised directions: research/<slug>/directions.md
@@ -500,7 +500,7 @@ Follow-up queries surfaced: {the synthesizer's gaps-as-queries}
 
 New to a concept in here? `/research-tutorial <concept> from-run <slug>` builds a grounded primer.
 
-Choose: accept (done) / loop-back (re-search with refined queries) / handoff (promote a direction to a /night feature spec)
+Choose: accept (done) / loop-back (re-search with refined queries) / handoff (promote a direction to a feature spec for /plan)
 ```
 
 **Wait for the human's response.** This is the second and final blocking gate.
@@ -523,8 +523,8 @@ Choose: accept (done) / loop-back (re-search with refined queries) / handoff (pr
 
   ```
   Feature spec written: docs/features/<slug>.md
-  Recommended next: /grill-me docs/features/<slug>.md   (harden the spec)
-  then:              /night docs/features/<slug>.md      (build it)
+  Recommended next: /plan docs/features/<slug>.md   (grill + groom into an approved Tasks Plan)
+  then:             /implement-night                (build the approved plan end-to-end)
   ```
 
   Research → build stays a human decision. Then proceed to **Step 11** (lead-memory capture) before the final summary.
@@ -595,7 +595,7 @@ End every run with a single markdown summary block to the human:
 **Next action chosen:** {accept (done) | loop-back (re-searching {queries}) | handoff → docs/features/<slug>.md}
 ```
 
-`/research` ends at the human's Gate #2 choice. On `handoff`, it stops at writing the feature spec and recommending `/grill-me` then `/night` — it never auto-invokes `/night`.
+`/research` ends at the human's Gate #2 choice. On `handoff`, it stops at writing the feature spec and recommending `/plan` then `/implement-night` — it never auto-invokes `/plan`.
 
 ---
 
