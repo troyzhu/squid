@@ -81,7 +81,7 @@ Launch ONE `squid:literature-scout` with a tiny targeted plan inlined in the pro
 ```
 Agent(
   subagent_type="squid:literature-scout",
-  prompt="""Credibility-gated grounding for a profile dossier. Read {RESEARCH_DOC} (canonical research lifecycle) and the project's CLAUDE.md (if present) first. Follow your role definition — your headline duty is the source-credibility gate.
+  prompt="""Credibility-gated grounding for a profile dossier. Read {RESEARCH_DOC} (canonical research lifecycle) and the project's AGENTS.md (or CLAUDE.md, if present) first. Follow your role definition — your headline duty is the source-credibility gate.
 
   This is NOT a full /research run — there is no plan.md. Treat this inlined plan as your contract:
     Mode: targeted

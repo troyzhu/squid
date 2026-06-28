@@ -2,7 +2,7 @@
 
 This document defines the agent-team workflow for the **research pipeline**. It is the **single source of truth** for that pipeline. Every research agent (research-lead, literature-scout, synthesizer, strategist, research-reviewer) reads this file before acting, and the `/research` skill drives the loop described here.
 
-It is the research-pipeline analog of `docs/PROCESS.md` (the engineering pipeline). Research decides *what* to build; the engineering team builds it. The two layers chain optionally at Gate #2 via the `/night` handoff.
+It is the research-pipeline analog of the engineering pipeline (the `/plan` → `/implement-night` skills, described in `AGENTS.md`). Research decides *what* to build; the engineering team builds it. The two layers chain optionally at Gate #2 via the `/plan` handoff.
 
 ## Lifecycle
 
@@ -45,7 +45,7 @@ HUMAN GATE #2 — review the critiqued directions memo                 ← gate 
         │
         ├── accept / done
         ├── loop back → refine queries, re-run from search   (human-decided)
-        └── handoff → promote a direction to a /night feature spec
+        └── handoff → promote a direction to a feature spec for /plan
 ```
 
 The pipeline blocks on the human exactly twice by design: once after the research-lead produces the Research Plan (approve the plan), and once at the end (review the directions memo). Between the two gates the pipeline moves forward on its own — it does not silently skip, and it does not wait for additional input. The optional synthesis checkpoint (above) is default-off and fires only when the human opted in at Gate #1; it is human-controlled and is **not** a third mandatory gate — with it off, behavior is identical to a two-gate run.
@@ -60,8 +60,8 @@ Five sub-agents plus the orchestrator (the top-level Claude Code session).
 
 | Agent | File | Engineering analog | Role |
 |---|---|---|---|
-| Orchestrator | `CLAUDE.md` + `skills/research/SKILL.md` | (night/day orchestrator) | Drives the pipeline, enforces the two gates, verifies each report; never does the research itself. |
-| research-lead | `agents/research-lead.md` | product-manager | Grooms the raw question into a Research Plan (questions, mode, scope, source strategy, success criteria); performs user-POV acceptance of the directions memo. Owns "does this answer the question." |
+| Orchestrator | `AGENTS.md` + `skills/research/SKILL.md` | (implement-night orchestrator) | Drives the pipeline, enforces the two gates, verifies each report; never does the research itself. |
+| research-lead | `agents/research-lead.md` | product-architect | Grooms the raw question into a Research Plan (questions, mode, scope, source strategy, success criteria); performs user-POV acceptance of the directions memo. Owns "does this answer the question." |
 | literature-scout | `agents/literature-scout.md` | tester | Runs credibility-gated multi-source search (web + academic), fan-out → fetch → verify. **Headline duty: the source-credibility gate.** Produces `sources.md`. |
 | synthesizer | `agents/synthesizer.md` | software-engineer | Reviews `sources.md` → `synthesis.md`, a reader-facing memo: a one-screen answer; themes argued at the material's depth; tensions; an **Analysis — beyond the sources** section (OURS, confidence-tagged A# items derived past the literature); implications; where-I-need-judgment; gaps & follow-up queries; an evidence-ledger appendix. Derives knowledge, not directions. After the draft, **revises against the depth critic** — deepening the synthesis to resolve every rubric Blocker (the synthesis depth loop). Also flags primer candidates in its hand-off (foundational concepts a newcomer would want grounding on), seeding the optional `/research-tutorial` offer at the checkpoint. |
 | strategist | `agents/strategist.md` | software-engineer | Turns the synthesis into candidate directions (`directions.md`, each cited); after the panel, resolves every Blocker and re-emits the revised memo. |
@@ -72,7 +72,7 @@ Five sub-agents plus the orchestrator (the top-level Claude Code session).
 | Gate | When | Human choice |
 |---|---|---|
 | **Gate #1 — approve the plan** | After research-lead grooms `plan.md` | `y` (approve) / `edit` (re-groom) / `cancel`. Confirms questions, scope, mode, and source strategy before any search runs. Any profile attachments are surfaced (with `updated:` dates) and adjustable here. |
-| **Gate #2 — review the directions** | After research-lead acceptance | **accept** (done) / **loop back** (refine queries, re-run from search — human-decided) / **handoff** (promote a direction to a `/night` feature spec). Presented with the memo, a panel-findings summary, any unresolved Blockers, and the synthesizer's follow-up queries. |
+| **Gate #2 — review the directions** | After research-lead acceptance | **accept** (done) / **loop back** (refine queries, re-run from search — human-decided) / **handoff** (promote a direction to a feature spec for `/plan`). Presented with the memo, a panel-findings summary, any unresolved Blockers, and the synthesizer's follow-up queries. |
 
 **Opt-in synthesis checkpoint (NOT a gate).** When `plan.md` sets `Synthesis checkpoint: yes`, the pipeline pauses after the synthesizer to present the answer-so-far and the synthesizer's "where I need your judgment" prompts, so the human's feedback can shape the directions (continue / primer / feedback-revise / loop-back / cancel). The checkpoint also surfaces the synthesizer's flagged **primer candidates** and can build a grounded primer (`/research-tutorial`) on one before continuing — human-directed, the checkpoint re-presents after each build. It is **human-controlled and default-off** — it does not count toward the two mandatory gates, and with it off the run behaves exactly as a two-gate run.
 
@@ -235,14 +235,14 @@ Format: `### [ROLE] YYYY-MM-DD HH:MM — Short subject`. Append-only.
 
 Loop-back is **always human-decided** — there is no automatic loop-back and no auto-cap on rounds. The human gate is the control.
 
-## `/night` Handoff
+## Engineering Handoff (`/plan` → `/implement-night`)
 
 At Gate #2, "handoff" promotes a chosen direction into an engineering feature spec:
 
 1. The orchestrator writes `docs/features/<slug>.md` from the chosen direction (problem, goal, scope, acceptance-shaped notes, links back to `research/<slug>/`).
-2. It recommends the next command: `/grill-me docs/features/<slug>.md` (to harden the spec), then `/night docs/features/<slug>.md`.
+2. It recommends the next command: `/plan docs/features/<slug>.md` (grill + groom + approve), then `/implement-night`.
 
-The handoff **stops at writing the feature spec and recommending the command** — it does not auto-invoke `/night`. Research → build stays a human decision.
+The handoff **stops at writing the feature spec and recommending the command** — it does not auto-invoke `/plan`. Research → build stays a human decision.
 
 ## Responsibility Model
 

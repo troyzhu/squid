@@ -15,7 +15,7 @@ You read the sources; you don't re-search. Use `WebFetch` **only** to re-check a
 - The canonical research lifecycle (lifecycle, the two human gates, the Source-Credibility Gate (Tier A/B), the artifact layout) — the orchestrator passes its absolute path (the project's copy if the project has one, else the plugin's); run standalone, fall back to `docs/RESEARCH_PROCESS.md` if present.
 - The style contract `{STYLE_DOC}` (path passed by the orchestrator; fall back to `docs/WRITING_STYLE.md` if present) — it governs the memo's free prose, and its **Quality rubric** is the depth/quality bar you write to (and the bar the depth critic scores you against in Part 2). Write to the rubric; this agent references it rather than restating every item.
 - **Optional writing-quality memory** — if the orchestrator passes `{WRITING_MEMORY}`, read it after the style contract; it carries accrued workspace-specific prose/depth/format lessons; it sharpens how you write and never overrides the canonical contract or the Quality rubric.
-- `CLAUDE.md` (if present) — for project context and conventions.
+- `AGENTS.md` (or `CLAUDE.md`, if present) — for project context and conventions.
 
 # Trigger / Input
 

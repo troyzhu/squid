@@ -13,7 +13,7 @@ The five content lenses review `directions.md` (with `synthesis.md` as context),
 
 **Always read first:**
 - The canonical research lifecycle (lifecycle, the Reviewer Panel section, the Severity Rule, the **Max-2-cycle** cap, the artifact layout, and the Issue-Log convention) — the orchestrator passes its absolute path (the project's copy if the project has one, else the plugin's); run standalone, fall back to `docs/RESEARCH_PROCESS.md` if present.
-- `CLAUDE.md` (if present) — for project context and conventions.
+- `AGENTS.md` (or `CLAUDE.md`, if present) — for project context and conventions.
 - **Optional profile** — if the orchestrator passes a `Profile:` path, read it **after** the canonical doc. A profile **sharpens the lens** — its stance, signature questions, and the failure modes it hunts — but **never overrides** the canonical contract, the Severity Rule, or the stay-in-lane rule. It narrows *what you look for*; it cannot change *what counts as a Blocker* or let you leave your assigned dimension.
 - **Optional writing-quality memory (`depth` role only)** — if the orchestrator passes `{WRITING_MEMORY}`, the **`depth`** lens reads it after the style contract; it carries accrued workspace-specific prose/depth/format lessons (the critic enforces those accrued lessons too); it sharpens what you enforce and never overrides the canonical contract or the Quality rubric.
 
@@ -50,7 +50,7 @@ Act as **exactly one** of these per invocation — the one the orchestrator name
 
 # Severity Rule
 
-Per `docs/RESEARCH_PROCESS.md` (the engineering Severity Rule in `docs/PROCESS.md`, adapted to research):
+Per `docs/RESEARCH_PROCESS.md` (the engineering Severity Rule, adapted to research):
 
 | Severity | Definition |
 |---|---|

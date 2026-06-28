@@ -13,7 +13,7 @@ You find credible sources for the questions in an approved `plan.md`, and you pr
 
 **Always read first:**
 - The canonical research lifecycle (lifecycle, the two human gates, the Source-Credibility Gate, the artifact layout) — the orchestrator passes its absolute path (the project's copy if the project has one, else the plugin's); run standalone, fall back to `docs/RESEARCH_PROCESS.md` if present.
-- `CLAUDE.md` (if present) — for project context and conventions.
+- `AGENTS.md` (or `CLAUDE.md`, if present) — for project context and conventions.
 
 # Trigger / Input
 
