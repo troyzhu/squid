@@ -100,8 +100,8 @@ What it does, in order: verifies you're on `main` with a clean tree synced to `o
 After release, smoke-test from a fresh Claude Code session:
 
 ```
-/plugin marketplace update iusztinpaul
-/plugin update squid@iusztinpaul
+/plugin marketplace update troyzhu
+/plugin update squid@troyzhu
 ```
 
 **Manual fallback.** If the script can't run, the equivalent steps are: bump `version` in `.claude-plugin/plugin.json` by hand → `git commit -m "chore: release v0.X.Y"` → `git tag -a v0.X.Y -m "v0.X.Y"` → `git push origin main` → `git push origin v0.X.Y`. CI still verifies the tag matches `plugin.json`.
