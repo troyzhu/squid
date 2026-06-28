@@ -1,6 +1,6 @@
 ---
 name: triage-issue
-description: Bug intake — takes a free-form bug report (or a tracker / GitHub issue reference), localises the suspected code, captures a deterministic reproducer, and emits a groomed bug task with a regression-test acceptance criterion. Hands off cleanly to /implement-task for supervised single-bug fixes or to /implement-night when the fix needs the full PM/Tester/PR-Reviewer pipeline. Trigger when the user reports a bug, says "/triage-issue", asks "investigate this bug", "diagnose X", or pastes a stack trace / customer report.
+description: Bug intake — takes a free-form bug report (or a tracker / GitHub issue reference), localises the suspected code, captures a deterministic reproducer, and emits a groomed bug task with a regression-test acceptance criterion. Hands off cleanly to /implement-task for supervised single-bug fixes or to /implement-night when the fix needs the full PA/Tester/PR-Reviewer pipeline. Trigger when the user reports a bug, says "/triage-issue", asks "investigate this bug", "diagnose X", or pastes a stack trace / customer report.
 disable-model-invocation: false
 argument-hint: <bug-description | path/to/report.md | #issue-or-NNN-slug>
 ---
@@ -19,7 +19,7 @@ You are the **triage orchestrator** — you may delegate exploration to sub-agen
 
 If empty, ask the user for one before proceeding.
 
-Read [`docs/PROCESS.md`](../../../docs/PROCESS.md) to confirm the active **tracker mode** (`file` or `gh`).
+Read [`AGENTS.md`](../../AGENTS.md) to confirm the active **tracker mode** (`TRACKER_MODE: file` or `gh`).
 
 ## When to use
 
@@ -39,7 +39,7 @@ Read [`docs/PROCESS.md`](../../../docs/PROCESS.md) to confirm the active **track
 Identify what to triage from `$ARGUMENTS`:
 
 1. **File path** → `cat` the report.
-2. **Tracker reference** (`NNN-slug` file mode, `#N` gh mode) → load the existing record (`tracker/NNN-*.todo.md` or `gh issue view N --json number,title,body,labels`).
+2. **Tracker reference** (`NNN-slug` file mode, `#N` gh mode) → load the existing record (a `tasks/<NNN>-*.md` file, or `gh issue view N --json number,title,body,labels`).
 3. **Free-form text** → use as-is.
 4. **Empty** → ask: "What bug should I triage? (Paste the report, give me a path, or a tracker reference.)"
 
@@ -85,7 +85,7 @@ The reproducer must be **deterministic**. If it's only intermittent, mark it exp
 
 ## Step 4 — Write the groomed bug task
 
-Use this exact template. It mirrors the PM agent's groom output so `/implement-task` and `/implement-night` accept it without re-grooming.
+Use this exact template. It mirrors the product-architect's groom output so `/implement-task` and `/implement-night` accept it without re-grooming.
 
 ```markdown
 # Bug: {one-line title — observable user-visible symptom}
@@ -142,17 +142,17 @@ Actual: {what does happen — include exact error message, status code, or outpu
 
 ## Step 5 — File the task
 
-Where it lands depends on tracker mode (read from `docs/PROCESS.md`).
+Where it lands depends on `TRACKER_MODE` (read from `AGENTS.md`; see [`tracker-workflow.md`](../scaffold/specs/tracker-workflow.md)).
 
 ### File mode
 
-Pick the next sequential ID (`ls tracker/ | grep -oE '^[0-9]+' | sort -n | tail -1`, +1, zero-padded to the project's existing width). Write to:
+Pick the next sequential ID (`ls tasks/ tasks/done/ 2>/dev/null | grep -oE '^[0-9]+' | sort -n | tail -1`, +1, zero-padded to the project's existing width). Write to:
 
 ```
-tracker/NNN-bug-<slug>.groomed.md
+tasks/<NNN>-bug-<slug>.md
 ```
 
-`.groomed.md` (not `.todo.md`) signals "PM-ready, can enter the inner loop". Both `/implement-task` and `/implement-night` accept this directly.
+Add `status: pending` + `feature: bug-<slug>` frontmatter (per [`tracker-workflow.md`](../scaffold/specs/tracker-workflow.md)) so the file signals "groomed, ready for the inner loop". Both `/implement-task` and `/implement-night` accept it directly.
 
 ### gh mode
 
