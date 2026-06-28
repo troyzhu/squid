@@ -108,7 +108,7 @@ For each external-service slug the user selected, emit one bullet below wrapped 
 
 *Only emit if agent team + tracker chosen.*
 
-This project uses the **squid** agent team (`/plugin marketplace add iusztinpaul/squid && /plugin install squid@iusztinpaul`) — per-role rules in `agents/`, per-phase rules in the skills. Direct chat for trivial edits; for one or a few groomed tasks use **`/implement-task`**; for a whole feature use **`/plan`** then **`/implement-night`** (or run **`/review`** / **`/review-ci`** standalone).
+This project uses the **squid** agent team (`/plugin marketplace add troyzhu/squid && /plugin install squid@troyzhu`) — per-role rules in `agents/`, per-phase rules in the skills. Direct chat for trivial edits; for one or a few groomed tasks use **`/implement-task`**; for a whole feature use **`/plan`** then **`/implement-night`** (or run **`/review`** / **`/review-ci`** standalone).
 
 | Role | Responsibility |
 |---|---|

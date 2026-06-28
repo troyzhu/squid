@@ -171,4 +171,4 @@ git push origin "$NEW_TAG"
 
 echo
 echo "released ${NEW_TAG}"
-echo "verify: https://github.com/iusztinpaul/squid/releases/tag/${NEW_TAG}"
+echo "verify: https://github.com/troyzhu/squid/releases/tag/${NEW_TAG}"

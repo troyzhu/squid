@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Claude Code](https://img.shields.io/badge/Claude%20Code-2.1%2B-blue)](https://claude.com/claude-code)
-[![Plugin version](https://img.shields.io/github/v/tag/iusztinpaul/squid?label=version)](https://github.com/iusztinpaul/squid/tags)
+[![Plugin version](https://img.shields.io/github/v/tag/troyzhu/squid?label=version)](https://github.com/troyzhu/squid/tags)
 
 Claude Code writes code fast. It's worse at writing the code *your team* would actually ship — code that follows your conventions, has tests you trust, and survives review.
 
@@ -34,6 +34,16 @@ Run `/plan <feature-spec>` then `/implement-night`, and Squid drives this end-to
 
 Branch + worktree, grooming, the per-task implement/verify loop, push, diff review, and CI are all automated — you only show up for the two gates. For a quick single change, run `/implement-task <task>` (the same SWE ↔ Tester loop, no planning or review pipeline). Starting from an empty repo? Run `/scaffold` first — it interviews you about the stack and writes a tailored `AGENTS.md` plus a folder skeleton (no application source).
 
+## Research layer (this fork)
+
+Claude Code is good at building; it's worse at the literature homework that decides *what's worth building*. This fork adds a **research agent-team** — the research analog of the engineering pipeline — that turns a question into a credibility-grounded, reviewer-critiqued **directions memo**, then optionally hands a chosen direction to `/plan`.
+
+`/research <question>` drives: research-lead grooms a plan (**human gate 1/2**) → literature-scout gathers credibility-gated sources → synthesizer writes the answer → strategist drafts directions → a 5-role reviewer panel critiques → research-lead accepts → you review the memo (**gate 2/2**). Companions: `/research-profile` (reusable reviewer lenses), `/research-tutorial` (grounded primers), `/research-thread` (wiki-ready consolidation). Full lifecycle in [`docs/RESEARCH_PROCESS.md`](docs/RESEARCH_PROCESS.md).
+
+## Codex support (this fork)
+
+Squid also runs under [OpenAI Codex](https://openai.com/codex/), not just Claude Code. The canonical contracts live once in `agents/` and `skills/`; a generator derives the Codex adapter layer (`.codex/agents/`, `plugins/squid-codex/`, `.agents/skills/`) from them, and CI fails on drift — one source of truth, not three hand-maintained mirrors. See [`docs/CODEX.md`](docs/CODEX.md). To use just the skills in Codex (or Cursor, and 70+ others), `npx skills add troyzhu/squid` works too.
+
 ## Who this is for
 
 - **Yes:** solo devs and small teams shipping Python backends, TypeScript frontends, or Go TUIs who want Claude Code to *consistently* hit your team's bar without re-explaining conventions every session.
@@ -48,11 +58,11 @@ Branch + worktree, grooming, the per-task implement/verify loop, push, diff revi
 ## Install
 
 ```
-/plugin marketplace add iusztinpaul/squid
-/plugin install squid@iusztinpaul
+/plugin marketplace add troyzhu/squid
+/plugin install squid@troyzhu
 ```
 
-That's it. Open any repo in Claude Code; the agents and skills appear in `/agents` and `/help`. Run `/plugin marketplace update iusztinpaul` later to pull fresh changes.
+That's it. Open any repo in Claude Code; the agents and skills appear in `/agents` and `/help`. Run `/plugin marketplace update troyzhu` later to pull fresh changes.
 
 Installing Squid also pulls in three plugins the agent team relies on, all from Anthropic's official `claude-plugins-official` marketplace — `context7` (live library docs via MCP), `code-review`, and `commit-commands`. That marketplace ships with Claude Code, so these resolve and enable on their own. (Requires Claude Code v2.1.143+ for auto-enable; v2.1.110+ for the dependency mechanism. If a dependency fails to resolve, run `/plugin marketplace update claude-plugins-official`.)
 
@@ -64,20 +74,20 @@ Commit this into the target repo's `.claude/settings.json`:
 ```json
 {
   "extraKnownMarketplaces": {
-    "iusztinpaul": {
+    "troyzhu": {
       "source": {
         "source": "github",
-        "repo": "iusztinpaul/squid"
+        "repo": "troyzhu/squid"
       }
     }
   },
   "enabledPlugins": {
-    "squid@iusztinpaul": true
+    "squid@troyzhu": true
   }
 }
 ```
 
-When a teammate (or future-you on a fresh machine) opens that repo and trusts the folder, Claude Code prompts them to add the marketplace and install in one step. `enabledPlugins` alone isn't enough — `extraKnownMarketplaces` is what tells Claude Code where `squid@iusztinpaul` resolves to.
+When a teammate (or future-you on a fresh machine) opens that repo and trusts the folder, Claude Code prompts them to add the marketplace and install in one step. `enabledPlugins` alone isn't enough — `extraKnownMarketplaces` is what tells Claude Code where `squid@troyzhu` resolves to.
 
 </details>
 
@@ -90,7 +100,7 @@ claude --plugin-dir /path/to/squid
 
 Launches Claude Code with the plugin loaded for the session. No marketplace, no install, no cache. Re-run after edits. This is the only path that exercises your local working tree directly on Claude Code v2.1+.
 
-> `/plugin marketplace add /path/to/squid` reads the local `marketplace.json` but the plugin's `source` points at GitHub — so the install still fetches from `iusztinpaul/squid`, not your working tree.
+> `/plugin marketplace add /path/to/squid` reads the local `marketplace.json` but the plugin's `source` points at GitHub — so the install still fetches from `troyzhu/squid`, not your working tree.
 
 </details>
 
@@ -100,13 +110,13 @@ Launches Claude Code with the plugin loaded for the session. No marketplace, no 
 Not on Claude Code, or only want Squid's skills without the full plugin? Use the cross-agent [`skills`](https://github.com/vercel-labs/skills) CLI:
 
 ```
-npx skills add iusztinpaul/squid
+npx skills add troyzhu/squid
 ```
 
 It scans the repo for `SKILL.md` files and installs them into whichever agents it detects (Claude Code, Cursor, Codex, and 70+ more). Add `-g` to install into your user directory instead of the current project, or `--skill <name>` to grab specific ones:
 
 ```
-npx skills add iusztinpaul/squid --skill plan --skill implement-task -g
+npx skills add troyzhu/squid --skill plan --skill implement-task -g
 ```
 
 Manage them with `npx skills list`, `npx skills update`, and `npx skills remove <name>`.
@@ -119,13 +129,13 @@ Manage them with `npx skills list`, `npx skills update`, and `npx skills remove 
 <summary><b>Uninstall</b></summary>
 
 ```
-/plugin uninstall squid@iusztinpaul
+/plugin uninstall squid@troyzhu
 ```
 
 To also forget the marketplace (stops it checking for updates):
 
 ```
-/plugin marketplace remove iusztinpaul
+/plugin marketplace remove troyzhu
 ```
 
 Installed via `npx skills` instead? Remove those with `npx skills remove <name>` (add `--global` if you used `-g`, or `--all` to clear everything).
@@ -141,6 +151,7 @@ Installed via `npx skills` instead? Remove those with `npx skills remove <name>`
 | `/implement-night <plan>` | End-to-end single-feature pipeline (the diagram above) — builds the approved plan to a validated PR. |
 | `/implement-task` · `/review` · `/review-ci` | Granular pipeline stages, runnable standalone: build tasks · push + acceptance + diff review · CI validation. |
 | `/refactor` · `/triage-issue` · `/architecture-review` | Standalone planning/intake helpers (not wired into the main pipeline). |
+| `/research` · `/research-profile` · `/research-tutorial` · `/research-thread` | Research agent-team (this fork): question → credibility-gated directions memo → optional handoff to `/plan`. See [`docs/RESEARCH_PROCESS.md`](docs/RESEARCH_PROCESS.md). |
 | `product-architect`, `software-engineer`, `tester`, `pr-reviewer`, `oncall-engineer` | Sub-agents invoked by the pipelines; also usable directly via the `Agent` tool. |
 | `testing-python`, `grilling`, `self-improve` | Support skills the pipelines and agents lean on. |
 
