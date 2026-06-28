@@ -1,0 +1,39 @@
+{
+  "name": "squid-codex",
+  "version": "0.5.0",
+  "description": "Codex adapter for Squid's opinionated engineering and research agent-team workflows.",
+  "author": {
+    "name": "troyzhu",
+    "url": "https://github.com/troyzhu"
+  },
+  "homepage": "https://github.com/troyzhu/squid",
+  "repository": "https://github.com/troyzhu/squid",
+  "license": "MIT",
+  "keywords": [
+    "codex",
+    "agent-team",
+    "scaffold",
+    "workflow",
+    "research",
+    "review"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Squid for Codex",
+    "shortDescription": "Engineering and research workflows adapted for Codex.",
+    "longDescription": "Codex-facing adapters for Squid's scaffold, plan, implement-night, research, review, refactor, and support workflows. The adapters preserve the original Squid contracts while translating Claude-specific tool syntax into Codex-native execution.",
+    "developerName": "troyzhu",
+    "category": "Productivity",
+    "capabilities": [
+      "Skills",
+      "Workflow",
+      "Research"
+    ],
+    "defaultPrompt": [
+      "Use $scaffold to bootstrap a new service.",
+      "Use $plan to groom a feature into an approved Tasks Plan.",
+      "Use $research to map credible approaches."
+    ],
+    "brandColor": "#0EA5A4"
+  }
+}
