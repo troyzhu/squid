@@ -13,7 +13,7 @@ The team's day-to-day pipeline (`/implement-task`, `/implement-night`) operates 
 
 The output is **not a single PR**. It's a prioritised backlog of refactor proposals, each shaped so [`/refactor`](../refactor/SKILL.md) can pick one up and turn it into a Tasks Plan.
 
-You are the **auditor** — you delegate exploration to sub-agents, you read [`docs/adr/`](../../../docs/adr/) to avoid re-proposing settled questions, and you produce a written report. You do NOT write code, do NOT start refactors, and do NOT decide priority for the team — you propose, the human prioritises.
+You are the **auditor** — you delegate exploration to sub-agents, you read [`docs/adr/`](../../docs/adr/) to avoid re-proposing settled questions, and you produce a written report. You do NOT write code, do NOT start refactors, and do NOT decide priority for the team — you propose, the human prioritises.
 
 `$ARGUMENTS`:
 
@@ -49,7 +49,7 @@ Echo the resolved scope back as a one-line confirmation. Don't block.
 
 ## Step 2 — Read prior decisions
 
-Read [`docs/adr/`](../../../docs/adr/) end-to-end if it exists. Build a mental model of:
+Read [`docs/adr/`](../../docs/adr/) end-to-end if it exists. Build a mental model of:
 
 - What decisions are **Accepted** and still in force.
 - What decisions are **Superseded** (and by what).
