@@ -1,15 +1,15 @@
 ---
 name: refactor
-description: Plan a refactor as an ordered, commit-grain Tasks Plan with structural acceptance criteria (test suite green at every step, no behaviour diff, named module/coupling invariants). Output is a feature-shaped plan that `/night` can execute end-to-end. Trigger when the user says "/refactor", asks "plan a refactor of X", "extract Y from Z", "split this module", "rename across the codebase", or describes a structural change with no user-visible feature behind it.
+description: Plan a refactor as an ordered, commit-grain Tasks Plan with structural acceptance criteria (test suite green at every step, no behaviour diff, named module/coupling invariants). Output is a feature-shaped plan that `/implement-night` can execute end-to-end. Trigger when the user says "/refactor", asks "plan a refactor of X", "extract Y from Z", "split this module", "rename across the codebase", or describes a structural change with no user-visible feature behind it.
 disable-model-invocation: false
 argument-hint: <refactor-goal | path/to/refactor-spec.md | tracker-ref>
 ---
 
 # Refactor — plan a no-behaviour-change structural improvement
 
-A refactor is **not** a feature and **not** a bug. Its acceptance criteria are structural ("module X no longer imports module Y", "the public API of `foo()` is unchanged but the implementation is now split across N files") and its safety net is "the test suite is green at every commit." The PM agent's normal feature-grooming flow doesn't fit because there's no user-visible behaviour to acceptance-test.
+A refactor is **not** a feature and **not** a bug. Its acceptance criteria are structural ("module X no longer imports module Y", "the public API of `foo()` is unchanged but the implementation is now split across N files") and its safety net is "the test suite is green at every commit." The product-architect's normal feature-grooming flow doesn't fit because there's no user-visible behaviour to acceptance-test.
 
-This skill produces a Tasks Plan whose tasks are **commit-grain** (each one keeps `main` shippable) and whose AC speak the refactor's actual concerns: imports, types, signatures, dependency direction, public surface, test coverage. The output feeds `/night` directly.
+This skill produces a Tasks Plan whose tasks are **commit-grain** (each one keeps `main` shippable) and whose AC speak the refactor's actual concerns: imports, types, signatures, dependency direction, public surface, test coverage. The output feeds `/implement-night` directly.
 
 You are the **planner** — you may delegate exploration but do NOT write code, do NOT execute steps. Your output is the plan file plus a hand-off message.
 
@@ -21,7 +21,7 @@ You are the **planner** — you may delegate exploration but do NOT write code, 
 
 If empty, ask the user for one.
 
-Read [`docs/PROCESS.md`](../../../docs/PROCESS.md) to confirm tracker mode and the canonical lifecycle this plan plugs into.
+Read [`AGENTS.md`](../../AGENTS.md) to confirm the tracker mode (`TRACKER_MODE`) and the canonical lifecycle this plan plugs into.
 
 ## When to use
 
@@ -31,8 +31,8 @@ Read [`docs/PROCESS.md`](../../../docs/PROCESS.md) to confirm tracker mode and t
 
 ## When NOT to use
 
-- A feature with new user-visible behaviour — use `/night`'s built-in PM grooming instead.
-- A bug fix — use [`/triage-issue`](../triage-issue/SKILL.md), then `/day` or `/night`.
+- A feature with new user-visible behaviour — use `/implement-night`'s built-in PM grooming instead.
+- A bug fix — use [`/triage-issue`](../triage-issue/SKILL.md), then `/implement-task` or `/implement-night`.
 - A one-file rename you can finish in five minutes — just do it; don't ceremony.
 - Refactors where the test suite is too thin to anchor "green at every step." First task in that case is **expand test coverage**, then come back here. The skill will surface this gap in Step 2.
 
@@ -86,11 +86,11 @@ Common refactor shapes and their canonical decomposition:
 | **Layer cleanup** (e.g., remove cycle) | (1) introduce the seam (new module / interface); (2) move responsibilities one batch at a time; (3) enforce direction with an architectural test. |
 | **Dead-code removal** | (1) delete callers; (2) delete leaves; (3) re-run unused-detector. Each in its own task only if the ordering matters; often this is one task. |
 
-3–8 tasks is a healthy plan size. Fewer than 3 → it's too small for a Tasks Plan; do it as a single `/day` task. More than 8 → either decompose into multiple sequential refactors (file separate `/refactor` plans), or you're sneaking feature work in.
+3–8 tasks is a healthy plan size. Fewer than 3 → it's too small for a Tasks Plan; do it as a single `/implement-task` task. More than 8 → either decompose into multiple sequential refactors (file separate `/refactor` plans), or you're sneaking feature work in.
 
 ## Step 4 — Write the Tasks Plan
 
-Use this template. It mirrors the PM agent's feature-plan output so `/night`'s Step 4 inner loop accepts it without re-grooming.
+Use this template. It mirrors the product-architect's task output so the `/implement-night` inner loop accepts the tasks without re-grooming.
 
 ```markdown
 # Refactor: {one-line goal}
@@ -140,15 +140,15 @@ If task N goes sideways and the team needs to ship before it's resolved, revert 
 
 ## Step 5 — File the plan
 
-Where it lands depends on tracker mode (per `docs/PROCESS.md`).
+Where it lands depends on `TRACKER_MODE` (per `AGENTS.md`; see [`tracker-workflow.md`](../scaffold/specs/tracker-workflow.md)).
 
 ### File mode
 
 ```
-tracker/feature-refactor-<slug>-plan.md
+tasks/<NNN>-<slug>.md       # one file per task — the tasks ARE the plan
 ```
 
-Plus one `tracker/NNN-<refactor-slug>-task-K.groomed.md` per task (matches what `/night`'s Step 4 expects to find). Use sequential numbering for the per-task IDs.
+Write **one file per task** from Step 4, each with `status: pending` and a shared `feature: refactor-<slug>` (per [`tracker-workflow.md`](../scaffold/specs/tracker-workflow.md)). Allocate each `NNN` by scanning both locations so a moved-out done task never frees its number: `ls tasks/ tasks/done/ 2>/dev/null | grep -oE '^[0-9]+' | sort -n | tail -1` (+1). `/implement-night` builds them in `NNN` order.
 
 ### gh mode
 
@@ -170,13 +170,13 @@ Single markdown block:
 
 ### Recommended next step
 
-`/night {plan-ref}` — the inner loop runs each task, the Tester gate enforces "tests green at every step", and the PM acceptance review verifies the structural DoD. The two human gates (plan approval and merge) still apply.
+`/implement-night {plan-ref}` — the inner loop runs each task, the Tester gate enforces "tests green at every step", and the PM acceptance review verifies the structural DoD. The two human gates (plan approval and merge) still apply.
 
 If the refactor is small enough (≤ 2 tasks) and you'd rather supervise:
 
-`/day {first-task-ref}` then `/day {next-task-ref}` — manual, one task at a time.
+`/implement-task {first-task-ref}` then `/implement-task {next-task-ref}` — manual, one task at a time.
 
-### Pre-flight checklist (before /night)
+### Pre-flight checklist (before /implement-night)
 
 - [ ] Test-suite anchor (`make pre-commit && make unit-tests && make integration-tests`) is green on `main` *right now*. Do not start a refactor on a red base.
 - [ ] No in-flight feature branches conflict with the affected files (avoidable merge churn).

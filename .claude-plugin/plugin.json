@@ -1,6 +1,24 @@
 {
   "name": "squid",
-  "version": "0.2.7",
-  "description": "Opinionated engineering agent team with progressive-disclosure specs for Python / TypeScript / Go monorepos. Ships PM / SWE / Tester / On-Call sub-agents, /day and /night pipelines, and a library of language/framework/infra specs that agents load on-demand.",
-  "homepage": "https://github.com/iusztinpaul/squid"
+  "version": "0.5.0",
+  "description": "Opinionated engineering + research agent team with progressive-disclosure specs for Python / TypeScript / Go monorepos. Ships PA / SWE / Tester / PR Reviewer / On-Call sub-agents, /plan / /implement-task / /implement-night pipelines, and a library of language/framework/infra specs that agents load on-demand. This fork adds a research agent-team (/research, /research-profile, /research-thread, /research-tutorial) and Codex support via generated adapters.",
+  "homepage": "https://github.com/troyzhu/squid",
+  "author": {
+    "name": "troyzhu",
+    "url": "https://github.com/troyzhu"
+  },
+  "dependencies": [
+    {
+      "name": "context7",
+      "marketplace": "claude-plugins-official"
+    },
+    {
+      "name": "code-review",
+      "marketplace": "claude-plugins-official"
+    },
+    {
+      "name": "commit-commands",
+      "marketplace": "claude-plugins-official"
+    }
+  ]
 }

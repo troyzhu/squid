@@ -1,8 +1,8 @@
 ---
 name: scaffold
-description: Bootstrap a new polyglot monorepo (or a new component in an existing one) from an opinionated spec library. Asks what to build, picks the relevant specs from specs/, writes a tailored AGENTS.md (plus a CLAUDE.md pointer), and lays down an empty folder skeleton. TRIGGER when the user says "/scaffold", asks to bootstrap a project, create a new codebase, start a fresh repo, or add a new component. SKIP for work inside an already-scaffolded project — pick /day or /night instead.
+description: Bootstrap a new polyglot monorepo (or a new component in an existing one) from an opinionated spec library, OR audit an existing scaffolded repo for drift. mode=create (default) asks what to build, picks the relevant specs from specs/, writes a tailored AGENTS.md (plus a CLAUDE.md pointer), and lays down an empty folder skeleton. mode=evaluate checks whether an existing repo's AGENTS.md + scaffold output still follow the scaffold rules and reports the drift (no fixes). TRIGGER when the user says "/scaffold", asks to bootstrap a project, create a new codebase, start a fresh repo, add a new component, or asks to check/audit whether an existing AGENTS.md still follows the scaffold conventions. SKIP for writing application source inside an already-scaffolded project — pick /implement-task or /plan instead.
 disable-model-invocation: false
-argument-hint: [optional one-line project description]
+argument-hint: [mode=create|evaluate] [project description | target repo path]
 ---
 
 # Scaffold
@@ -13,7 +13,16 @@ Interactive bootstrap for a new repo (or a new component in an existing one).
 - Read only the specs under [`specs/`](specs/) that apply.
 - Write a tailored `AGENTS.md` (plus a one-line `CLAUDE.md` pointer) at the target project root that **distils** those specs (doesn't copy-paste them).
 - Lay down an empty folder skeleton (no source code).
-- Hand control back — the user runs `/day` next to have the SWE agent write the first code against the generated AGENTS.md.
+- Hand control back — the user runs `/implement-task` next to have the SWE agent write the first code against the generated AGENTS.md.
+
+## Modes
+
+`$ARGUMENTS` may lead with `mode=create` (default) or `mode=evaluate`:
+
+- **`mode=create`** (default) — bootstrap a repo / component. The flow in "## Flow" below.
+- **`mode=evaluate`** — audit an *existing* scaffolded repo against the artifact invariants in [`rules.md`](rules.md) and report drift (no fixes). See "## Evaluate mode".
+
+Every rule both modes honour lives in [`rules.md`](rules.md) — the single source of truth. Do **not** restate any rule in this file.
 
 ## When to use
 
@@ -23,7 +32,7 @@ Interactive bootstrap for a new repo (or a new component in an existing one).
 
 ## When NOT to use
 
-- Writing application source code (that's the SWE agent's job under `/day` or `/night`).
+- Writing application source code (that's the SWE agent's job under `/implement-task` or `/implement-night`).
 - Filling in business logic, API handlers, components, etc.
 - Adjusting opinions inside an existing project — edit the generated `AGENTS.md` directly.
 - Non-polyglot single-package projects where the full machinery is overkill. (You can still use a single spec as reference, but skip the scaffold flow.)
@@ -57,6 +66,8 @@ Use `AskUserQuestion` to collect answers. Consolidate where possible — one or 
    - **Web scraping:** `firecrawl` / `playwright` / `requests-bs4` / `other` / `none`
 
    Ask this as ONE consolidated question: "Which external services will you use? (deselect anything you don't need)." `none` skips the category entirely — no stub read, no bullet emitted. `other` keeps an `AGENT: fill in` placeholder so the SWE can document the real choice on first use.
+
+12. **Reference docs (`llms.txt`)** — ask which tools / frameworks / services this project uses that publish an `llms.txt`, and collect each one's index URL (e.g. Pydantic AI → `https://pydantic.dev/docs/ai/llms.txt`). They become direct links in the generated AGENTS.md "Access Documentation" section; anything the user doesn't name falls back to `context7`. Fully skippable — name none and only the `context7` paragraph is emitted. Governed by [`rules.md`](rules.md) `P5`.
 
 Before proceeding to step 2, echo the picked configuration back to the user in a two-line summary and confirm.
 
@@ -98,7 +109,7 @@ Skip any row where the user picked `none` / `other`. `other` is handled at compo
 
 ### 3. Compose `AGENTS.md`
 
-Write the project's root memory file from the canonical template in [`AGENTS_TEMPLATE.md`](AGENTS_TEMPLATE.md). That file holds the full `The Why` / `The What` / `The How` structure **and** the rules for composing it — size target, distil-don't-copy, gate-sections-on-component-presence, fill-placeholders-inline. Read it end-to-end, then emit a tailored `AGENTS.md` at the target project root (or wherever `/scaffold` was invoked).
+Write the project's root memory file from the canonical template in [`AGENTS_TEMPLATE.md`](AGENTS_TEMPLATE.md) (the template body and section structure). Compose it following the `I#` artifact invariants in [`rules.md`](rules.md) — size, distil-don't-copy, gate-sections-on-presence, group-per-app, fill-placeholders-inline. Read both end-to-end, then emit a tailored `AGENTS.md` at the target project root (or wherever `/scaffold` was invoked).
 
 `AGENTS.md` is the canonical, agent-agnostic memory file. Alongside it, write a one-line `CLAUDE.md` whose only content is `@AGENTS.md` — that import makes Claude Code auto-load the same file without duplicating the body.
 
@@ -138,7 +149,7 @@ If monorepo:
 - Each `packages/<c>/` also gets:
   - `AGENTS.md` — one-paragraph component brief + "see root AGENTS.md for conventions"; plus a one-line `CLAUDE.md` (`@AGENTS.md`) so Claude Code auto-loads it.
   - `.env.example` — component-local placeholder.
-  - *No source files.* (Those are SWE agent's job on first `/day` run.)
+  - *No source files.* (Those are SWE agent's job on first `/implement-task` run.)
 
 - If shared OpenAPI chosen: `packages/shared/openapi/api.yaml` with a minimal `/health` endpoint seed.
 
@@ -155,17 +166,16 @@ If github-actions chosen:
 
 If agent team + tracker chosen:
 
-- `docs/PROCESS.md` — copy from the plugin (same file).
-- `tracker/README.md` + `tracker/done/.gitkeep`.
+- `tasks/README.md` describing the one-file-per-task model (`tasks/<NNN>-<slug>.md` with a `status:` frontmatter field — `pending` / `in-progress` / `done` — and a `feature:` field). State lives in the frontmatter, not the filename; on completion the file is `git mv`'d into `tasks/done/`, so the top level of `tasks/` lists only open work (pending + in-progress) and `NNN` is allocated by scanning both `tasks/` and `tasks/done/`. (The agent-team lifecycle + cross-cutting rules are baked into the generated `AGENTS.md` from `AGENTS_TEMPLATE.md` — there is no separate `docs/PROCESS.md`.)
 - `.claude/` — only if the user isn't installing the plugin globally; otherwise skip (the plugin provides it).
 
 If `adr` chosen (Process & documentation):
 
-- `docs/adr/0001-record-architecture-decisions.md` — drop the canonical ADR-0001 boilerplate verbatim from [`adr.md`'s Bootstrap section](specs/adr.md), with `{YYYY-MM-DD}` replaced by today's date. This is the only ADR scaffold writes — subsequent ADRs are authored by the SWE / PR Reviewer / `/architecture-review` flow as decisions arise. Do **not** emit a `docs/adr/.gitkeep` (ADR-0001 already keeps the directory non-empty).
+- `docs/adr/0001-record-architecture-decisions.md` — drop the canonical ADR-0001 boilerplate verbatim from [`adr.md`'s Bootstrap section](specs/adr.md), with `{YYYY-MM-DD}` replaced by today's date. This is the only ADR scaffold writes — subsequent ADRs are authored by the PA during `/plan` grooming as decisions arise. Do **not** emit a `docs/adr/.gitkeep` (ADR-0001 already keeps the directory non-empty).
 
 If `ubiquitous-language` chosen (Process & documentation):
 
-- `docs/glossary.md` — minimal seed: a one-paragraph header declaring the discipline ("The canonical vocabulary for {project}. When code, docs, specs, or conversation use a domain concept, use the term as it appears here.") + an empty 3-column table (`| Term | Definition | Notes |`) with a single commented-out example row so the format is unambiguous. Do **not** invent domain terms — the SWE / PM agent populate it as the first feature lands. Recommended seed body:
+- `docs/glossary.md` — minimal seed: a one-paragraph header declaring the discipline ("The canonical vocabulary for {project}. When code, docs, specs, or conversation use a domain concept, use the term as it appears here.") + an empty 3-column table (`| Term | Definition | Notes |`) with a single commented-out example row so the format is unambiguous. Do **not** invent domain terms — the SWE / PA populate it as the first feature lands. Recommended seed body:
 
   ```markdown
   # Glossary
@@ -183,16 +193,61 @@ Summarise for the user:
 
 - File tree created (full list, relative paths).
 - Which specs informed the AGENTS.md (named).
-- **Exact next step** — e.g. `/day "bootstrap packages/backend with a minimal FastAPI app and a /health endpoint"`. The SWE agent will read AGENTS.md and the spec references, and write the first real code.
+- **Exact next step** — e.g. `/implement-task "bootstrap packages/backend with a minimal FastAPI app and a /health endpoint"`. The SWE agent will read AGENTS.md and the spec references, and write the first real code.
 
 ## Rules
 
-- **Never write application source.** Not `main.py`, not `App.tsx`, not `cmd/<slug>/main.go`. Only structural / configuration files with AGENT-fill-in placeholders.
-- **Distil, don't transclude.** AGENTS.md cites specs; it doesn't reproduce them.
-- **Stop and ask on conflicts.** If the user picks `cli-tool-python` and `fastapi-service` for the same backend, ask which one (they can always run `/scaffold` again to add the other).
-- **Don't overwrite without confirmation.** If the target dir already has an `AGENTS.md`/`CLAUDE.md` or a `packages/<c>/` for a chosen component, ask before clobbering.
-- **Don't mutate the spec library.** `specs/` is read-only at scaffold time. Edits happen on the plugin repo, not in a consumer project.
-- **Stack stubs are optional and deletable.** The `datastore-*`, `orchestrator-*`, `observability-*`, `llm-*`, `embeddings-*`, `model-serving-*`, `scraping-*` files are all stubs pending real-project use. If a category turns out not to be worth maintaining, delete the stub(s) in plugin-repo edits and drop the matching row in Step 2's decision table — nothing else references them.
+All scaffold rules — create-time process rules (`P#`) and artifact invariants (`I#`) — live in [`rules.md`](rules.md), the single source of truth. While composing in `mode=create`, follow **every** `P#` and `I#`. Do not restate them here.
+
+## Evaluate mode
+
+`mode=evaluate` audits an *existing* scaffolded repo against the artifact invariants in [`rules.md`](rules.md) and reports drift. **You are the auditor — you do NOT apply fixes, you report.** The flow is read-only on the target repo; the report is printed to chat (no file is written).
+
+### E1 — Resolve target
+
+`$ARGUMENTS` after `mode=evaluate` is the target repo root (default: the current working directory). Echo it back in one line. If there is no `AGENTS.md` there, stop with a clear message: *"Nothing scaffolded to evaluate at `{path}` — run `mode=create` first."*
+
+### E2 — Spawn the audit sub-agent
+
+Launch a single `Explore` sub-agent. It reads the rules from the **plugin's** scaffold skill dir and audits the artifacts in the **target** repo — keep those two locations distinct in the prompt:
+
+```
+Agent(
+  subagent_type="Explore",
+  prompt="""Scaffold-conformance audit of the repo at {target path}.
+
+  AUTHORITATIVE RULES (read from the squid plugin's scaffold skill dir, NOT the target repo):
+  read `skills/scaffold/rules.md` end to end, and `skills/scaffold/AGENTS_TEMPLATE.md` for
+  structure questions. Audit ONLY the `I#` artifact invariants — skip every `P#` (those are
+  create-time and not checkable from a checkout).
+
+  ARTIFACTS UNDER AUDIT (in the target repo at {target path}): read `AGENTS.md`, the root
+  `CLAUDE.md` and every `packages/*/CLAUDE.md`, the root `Makefile`, and the skeleton tree
+  (`ls -R`, not file bodies).
+
+  For EACH `I#` rule, run its `Check:` procedure and return one row:
+    `rule id | PASS | VIOLATED | N/A | evidence (file:line or command output) | one-line remediation`.
+  Mark a rule N/A (not VIOLATED) when it doesn't apply — e.g. monorepo-only rules (I7, I10) on a
+  standalone single-package repo. Quote rules by ID only — do NOT paste rule text into your output.
+  Do NOT propose code changes beyond the one-line remediation. Return the table plus a 2–3 sentence
+  health summary."""
+)
+```
+
+### E3 — Compose the report (to chat)
+
+Read the target's `AGENTS.md` yourself first — the judgment-call invariants (`I2` size, `I3` distil, `I5` structure) need a firsthand read, not just the sub-agent's grep. Then print:
+
+- A 2–3 sentence headline summary (the main drift, or "no drift").
+- **Violations** — one block per VIOLATED rule: reference the rule by ID (e.g. `see rules.md#I2` — do **not** restate the rule text), the evidence (`file:line`), and a one-paragraph remediation describing the *shape* of the fix (not a patch).
+- **Passing** — a terse one-line list of the PASS rule IDs.
+- **N/A** — an explicit list of N/A rules with the one-line reason (e.g. "I7, I10 — standalone repo, no monorepo Makefile/per-app grouping").
+
+Findings are naturally bounded by the fixed rule set — no arbitrary cap.
+
+### E4 — Hand off
+
+Single block: result counts, the violated IDs, and the recommended next step — either *"Edit AGENTS.md to resolve {IDs} — see remediations above, then re-run `/scaffold mode=evaluate` to confirm"* or *"No drift — AGENTS.md still conforms."*
 
 ## Index of specs
 

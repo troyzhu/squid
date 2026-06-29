@@ -1,31 +1,36 @@
 {
-  "name": "squid",
+  "name": "troyzhu",
   "owner": {
-    "name": "iusztinpaul"
+    "name": "troyzhu"
   },
   "metadata": {
-    "description": "Opinionated engineering agent team plus /day, /night, /scaffold, and a library of language/framework/infra specs.",
-    "version": "0.2.7"
+    "description": "Opinionated engineering + research agent team plus /plan, /implement-night, /scaffold, /research, and a library of language/framework/infra specs. Fork of iusztinpaul/squid adding a research layer and generated Codex support.",
+    "version": "0.5.0"
   },
+  "allowCrossMarketplaceDependenciesOn": [
+    "claude-plugins-official"
+  ],
   "plugins": [
     {
       "name": "squid",
       "source": "./",
-      "description": "PM / SWE / Tester / PR Reviewer / On-Call sub-agents plus /day, /night, /scaffold, /triage-issue, /refactor, /grill-me, /architecture-review, and supporting workflow skills.",
-      "version": "0.2.7",
+      "description": "PA / SWE / Tester / PR Reviewer / On-Call sub-agents plus /plan, /implement-task, /implement-night, /review, /review-ci, /scaffold, the /research agent-team, and supporting workflow skills.",
+      "version": "0.5.0",
       "author": {
-        "name": "iusztinpaul",
-        "url": "https://github.com/iusztinpaul"
+        "name": "troyzhu",
+        "url": "https://github.com/troyzhu"
       },
-      "homepage": "https://github.com/iusztinpaul/squid",
-      "repository": "https://github.com/iusztinpaul/squid",
+      "homepage": "https://github.com/troyzhu/squid",
+      "repository": "https://github.com/troyzhu/squid",
       "license": "MIT",
       "category": "workflow",
       "keywords": [
+        "research",
+        "codex",
         "agent-team",
         "scaffold",
         "pipeline",
-        "pm",
+        "pa",
         "swe",
         "tester",
         "pr-reviewer",

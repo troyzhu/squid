@@ -1,6 +1,6 @@
 ---
 name: self-improve
-description: Analyze developer corrections from the current coding session and persist lessons learned as rules in CLAUDE.md files or memory. Use this skill at the end of a coding session, after the developer has reviewed and corrected your work, when the developer says "self-improve", "learn from this session", "what did you learn", "update your rules", "remember this for next time", or any time the developer wants to capture feedback from corrections they made. Also trigger when the developer explicitly asks you to reflect on mistakes or extract patterns from their edits.
+description: Analyze developer corrections from the current coding session and persist lessons learned as rules in AGENTS.md files or memory. Use this skill at the end of a coding session, after the developer has reviewed and corrected your work, when the developer says "self-improve", "learn from this session", "what did you learn", "update your rules", "remember this for next time", or any time the developer wants to capture feedback from corrections they made. Also trigger when the developer explicitly asks you to reflect on mistakes or extract patterns from their edits.
 ---
 
 # Self-Improvement from Developer Feedback
@@ -53,8 +53,8 @@ Show the developer all extracted rules in a numbered list. For each rule, includ
 2. **Why** — the developer's reasoning (or your best understanding of it)
 3. **Evidence** — brief reference to when this came up in the session
 4. **Where to persist** — your recommendation for where this rule should live:
-   - `CLAUDE.md` (project root) — project-wide conventions, architecture decisions, coding standards
-   - `CLAUDE.md` (local, in a subdirectory) — module-specific conventions
+   - `AGENTS.md` (project root) — project-wide conventions, architecture decisions, coding standards
+   - `AGENTS.md` (local, in a subdirectory) — module-specific conventions
    - `feedback memory` — personal preferences about collaboration style
    - `project memory` — project context, goals, constraints, deadlines
 5. **Conflicts** — any existing rules this might contradict (see Step 4)
@@ -70,26 +70,26 @@ Do NOT persist anything without explicit approval.
 
 Before presenting rules, scan for conflicts:
 
-1. **Read all CLAUDE.md files** in the project (root and any subdirectories)
+1. **Read all AGENTS.md files** in the project (root and any subdirectories)
 2. **Read the memory index** at `~/.claude/projects/*/memory/MEMORY.md` and any referenced memory files that seem related
 3. **Compare** each new rule against existing rules
 
 If a new rule contradicts an existing one:
-- Flag it clearly: "New rule X conflicts with existing rule Y in `CLAUDE.md:line N`"
+- Flag it clearly: "New rule X conflicts with existing rule Y in `AGENTS.md:line N`"
 - Present both versions to the developer
 - Ask which to keep, or whether to merge them
 
 If a new rule duplicates an existing one:
-- Skip it and note: "Already captured in `CLAUDE.md:line N`"
+- Skip it and note: "Already captured in `AGENTS.md:line N`"
 
 ## Step 5: Persist Approved Rules
 
 For each approved rule, persist it to the agreed location:
 
-### CLAUDE.md updates
-- Read the target CLAUDE.md file first
+### AGENTS.md updates
+- Read the target AGENTS.md file first
 - Find the most appropriate section for the rule (or suggest creating a new section if none fits)
-- Add the rule concisely — CLAUDE.md should stay scannable, not become a novel
+- Add the rule concisely — AGENTS.md should stay scannable, not become a novel
 - Use the existing formatting style of the file
 
 ### Memory updates
@@ -101,7 +101,7 @@ For each approved rule, persist it to the agreed location:
 
 ### After persisting
 - Show the developer exactly what was written and where
-- If a CLAUDE.md was modified, show the diff
+- If a AGENTS.md was modified, show the diff
 
 ## Step 6: Summary
 
@@ -117,4 +117,4 @@ End with a brief summary:
 - **Specificity beats coverage.** Three specific, actionable rules are worth more than ten vague ones.
 - **The developer has final say.** Never persist a rule the developer didn't approve. Never rewrite a rule they already approved into something different.
 - **Validated approaches matter.** Don't only learn from mistakes — also capture what worked well, especially non-obvious approaches that the developer confirmed were correct.
-- **Check before writing.** Always read existing CLAUDE.md files and memories before adding to them. Duplication erodes trust in the system.
+- **Check before writing.** Always read existing AGENTS.md files and memories before adding to them. Duplication erodes trust in the system.
