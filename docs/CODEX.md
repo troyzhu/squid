@@ -24,7 +24,10 @@ The Codex artifacts are **generated**, not hand-maintained. `agents/*.md` and
 `skills/*/SKILL.md` are the single source of truth; `scripts/gen_codex.py` reads
 them plus `scripts/codex/config.yaml` and regenerates the `.codex/agents/*.toml`,
 the `plugins/squid-codex/skills/*/SKILL.md` adapters, the `.agents/skills/*`
-discovery stubs, and the agent-map table in `codex-adapter.md`. CI
+discovery stubs, the packaged canonical contract snapshots under
+`plugins/squid-codex/references/canonical/`, the agent-map table in
+`codex-adapter.md`, and the generated `version` plus
+`interface.defaultPrompt` fields in the Codex plugin manifest. CI
 (`.github/workflows/codex-sync-check.yml`) fails if they drift.
 
 - **Good:** edit `skills/research/SKILL.md`, run `python3 scripts/gen_codex.py`,
@@ -63,13 +66,14 @@ is used outside this checkout, it falls back to spawning regular Codex workers
 and includes the matching role contract in the prompt when the contract file is
 available.
 
-## Research-thread gap (current)
+## Research Thread
 
 Squid's Codex layer is a **workflow/skill adapter** over the canonical contracts,
-not a Codex-native agent runtime. In particular there is no Codex-native
-research-thread runtime yet: the adapter can guide Codex through the existing
-Squid research workflow in a normal Codex thread, but a durable research-thread
-layer — portable run-state, resume, and thread-aware orchestration outside the
-Claude plugin environment — still needs design and implementation. Do not
-describe Codex `$research` as having tested persistent research-thread semantics
-across arbitrary directories; treat that as future work.
+not a Codex-native agent runtime. `$research-thread` is available as a generated
+Codex skill adapter and reads the canonical
+`skills/research-thread/SKILL.md` contract. It can consolidate a finished
+`/research` run inside a normal Codex thread.
+
+That does not mean Squid has a separate Codex-native research-thread runtime.
+Portable run-state, resume behavior, or thread-aware orchestration outside the
+Claude plugin environment would still need a dedicated design.

@@ -138,9 +138,12 @@ with open(path, "w") as f:
     f.write("\n")
 PYEOF
 
+# Regenerate Codex artifacts so their version matches the release.
+python3 scripts/gen_codex.py
+
 # ---- commit + tag -------------------------------------------------------------
 
-git add "$MANIFEST"
+git add "$MANIFEST" .codex plugins/squid-codex .agents/skills
 git commit -m "chore: release ${NEW_TAG}"
 git tag -a "$NEW_TAG" -m "$NEW_TAG"
 

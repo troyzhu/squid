@@ -1,0 +1,159 @@
+{
+  "agents": {
+    "literature-scout": {
+      "title": "Literature Scout",
+      "description": "Squid literature scout: performs credibility-gated source discovery and local corpus intake.",
+      "guardrail": "Your core duty is the Tier A, Tier B, Reject source-credibility gate.",
+      "nicknames": ["Scout", "Sources", "Gatekeeper"]
+    },
+    "oncall-engineer": {
+      "title": "On-Call Engineer",
+      "description": "Squid on-call engineer: watches CI after push, diagnoses failures, and delegates related fixes.",
+      "guardrail": "Own pipeline health; do not change unrelated application code.",
+      "nicknames": ["On Call", "CI", "Release"]
+    },
+    "pr-reviewer": {
+      "title": "PR Reviewer",
+      "description": "Squid PR reviewer: reviews a pushed feature diff and emits blocker or nit findings.",
+      "guardrail": "Review the diff; do not read CI, comment on the PR, merge, or fix the code unless explicitly redirected.",
+      "nicknames": ["Reviewer", "Diff Review", "Code Review"]
+    },
+    "product-architect": {
+      "title": "Product Architect",
+      "description": "Squid product architect: grooms tasks, owns ADRs plus glossary, and runs user-perspective acceptance review.",
+      "guardrail": "You author ADRs and the glossary; others read them. Decide what to build, not how to write the code.",
+      "nicknames": ["PA", "Architect", "Acceptance"]
+    },
+    "research-lead": {
+      "title": "Research Lead",
+      "description": "Squid research lead: grooms research questions into plans and performs final acceptance.",
+      "guardrail": "Do not search, synthesize, or draft directions yourself.",
+      "nicknames": ["Lead", "Research Lead", "Planner"]
+    },
+    "research-reviewer": {
+      "title": "Research Reviewer",
+      "description": "Squid research reviewer: runs one assigned review lens over synthesis or directions.",
+      "guardrail": "Stay within the single review lens assigned in your prompt and do not revise the artifact yourself.",
+      "nicknames": ["Reviewer", "Panelist", "Critic"]
+    },
+    "software-engineer": {
+      "title": "Software Engineer",
+      "description": "Squid software engineer: implements a single groomed task with tests and no premature commit.",
+      "guardrail": "Do not commit unless the active workflow and user explicitly authorize it.",
+      "nicknames": ["SWE", "Builder", "Implementer"]
+    },
+    "strategist": {
+      "title": "Strategist",
+      "description": "Squid strategist: drafts and revises grounded research directions from synthesis.",
+      "guardrail": "Draft and revise directions from the synthesis; do not search or judge your own work.",
+      "nicknames": ["Strategist", "Directions", "Planner"]
+    },
+    "synthesizer": {
+      "title": "Synthesizer",
+      "description": "Squid synthesizer: turns vetted sources into a grounded synthesis memo.",
+      "guardrail": "Synthesize from vetted sources; do not introduce ungated sources or propose research directions.",
+      "nicknames": ["Synthesizer", "Synthesis", "Mapper"]
+    },
+    "tester": {
+      "title": "Tester",
+      "description": "Squid tester: verifies implementation work, acceptance criteria, and adversarial end-to-end behavior.",
+      "guardrail": "Your core duty is evidence-backed verification, not rubber-stamping.",
+      "nicknames": ["QA", "Verifier", "Tester"]
+    }
+  },
+  "skills": {
+    "scaffold": {
+      "title": "Scaffold",
+      "blurb": "bootstrap a new repo or component from the Squid spec library",
+      "codex": true,
+      "extra_steps": [
+        "Generate `AGENTS.md` as the canonical project brief. Generate a one-line `CLAUDE.md` pointer only because scaffolded projects are intended to work with both Claude Code and Codex."
+      ],
+      "default_prompt": "Use $scaffold to bootstrap a new service."
+    },
+    "plan": {
+      "title": "Plan",
+      "blurb": "turn a feature spec into an approved Tasks Plan",
+      "codex": true,
+      "default_prompt": "Use $plan to groom a feature into an approved Tasks Plan."
+    },
+    "implement-task": {
+      "title": "Implement Task",
+      "blurb": "drive one or more groomed tasks through the SWE and Tester loop",
+      "codex": true
+    },
+    "implement-night": {
+      "title": "Implement Night",
+      "blurb": "run an approved feature plan through implementation, review, CI, and handoff",
+      "codex": true
+    },
+    "review": {
+      "title": "Review",
+      "blurb": "push a committed branch and run PA acceptance plus PR review",
+      "codex": true
+    },
+    "review-ci": {
+      "title": "Review CI",
+      "blurb": "watch feature PR CI and drive it to green through delegated fixes",
+      "codex": true
+    },
+    "grilling": {
+      "title": "Grilling",
+      "blurb": "stress-test a plan or design through focused questioning",
+      "codex": true
+    },
+    "testing-python": {
+      "title": "Testing Python",
+      "blurb": "write and evaluate effective Python tests with pytest",
+      "codex": true
+    },
+    "self-improve": {
+      "title": "Self Improve",
+      "blurb": "extract reusable lessons from corrections and persist them to agent guidance",
+      "codex": true
+    },
+    "refactor": {
+      "title": "Refactor",
+      "blurb": "turn a no-behavior-change structural goal into a safe Tasks Plan",
+      "codex": true
+    },
+    "triage-issue": {
+      "title": "Triage Issue",
+      "blurb": "localize a bug, capture a reproducer, and emit a groomed fix task",
+      "codex": true
+    },
+    "architecture-review": {
+      "title": "Architecture Review",
+      "blurb": "audit architecture drift and produce prioritized refactor proposals",
+      "codex": true
+    },
+    "research": {
+      "title": "Research",
+      "blurb": "run credibility-gated research planning, sourcing, synthesis, strategy, review, and handoff",
+      "codex": true,
+      "extra_steps": [
+        "Prefer the research custom agents from `.codex/agents`; otherwise spawn regular Codex workers with the matching `agents/` role contract included."
+      ],
+      "default_prompt": "Use $research to map credible approaches."
+    },
+    "research-profile": {
+      "title": "Research Profile",
+      "blurb": "build or update reusable reviewer and lead lens dossiers",
+      "codex": true
+    },
+    "research-thread": {
+      "title": "Research Thread",
+      "blurb": "consolidate a finished research run into a wiki-ready thread note",
+      "codex": true,
+      "extra_steps": [
+        "Preserve the source-fidelity rule: introduce no new claims and run no new search.",
+        "Keep the wiki write boundary: write only to the run folder and never directly to the target wiki."
+      ]
+    },
+    "research-tutorial": {
+      "title": "Research Tutorial",
+      "blurb": "build a grounded primer on a concept from a run corpus or fresh gated fetch",
+      "codex": true
+    }
+  }
+}

@@ -6,7 +6,9 @@ original files.
 ## Source order
 
 1. Read this adapter reference.
-2. Read the canonical Squid skill or agent contract named by the adapter.
+2. Read the canonical Squid skill or agent contract named by the adapter. In an
+   installed Codex plugin, use the packaged snapshot under
+   `references/canonical/`.
 3. Follow the canonical contract after applying the translation rules below.
 
 If the canonical contract is unavailable, continue only when the adapter has
@@ -47,16 +49,16 @@ workflow is being run through Codex.
 <!-- BEGIN GENERATED:agent-map (scripts/gen_codex.py) — do not edit by hand -->
 | Claude role | Codex custom agent | Canonical contract |
 |---|---|---|
-| `squid:product-architect` | `squid-product-architect` | `agents/product-architect.md` |
-| `squid:software-engineer` | `squid-software-engineer` | `agents/software-engineer.md` |
-| `squid:tester` | `squid-tester` | `agents/tester.md` |
-| `squid:pr-reviewer` | `squid-pr-reviewer` | `agents/pr-reviewer.md` |
-| `squid:oncall-engineer` | `squid-oncall-engineer` | `agents/oncall-engineer.md` |
-| `squid:research-lead` | `squid-research-lead` | `agents/research-lead.md` |
 | `squid:literature-scout` | `squid-literature-scout` | `agents/literature-scout.md` |
-| `squid:synthesizer` | `squid-synthesizer` | `agents/synthesizer.md` |
-| `squid:strategist` | `squid-strategist` | `agents/strategist.md` |
+| `squid:oncall-engineer` | `squid-oncall-engineer` | `agents/oncall-engineer.md` |
+| `squid:pr-reviewer` | `squid-pr-reviewer` | `agents/pr-reviewer.md` |
+| `squid:product-architect` | `squid-product-architect` | `agents/product-architect.md` |
+| `squid:research-lead` | `squid-research-lead` | `agents/research-lead.md` |
 | `squid:research-reviewer` | `squid-research-reviewer` | `agents/research-reviewer.md` |
+| `squid:software-engineer` | `squid-software-engineer` | `agents/software-engineer.md` |
+| `squid:strategist` | `squid-strategist` | `agents/strategist.md` |
+| `squid:synthesizer` | `squid-synthesizer` | `agents/synthesizer.md` |
+| `squid:tester` | `squid-tester` | `agents/tester.md` |
 <!-- END GENERATED:agent-map -->
 
 ## Claude-only persistence
