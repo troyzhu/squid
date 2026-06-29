@@ -62,3 +62,14 @@ roles are exposed for this repo through `.codex/agents/*.toml`; when the adapter
 is used outside this checkout, it falls back to spawning regular Codex workers
 and includes the matching role contract in the prompt when the contract file is
 available.
+
+## Research-thread gap (current)
+
+Squid's Codex layer is a **workflow/skill adapter** over the canonical contracts,
+not a Codex-native agent runtime. In particular there is no Codex-native
+research-thread runtime yet: the adapter can guide Codex through the existing
+Squid research workflow in a normal Codex thread, but a durable research-thread
+layer — portable run-state, resume, and thread-aware orchestration outside the
+Claude plugin environment — still needs design and implementation. Do not
+describe Codex `$research` as having tested persistent research-thread semantics
+across arbitrary directories; treat that as future work.
