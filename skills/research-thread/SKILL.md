@@ -1,13 +1,13 @@
 ---
 name: research-thread
-description: Consolidate a finished /research run into ONE wiki-ready research-thread note: a self-contained, readable writing artifact in a personal research wiki's "thread" genre. Re-projects the run's already-gated material (synthesis, directions, sources, primers) into a reader-facing note with a What-this-note-is opener, scope, summary, findings/guide body, compact source map, known gaps, and suggested reading order. Translates [S#] citations to wiki [[source-slug]] links plus local [(PDF)]/snapshot links. Introduces no new claims and runs no search. Drafted, improved through a two-lens review (wiki-editor + source-fidelity), then saved (human-gated) to research/<slug>/thread.md plus a wire-up sidecar; never writes to the wiki. Process details belong in log.md, sources.md, reviews.md, or thread--wireup.md, not in the thread body. Use when a finished /research run should become a publishable thread note, or the user says "/research-thread", "consolidate <run> into a thread", "make a wiki thread from <run>". Companion to /research; threads live next to the run.
+description: Consolidate a finished /research run into ONE wiki-ready research-thread note — a self-contained, high-quality writing artifact in a personal research wiki's "thread" genre. Re-projects the run's already-gated material (synthesis, directions, sources, primers) into the canonical thread template — a What-this-note-is opener, scope, quality filter, executive summary, established findings with the author's synthesis flagged, an annotated Tier-A/B/C bibliography, research gap, open questions, a minimal citation set, foldable derivations, a log — translating [S#] citations to the wiki's [[author-year-slug]] + [(PDF)] form and writing in the wiki house register. Introduces no new claims and runs no search. Drafted, improved through a two-lens review (wiki-editor + source-fidelity), then saved (human-gated) to research/<slug>/thread.md plus a wire-up sidecar; never writes to the wiki. Use when a finished /research run should become a publishable thread note, or the user says "/research-thread", "consolidate <run> into a thread", "make a wiki thread from <run>". Companion to /research; threads live next to the run.
 disable-model-invocation: true
 argument-hint: <run-slug> [wiki <path>] [quick|full]
 ---
 
 # Research Thread — consolidate a run into a wiki-ready note
 
-Consolidate ONE finished `/research` run into a single **research thread**: a self-contained, high-quality writing note in the maintainer's personal-wiki *thread genre*, ready to drop into `wiki/research-threads/` by hand. A `/research` run already produces most of the raw material: `synthesis.md`, `directions.md`, `sources.md` (a credibility-gated, mostly-local library), and primers under `tutorials/`. The gap is genre: the thread re-projects that material into a readable note with wiki citations and a compact source map. The thread **introduces no new claims and runs no search**; it re-renders already-gated material in a new shape.
+Consolidate ONE finished `/research` run into a single **research thread**: a self-contained, high-quality writing note in the maintainer's personal-wiki *thread genre*, ready to drop into `wiki/research-threads/` by hand. A `/research` run already produces ~85% of the raw material — `synthesis.md` (deep, typeset math, foldable derivations), `directions.md`, `sources.md` (a credibility-gated, mostly-local library), and primers under `tutorials/`. The gap is **genre, not depth**: the thread re-projects that material into the wiki's specific section template, an annotated Tier-A/B/C bibliography, and the wiki's citation and linking conventions. The thread **introduces no new claims and runs no search** — it re-renders already-gated material in a new shape.
 
 You are the **orchestrator** — a manager who also drafts, exactly like `/research-tutorial`. You read the run, draft the note into the thread template applying a defined transform and citation translation, improve it through a two-lens review, and save it only after the human approves. The two review lenses do the critique; you revise from their findings. The skill **never writes to the wiki** (reading a given wiki path is read-only and optional) and **never saves without the human** (the save is human-gated, with a diff on re-run).
 
@@ -23,7 +23,7 @@ You are the **orchestrator** — a manager who also drafts, exactly like `/resea
 
 - The **run-slug** (required) — names a run folder `research/<run-slug>/`. Resolve it relative to cwd. **If absent**, `ls research/` and list the available slugs for the human, then stop — never invent a run.
 - Optional **`wiki <path>`** — a personal-wiki root. If given, it is read **read-only** in Step 1/wiki-awareness to resolve links and reuse source slugs; the skill never writes there. If a project-local default wiki path is configured (a `wiki:` line in a project settings file), use it; otherwise default to no wiki (the standalone path).
-- Optional **depth `quick|full`** — `full` (default) is the complete reader-facing genre (contents, scope, summary, findings/guide body, compact source map, known gaps, suggested reading order, and useful reasoning checks); `quick` may omit contents and reasoning checks for a lighter thread. Neither depth includes process telemetry in `thread.md`.
+- Optional **depth `quick|full`** — `full` (default) is the complete genre (every section, the per-paper annotated bibliography, the Derivations section); `quick` omits the per-paper bibliography depth (a compact source table instead) and the Derivations section, for a lighter thread.
 
 **Derive the canonical thread slug.** The wiki slug is `<run-slug>` by default (it already reads as a topic slug); record it for the wire-up sidecar. The output path is fixed: `research/<run-slug>/thread.md`, with the wire-up sidecar at `research/<run-slug>/thread--wireup.md`.
 
@@ -48,8 +48,6 @@ Confirm the artifacts exist before drafting. If `synthesis.md` or `sources.md` i
 
 Draft into the canonical thread template (below) applying the transform and the citation translation, in the thread register (below). The orchestrator drafts (like the tutorial); no new agent.
 
-**Reader-facing rule.** `thread.md` is for the finished note, not for process telemetry. Keep it readable and useful to a wiki reader. Do not put review-cycle details, gate summaries, blocker counts, source-rejection process, A-code labels, or "thread consolidated from..." log entries in the note body. Put those details in `research/<run-slug>/log.md`, `sources.md`, `reviews.md`, and `thread--wireup.md`. The thread may include a compact source map and caveats needed to understand the claims, but it should not read like an audit report.
-
 **The transform (artifact → section).** Each thread section is re-projected from the run, not re-researched:
 
 | Thread section | Sourced from |
@@ -57,13 +55,15 @@ Draft into the canonical thread template (below) applying the transform and the 
 | Frontmatter | `plan.md` (question/scope) → `title`/`question`; methods-map neighbors → `related_concepts`; `log.md` dates → `date_started`; plan topic → `tags` |
 | `> **What this note is.**` | synthesis "answer so far" + the genre declaration (cited established results vs the author's flagged synthesis; intended reader; honest Tier-A/Tier-B status) |
 | Scope | `plan.md` in / out / adjacent |
-| Source note / source map | `sources.md` credibility gate, local-copy status, and the compact map from claims to load-bearing sources; full provenance and rejected-source details stay in `sources.md` |
+| Quality filter | `sources.md` credibility gate (the Tier-A/B/C venue policy) |
 | Executive summary | synthesis "answer so far" + top themes, rewritten as 3–7 claims |
-| Findings / guide body | synthesis themes, tables, and practical implications; integrate the **Analysis — beyond the sources** A-items as clearly marked synthesis or "main synthesis" prose, but do not expose internal A-code labels unless they are genuinely useful to the reader |
-| Known gaps | synthesis "Gaps & follow-up queries" + tensions, rewritten as reader-facing limits |
-| Follow-up questions | actionable questions from `directions.md`, rewritten without D1/D2/D3/D4 or reviewer-process labels |
-| Suggested reading order | the 4–8 most useful load-bearing sources in reading order |
-| Reasoning checks | only include foldable derivations or procedural inference chains when they make the note clearer; omit empty "no derivations" boilerplate |
+| Findings (+ flagged synthesis) | synthesis themes (math, tables, foldable derivations preserved) + the **Analysis — beyond the sources** A-items, confidence-tagged and **clearly marked as the author's, not the literature's** |
+| Annotated bibliography | the **load-bearing** sources (those the thread's claims rest on) re-rendered per paper; remaining accepted sources are cited inline only, not given a full entry — a curated spine like the wiki, not mechanically every source. "Why it matters" / "use in your work" synthesized from each source's relevance + which themes cite it |
+| Research gap | synthesis "Gaps & follow-up queries" + tensions |
+| Open questions | actionable questions + the run's proposals (from `directions.md`) |
+| Minimal citation set | the 4–6 load-bearing Tier-A sources |
+| Derivations | the synthesis `> [!derivation]-` callouts + tutorial folded math; AND where the synthesis argues load-bearing math in prose without a callout, a derivation **constructed** from that math (grounded — every step traces to the synthesis/sources; no new result) |
+| Log | one dated "thread consolidated from run `<slug>`" entry summarizing the run's provenance |
 
 **Citation translation.** `[S#]` (squid, resolving to `sources.md`) becomes the wiki form at every point of use: an inline `[[source-slug]]` source-page wikilink **and** a `[(PDF)](<sources/S#--slug.pdf>)` link to the run's local copy. Derive the slug to match the wiki's source-page convention — **title-first, kebab-cased short title, optionally suffixed `-<first-author-surname>-<year>` for disambiguation** (e.g. `S1` → `[[neural-simulated-annealing-correia-2023]]`; a distinctive title may stand alone). **If a source's first author, year, or title is missing from `sources.md`, read its local PDF (the `Local:` path) to recover the real provenance before emitting the slug** — emit a clearly-flagged placeholder only when the PDF is also unavailable, and flag it in the entry's **Caution** and the sidecar. Never invent an author. **Tier-B sources keep an explicit caveat at the point of use** (preserving squid's gate; the synthesis's `[S#, B]` mark carries over as a caveat clause). **Tier map:** squid Tier A → wiki Tier A; squid Tier B → wiki Tier B; a context-only accepted source → wiki Tier C.
 
@@ -77,8 +77,8 @@ Then thread the depth rules: the `{STYLE_DOC}` **Quality rubric** still binds (s
 
 Before the human sees it, improve the draft through a two-lens review. Launch BOTH lenses in parallel — one message, two `Agent(subagent_type="general-purpose", …)` calls — each given the draft path, the run's `sources/` and `synthesis.md` for fact-checking, and its brief. The lenses **return findings; they do not edit the file**. This mirrors `/research-tutorial` Step 5.
 
-- **Wiki-editor lens** — prompt: "You are the editor of a personal research wiki. Read `<draft path>` as a thread about to be filed. Check that the note is reader-facing: frontmatter is present; the `> **What this note is.**` opener declares the reader and practical scope; the body is organized for reading rather than for audit; claims are cited with `[[source-slug]]` wikilinks plus local `[(PDF)]`/snapshot links; caveats are visible at the point of use; tables and foldable reasoning checks are included only where they improve readability; and the note contains a compact source map, known gaps, and suggested reading order. Treat process chatter as a problem: review-cycle details, gate summaries, blocker counts, source-rejection process, A-code labels, and in-thread `## Log` sections belong in `log.md`, `sources.md`, `reviews.md`, or `thread--wireup.md`, not in `thread.md`. Tag a **Blocker** on missing frontmatter, a missing What-this-note-is declaration, a bare `[S#]` citation, absent local source links, or process sections that make the note read like an audit report. Tag a **Nit** for sharpening. Do not flag length by itself; flag only sections that are too thin, repetitive, or chatty. Return a findings list; do not edit the file."
-- **Source-fidelity lens** — prompt: "You are a fact-checker guarding against drift. Read `<draft path>` against the run's `synthesis.md` and `sources.md` (and `sources/` for the full texts). The thread must re-project the run with **no drift**: every claim traces to `synthesis.md` or `sources.md`; **no new un-grounded claim** is introduced (the thread runs no search and adds no literature); the tiers are preserved (a Tier-B source still carries its caveat); each `[S#] → [[source-slug]]` translation resolves to the **right** source; the `[(PDF)]` or snapshot path matches the run's local file; and any constructed reasoning check traces to the synthesis's claims without introducing a new result. The author's synthesis may be integrated into readable prose instead of exposed as internal A-code labels, but it must remain distinguishable from what the sources directly state. Tag a **Blocker** on any drift: an un-grounded claim, a mis-resolved citation, a dropped Tier-B caveat, or a synthesis claim presented as if it were directly stated by the literature. Quote the exact location and the source it should trace to. Return a findings list; do not edit the file."
+- **Wiki-editor lens** — prompt: "You are the editor of a personal research wiki; you know its *research-thread* genre and house style cold. Read `<draft path>` as a thread about to be filed. Check genre + house-style fidelity: every template section is present and in order (What-this-note-is → Table of contents [full] → Scope → Quality filter → Executive summary → Findings → Annotated bibliography → Research gap → Open questions → Minimal citation set → Suggested reading order → Derivations [full only] → Log); the `> **What this note is.**` opener declares the genre, the intended reader, and the honest status (which claims are Tier-A vs Tier-B-caveated, what is the author's analysis vs the literature's); the annotated bibliography is the curated **load-bearing spine** (the sources the thread's claims rest on, like the wiki — not mechanically every accepted source; the rest are cited inline) and matches the wiki house shape — grouped under `# Tier A/B/C — {subtitle}` headings, one numbered `## N. {Authors} — {Title}` per paper, the eight fields as per-field bullets (**Authors** · **Venue** · **Local copy** `[(PDF)]` · **arXiv** · **Paradigm** · **Why it matters** · **Caution** · **Use in your work**), complete per paper for each spine entry; the frontmatter carries the required fields; citations use `[[source-slug]]` wikilinks (the wiki's title-first convention) + `[(PDF)]` local links; the register is the wiki voice (purposeful bold, em-dashes for asides, first-person synthesis, define-on-first-use, honest caveats, tables, typeset LaTeX, foldable derivations); the note has **sufficient depth** — the wiki norm runs long, and **quality and depth outrank brevity: never flag length as excess; a thread is as long as its material warrants.** Flag only a section too THIN, never the note too long. Tag a **Blocker** on a missing genre element (an absent or out-of-order template section, an incomplete per-paper bibliography entry, a missing What-this-note-is declaration, a citation left as a bare `[S#]`). Tag a **Nit** for a sharpening. Note: this genre is the wiki house style and is **exempt from the synthesis lint** — do NOT flag purposeful bold, em-dashes, or first-person as AI-tics; they are the register here. Quote the exact location. Return a findings list; do not edit the file."
+- **Source-fidelity lens** — prompt: "You are a fact-checker guarding against drift. Read `<draft path>` against the run's `synthesis.md` and `sources.md` (and `sources/` for the full texts). The thread must re-project the run with **no drift**: every claim traces to `synthesis.md` or `sources.md`; **no new un-grounded claim** is introduced (the thread runs no search and adds no literature); the tiers are preserved (a Tier-B source still carries its caveat); each `[S#] → [[source-slug]]` translation resolves to the **right** source (the slug matches the wiki's title-first convention for the actual source in `sources.md`); the `[(PDF)]` path matches the run's local file; **any constructed derivation's every step traces to the synthesis's math/claims — it makes implicit math explicit and introduces no new result**; and the flagged **'my synthesis'** items in Findings are **exactly** the synthesis's `Analysis — beyond the sources` A-items, with nothing smuggled in as the author's that the literature actually stated, and nothing stated as the literature's that is really the author's. Tag a **Blocker** on any drift — an un-grounded claim, a mis-resolved citation, a dropped Tier-B caveat, a mis-attributed synthesis item. This is the analog of the synthesizer's grounding guard. Quote the exact location and the source it should trace to. Return a findings list; do not edit the file."
 
 **Severity.** A **Blocker** = a missing genre element (wiki-editor) or any drift from the run (source-fidelity). A **Nit** = a sharpening. Drift Blockers and genre Blockers are equal — fix both.
 
@@ -106,7 +106,7 @@ On `save`, write **both** files and set `last_updated:` to today:
 
 ## The canonical thread template (the save shape)
 
-A `full` thread is complete but reader-facing. The frontmatter carries the wiki's thread fields; the body should read like a useful note, not an audit trail. `depth: quick` may omit the table of contents and foldable reasoning checks, but both `quick` and `full` keep process details out of `thread.md`.
+A `full` thread is the complete wiki genre. The frontmatter carries the wiki's thread fields; the body sections follow in this order. `depth: quick` omits the per-paper bibliography depth (a compact source table instead) and the **Derivations** section.
 
 ```markdown
 ---
@@ -123,42 +123,70 @@ raw_folder: "research/{slug}/ (squid run; gated PDFs in sources/)"
 related: ["[[...]]"]                   # catch-all
 ---
 
-> **What this note is.** A practical note for {the intended reader, from plan.md Constraints}. It turns the run's local, gated sources into a readable synthesis. Established guidance is cited; synthesis beyond the sources is signposted in ordinary prose. Professional advice topics are routed to local verification rather than answered universally.
+> **What this note is.** An original analysis grounded in a credibility-gated literature sweep: established results are cited, **my synthesis is flagged** as mine. Written for {the intended reader, from plan.md Constraints}. Honest status: which claims rest on Tier-A sources, which lean on Tier-B (caveated at the point of use), and which are my analysis beyond the literature rather than the literature's.
 
-## Contents                        <!-- full depth: Obsidian [[#Heading]] links for navigation; quick may omit -->
-{Link the major `##` sections and useful `###` sub-sections. Each anchor's text must match its heading exactly.}
+## Table of contents                        <!-- full depth: Obsidian [[#Heading]] links for navigation; quick omits -->
+{Link the major `##` sections and the **Findings** `###` sub-sections — `- [[#Heading]]`, sub-sections indented. Do NOT list the per-paper `## N.` bibliography entries (too granular); link `[[#Annotated bibliography]]` once. Each anchor's text must match its heading exactly.}
 
 ## Scope
 {in / out / adjacent, from plan.md.}
 
-## Summary
+## Quality filter
+{the Tier-A/B/C venue policy from the credibility gate: Tier A = load-bearing (peer-reviewed at a recognized venue, or a well-known lab's report); Tier B = supporting, cited with an explicit caveat; Tier C = context only. Unclear provenance was rejected.}
+
+## Executive summary
 {3–7 bullet claims, from the synthesis "answer so far" + top themes.}
 
-## Core model / Findings
-{The established results argued at depth, rewritten as a readable guide or note. Preserve useful tables and foldable reasoning checks. Translate citations to [[source-slug]] plus local [(PDF)]/snapshot links at each point of use; keep Tier-B caveats at the point of use.}
+## Findings
+{The established results argued at depth — the synthesis themes, with their math (typeset $\ldots$ / $$\ldots$$), comparison tables, and foldable `> [!derivation]-` callouts preserved. Citations are translated: [[source-slug]] (the wiki's title-first convention) + [(PDF)](<sources/S#--slug.pdf>) at each point of use; a Tier-B-leaning claim keeps its caveat.}
 
-### Synthesis beyond the sources
-{Include only when useful. Integrate the synthesizer's Analysis items as readable "main synthesis" or "interpretation" prose. Do not expose internal A-code labels, status scaffolding, or derivation bookkeeping unless the reader benefits from it.}
+### My synthesis (beyond the sources)
+{The synthesizer's `Analysis — beyond the sources` A-items, confidence-tagged, clearly marked as the author's analysis — NOT the literature's. Each carries its Status / Derivation / Confidence and grounds its derivation in the cited sources.}
 
-## Source map
-{A compact table mapping claim areas to load-bearing sources and local copies. Full provenance, source rejection details, and review-cycle details stay in `sources.md`, `reviews.md`, and `log.md`.}
+## Annotated bibliography
+{The **load-bearing** sources only — those the thread's claims rest on (a curated spine, like the wiki; the remaining accepted sources are cited inline in the body, not given a full entry). The three Tier sections in the wiki house convention: a `# Tier X — {subtitle}` heading, then one numbered `## N. {Authors shorthand} — {Full title}` per paper with the eight per-field bullets below. Match the wiki's heading levels and per-field-bullet layout exactly — not a condensed dot-separated header.}
 
-| Use | Sources |
-|---|---|
-| {claim area} | [[source-slug]] [(PDF)](<sources/S#--slug.pdf>) |
+# Tier A — load-bearing (peer-reviewed at a recognized venue, or a well-known lab's report)
 
-## Known gaps
-{What the accepted sources do not yet support. Phrase as practical limits, not as process commentary.}
+## 1. {Authors shorthand} — {Full title}
+- **Authors**: {full list, with affiliation where known}
+- **Venue**: {venue, year}
+- **Local copy**: [(PDF)](<sources/S#--slug.pdf>)
+- **arXiv**: {id, if any}
+- **Paradigm**: {one line — what this work is.}
+- **Why it matters**: {to this thread, from its relevance + which themes cite it.}
+- **Caution**: {limits — toy-scale, single-dataset, Tier-B caveat where it applies.}
+- **Use in your work**: {how the reader would actually reach for it.}
+
+# Tier B — supporting, cited with an explicit caveat
+{same numbered `## N.` per-paper shape; each entry's **Caution** states the Tier-B caveat explicitly.}
+
+# Tier C — context only
+{same shape, lighter; if the gate accepted only Tier A/B, write "None — the gate accepted only Tier A/B.".}
+
+<!-- quick depth: replace the per-paper entries with one compact table: | Source | Tier | [(PDF)] | What it establishes | -->
+
+## Research gap
+{what the literature lacks, from the synthesis "Gaps & follow-up queries" and tensions.}
+
+## Open questions to investigate
+{actionable questions + the run's proposals (from directions.md), each grounded.}
+
+## Minimal citation set
+{the 4–6 load-bearing Tier-A sources — the ones a reader must read to trust the thread.}
 
 ## Suggested reading order
-{The most useful path through the local sources.}
+{concepts → Tier-A papers → derivations: the path through the material.}
 
-## Reasoning checks                         <!-- full depth only, and only when useful -->
-{Folded derivations or procedural inference chains when they materially improve the note. Omit this section if there is no useful reasoning check; do not write "No derivations appear".}
+## Derivations                              <!-- full depth only; quick omits -->
+{D1, D2, … — foldable `> [!derivation]-` callouts. Carry over the synthesis's and the tutorial's folded math; AND where the synthesis argues load-bearing math in prose without a callout, **construct** a grounded foldable derivation from it (every step traces to the synthesis/sources — no new result). The load-bearing equation stays visible; the long derivation folds.}
 
 > [!derivation]- D1 — {title}
 >
 > {the derivation, math as math, each content line `> `-prefixed.}
+
+## Log
+- {today} — Thread consolidated from run `{slug}` ({the run's provenance: N gated sources, M Tier-A; synthesis depth loop; primers built; Gate-#2 outcome}).
 ```
 
 ---
@@ -198,6 +226,6 @@ The thread is **standalone**: it is written to be wiki-ready without any wiki pr
 - **Never writes to the wiki.** The only writes are `thread.md` and the wire-up sidecar under the run folder. The sidecar guides the by-hand integration into `wiki/research-threads/`; the maintainer files it.
 - **Writing-only; toys are placeholders.** Toy/experiment references in the thread are left as a placeholder checklist in the sidecar — generating runnable code is a separate, larger ambition (the engineering layer), out of scope here.
 - **Re-projects, never re-researches.** The run's already-gated material is the only input; the thread introduces no new claims and runs no search. The source-fidelity lens enforces this.
-- **The two-lens review improves the note before the human sees it.** A wiki-editor lens checks reader-facing genre fidelity, citation readability, compact source mapping, and absence of process chatter; a source-fidelity lens checks no drift (every claim traces to the run, tiers preserved, citations resolve, and synthesis is distinguishable from direct source claims). Genre Blockers and drift Blockers are equal; the loop caps at 2 cycles; the human gate is final.
+- **The two-lens review improves the note before the human sees it.** A wiki-editor lens checks genre + house-style fidelity (every section present and ordered, the annotated bibliography complete per paper, citations translated, the register the wiki voice); a source-fidelity lens checks no drift (every claim traces to the run, tiers preserved, citations resolve, the flagged synthesis is exactly the synthesis Analysis items). Genre Blockers and drift Blockers are equal; the loop caps at 2 cycles; the human gate is final.
 - **Human-gated save.** Like `/research-tutorial`, nothing is written without explicit approval, and a re-run shows a diff before overwriting.
-- **Depth is the user's steer.** `full` is the complete reader-facing genre; `quick` is a lighter thread. Both use a compact source map and keep run/process details in the log and sidecar.
+- **Depth is the user's steer.** `full` is the complete genre (a navigational Table of contents + every section + the per-paper annotated bibliography + the Derivations section); `quick` is a lighter thread (no Table of contents, a compact source table instead of the per-paper bibliography, no Derivations section).
